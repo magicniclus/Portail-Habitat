@@ -1,0 +1,532 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { MapPin, Search, Users, CheckCircle } from "lucide-react";
+import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import MapboxMap from "@/components/MapboxMap";
+
+interface ProspectData {
+  prospectId?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  profession: string;
+  step: string;
+  selectedCity?: string;
+  coordinates?: { lat: number; lng: number };
+  radius?: number;
+}
+
+export default function OnboardingStep2Content() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const [prospectData, setProspectData] = useState<ProspectData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    profession: "",
+    step: "2"
+  });
+  
+  const [selectedCity, setSelectedCity] = useState("");
+  const [selectedRadius, setSelectedRadius] = useState(30);
+  const [estimatedSearches, setEstimatedSearches] = useState(0);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
+  const [cachedSearches, setCachedSearches] = useState<{[key: string]: number}>({});
+
+  // Charger les données depuis les paramètres URL
+  useEffect(() => {
+    const data: ProspectData = {
+      prospectId: searchParams.get("prospectId") || undefined,
+      firstName: searchParams.get("firstName") || "",
+      lastName: searchParams.get("lastName") || "",
+      email: searchParams.get("email") || "",
+      profession: searchParams.get("profession") || "",
+      step: "2",
+      selectedCity: searchParams.get("city") || ""
+    };
+    
+    setProspectData(data);
+    if (data.selectedCity) {
+      setSelectedCity(data.selectedCity);
+    }
+  }, [searchParams]);
+
+  // Extraire la profession pour éviter les problèmes de dépendances
+  const profession = prospectData.profession;
+
+  // Calculer les recherches estimées selon la profession et le rayon avec loader et cache
+  useEffect(() => {
+    if (selectedCity && profession) {
+      // Créer une clé unique pour le cache
+      const cacheKey = `${selectedCity}-${profession}-${selectedRadius}`;
+      
+      // Vérifier si on a déjà les données en cache
+      if (cachedSearches[cacheKey]) {
+        setEstimatedSearches(cachedSearches[cacheKey]);
+        setIsLoadingStats(false);
+        return;
+      }
+      
+      setIsLoadingStats(true);
+      
+      // Délai aléatoire entre 1 et 3.5 secondes
+      const randomDelay = Math.random() * 2500 + 1000; // 1000ms à 3500ms
+      
+      setTimeout(() => {
+        // Base selon la profession (certains métiers plus recherchés)
+        const professionMultiplier: { [key: string]: number } = {
+          "plombier": 1.5,
+          "electricien": 1.4,
+          "chauffagiste": 1.3,
+          "peintre": 1.2,
+          "maconnerie": 1.1,
+          "menuisier": 1.0,
+          "couvreur": 0.9,
+          "carreleur": 0.8,
+          "charpentier": 0.7,
+          "multiservices": 1.6
+        };
+
+        // Base selon le rayon (plus grande zone = plus de recherches)
+        const radiusMultiplier = selectedRadius === 30 ? 1 : selectedRadius === 50 ? 2.8 : 8.9;
+        
+        // Calcul avec une base aléatoire pour simuler la variabilité
+        const baseSearches = Math.floor(Math.random() * 8) + 4; // Entre 4 et 12
+        const professionFactor = professionMultiplier[profession] || 1;
+        
+        const estimated = Math.floor(baseSearches * professionFactor * radiusMultiplier);
+        
+        // Sauvegarder dans le cache
+        setCachedSearches(prev => ({
+          ...prev,
+          [cacheKey]: estimated
+        }));
+        
+        setEstimatedSearches(estimated);
+        setIsLoadingStats(false);
+      }, randomDelay);
+    }
+  }, [selectedCity, selectedRadius, profession]);
+
+  const handleCitySearch = (city: string, coordinates?: [number, number]) => {
+    // Si on change de ville, vider le cache des recherches
+    if (city !== selectedCity) {
+      setCachedSearches({});
+      setEstimatedSearches(0);
+    }
+    
+    setSelectedCity(city);
+    setProspectData(prev => ({ 
+      ...prev, 
+      selectedCity: city,
+      coordinates: coordinates ? { lat: coordinates[1], lng: coordinates[0] } : undefined
+    }));
+  };
+
+  const handleReserveZone = async () => {
+    if (!selectedCity) return;
+
+    try {
+      // Mettre à jour le document Firestore avec toutes les données
+      if (prospectData.prospectId) {
+        const prospectRef = doc(db, "prospects", prospectData.prospectId);
+        await updateDoc(prospectRef, {
+          selectedCity,
+          radius: selectedRadius,
+          coordinates: prospectData.coordinates,
+          step: "3",
+          updatedAt: serverTimestamp()
+        });
+      }
+
+      // Sauvegarder dans localStorage
+      const completeData = {
+        ...prospectData,
+        selectedCity,
+        radius: selectedRadius,
+        coordinates: prospectData.coordinates,
+        step: "3"
+      };
+      localStorage.setItem("prospectData", JSON.stringify(completeData));
+
+      // Créer l'URL avec tous les paramètres
+      const params = new URLSearchParams({
+        prospectId: prospectData.prospectId || "",
+        firstName: prospectData.firstName,
+        lastName: prospectData.lastName,
+        email: prospectData.email,
+        profession: prospectData.profession,
+        city: selectedCity,
+        radius: selectedRadius.toString(),
+        ...(prospectData.coordinates && {
+          lat: prospectData.coordinates.lat.toString(),
+          lng: prospectData.coordinates.lng.toString()
+        })
+      });
+
+      router.push(`/onboarding/step3?${params.toString()}`);
+    } catch (error) {
+      console.error("Erreur lors de la sauvegarde:", error);
+      // Redirection de fallback avec toutes les données
+      const params = new URLSearchParams({
+        prospectId: prospectData.prospectId || "",
+        firstName: prospectData.firstName,
+        lastName: prospectData.lastName,
+        email: prospectData.email,
+        profession: prospectData.profession,
+        city: selectedCity,
+        radius: selectedRadius.toString(),
+        ...(prospectData.coordinates && {
+          lat: prospectData.coordinates.lat.toString(),
+          lng: prospectData.coordinates.lng.toString()
+        })
+      });
+      router.push(`/onboarding/step3?${params.toString()}`);
+    }
+  };
+
+  const getProfessionLabel = (profession: string) => {
+    const labels: { [key: string]: string } = {
+      "plombier": "Plombier",
+      "electricien": "Électricien", 
+      "chauffagiste": "Chauffagiste",
+      "peintre": "Peintre",
+      "maconnerie": "Maçon",
+      "menuisier": "Menuisier",
+      "couvreur": "Couvreur",
+      "carreleur": "Carreleur",
+      "charpentier": "Charpentier",
+      "multiservices": "Multiservices"
+    };
+    return labels[profession] || profession;
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex flex-col" style={{ minHeight: '100vh' }}>
+      {/* Header */}
+      <header className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Image
+                src="/logo.png"
+                alt="Portail Habitat"
+                width={150}
+                height={60}
+                className="h-12 w-auto"
+              />
+              <div className="hidden sm:block">
+                <span className="text-sm text-gray-500">Étape 2/3</span>
+                <Progress value={66} className="w-32 mt-1" />
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-sm text-gray-600">
+                {prospectData.firstName} {prospectData.lastName}
+              </p>
+              <p className="text-xs text-gray-500">{prospectData.email}</p>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Carte mobile pleine largeur */}
+      <div className="lg:hidden">
+        <div className="relative h-[50vh] min-h-[300px]">
+          <MapboxMap 
+            onLocationSelect={handleCitySearch}
+            selectedCity={selectedCity}
+            selectedRadius={selectedRadius}
+          />
+          
+          {/* Sélecteur de rayon (overlay mobile) */}
+          {selectedCity && (
+            <div className="absolute bottom-4 left-4 right-4 z-10">
+              <div className="bg-white rounded-lg shadow-lg p-4">
+                <p className="font-semibold text-green-600 mb-3">
+                  📍 {selectedCity}
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600">Rayon d'intervention :</p>
+                  <div className="flex space-x-2">
+                    {[30, 50, 100].map((radius) => (
+                      <button
+                        key={radius}
+                        onClick={() => setSelectedRadius(radius)}
+                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                          selectedRadius === radius
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {radius} km
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bloc rassurance mobile pleine largeur */}
+      <div className="lg:hidden">
+        <Card className="shadow-xl mx-4 my-6">
+          <CardContent className="p-6">
+            
+            {/* Ligne dynamique */}
+            <div className="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+              <div className="flex items-center space-x-2">
+                <MapPin className="h-5 w-5 text-blue-600" />
+                <span className="font-semibold text-gray-900">
+                  {selectedCity || "Sélectionnez une ville"} – {getProfessionLabel(profession)}
+                </span>
+              </div>
+            </div>
+
+            {/* Statistiques */}
+            <div className="space-y-4 mb-6">
+              {selectedCity ? (
+                <>
+                  <div className="flex items-center space-x-3">
+                    <Search className="h-5 w-5 text-orange-600" />
+                    <span className="text-gray-700">
+                      {isLoadingStats ? (
+                        <>
+                          <div className="inline-flex items-center space-x-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
+                            <span>Analyse en cours...</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <strong>~{estimatedSearches} recherches</strong> estimées ces dernières 24h pour {getProfessionLabel(profession).toLowerCase()} à {selectedCity}
+                        </>
+                      )}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-3">
+                    <Users className="h-5 w-5 text-blue-600" />
+                    <span className="text-gray-700">
+                      <strong>1 demande garantie par mois</strong> • En moyenne nos artisans en ont entre 4 et 6
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <span className="text-gray-700">
+                      <strong>Disponible immédiatement</strong>
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center p-6 bg-gray-50 rounded-lg">
+                  <MapPin className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600">
+                    Choisissez une ville pour voir les informations sur votre secteur
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Bouton CTA */}
+            <Button
+              onClick={handleReserveZone}
+              disabled={!selectedCity}
+              className="w-full py-4 text-lg font-semibold bg-green-600 hover:bg-green-700 disabled:bg-gray-300 mb-4"
+            >
+              RÉSERVER CETTE ZONE →
+            </Button>
+
+            {/* Texte sécurisé */}
+            <p className="text-xs text-gray-500 text-center mb-4">
+              +3200 artisans • +64000 demandes/mois • 1 demande garantie chaque mois
+            </p>
+
+            {/* Message d'anti-vente */}
+            <div className="border-t pt-4">
+              <p className="text-xs text-gray-400 leading-relaxed">
+                <strong>Transparence :</strong> Les chiffres présentés sont basés sur l'activité réelle des dernières 24h sur nos différents sites partenaires. 
+                Ces données ne représentent qu'une partie de la demande totale du marché et peuvent varier selon la saison, 
+                les événements locaux et l'évolution du secteur. Nous privilégions la transparence à la sur-promesse.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Contenu principal desktop */}
+      <div className="hidden lg:block flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+          
+          {/* Colonne gauche - Carte (desktop seulement) */}
+          <div className="order-2 lg:order-1">
+            <div className="relative h-full min-h-[400px] lg:min-h-[600px]">
+              <MapboxMap 
+                onLocationSelect={handleCitySearch}
+                selectedCity={selectedCity}
+                selectedRadius={selectedRadius}
+              />
+              
+              {/* Sélecteur de rayon (overlay desktop) */}
+              {selectedCity && (
+                <div className="absolute bottom-4 left-4 right-4 z-10">
+                  <div className="bg-white rounded-lg shadow-lg p-4">
+                    <p className="font-semibold text-green-600 mb-3">
+                      📍 {selectedCity}
+                    </p>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">Rayon d'intervention :</p>
+                      <div className="flex space-x-2">
+                        {[30, 50, 100].map((radius) => (
+                          <button
+                            key={radius}
+                            onClick={() => setSelectedRadius(radius)}
+                            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                              selectedRadius === radius
+                                ? 'bg-green-600 text-white'
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                          >
+                            {radius} km
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Colonne droite - Bloc rassurance */}
+          <div className="order-1 lg:order-2 lg:col-span-1">
+            <div className="h-full min-h-[400px] lg:min-h-[600px] flex flex-col">
+              <Card className="shadow-xl flex-1 flex flex-col">
+                <CardContent className="p-8 flex-1 flex flex-col justify-between">
+                  
+                  {/* Contenu principal */}
+                  <div className="flex-1">
+                    {/* Ligne dynamique */}
+                    <div className="mb-8 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                      <div className="flex items-center space-x-2">
+                        <MapPin className="h-5 w-5 text-blue-600" />
+                        <span className="font-semibold text-gray-900">
+                          {selectedCity || "Sélectionnez une ville"} – {getProfessionLabel(profession)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Statistiques */}
+                    <div className="space-y-6 mb-8">
+                      {selectedCity ? (
+                        <>
+                          <div className="flex items-center space-x-3">
+                            <Search className="h-6 w-6 text-orange-600" />
+                            <span className="text-lg text-gray-700">
+                              {isLoadingStats ? (
+                                <>
+                                  <div className="inline-flex items-center space-x-2">
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600"></div>
+                                    <span>Analyse en cours...</span>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <strong>~{estimatedSearches} recherches</strong> estimées ces dernières 24h pour {getProfessionLabel(profession).toLowerCase()} à {selectedCity}
+                                </>
+                              )}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center space-x-3">
+                            <Users className="h-6 w-6 text-blue-600" />
+                            <span className="text-lg text-gray-700">
+                              <strong>1 demande garantie par mois</strong> • En moyenne nos artisans en ont entre 4 et 6
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-3">
+                            <CheckCircle className="h-6 w-6 text-green-600" />
+                            <span className="text-lg text-gray-700">
+                              <strong>Disponible immédiatement</strong>
+                            </span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-center p-8 bg-gray-50 rounded-lg">
+                          <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <p className="text-xl text-gray-600">
+                            Choisissez une ville pour voir les informations sur votre secteur
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Section CTA */}
+                  <div className="space-y-4">
+                    <Button
+                      onClick={handleReserveZone}
+                      disabled={!selectedCity}
+                      className="w-full py-4 text-xl font-semibold bg-green-600 hover:bg-green-700 disabled:bg-gray-300"
+                    >
+                      RÉSERVER CETTE ZONE →
+                    </Button>
+
+                    <p className="text-sm text-gray-500 text-center">
+                      +3200 artisans • +64000 demandes/mois • 1 demande garantie chaque mois
+                    </p>
+
+                    {/* Message d'anti-vente */}
+                    <div className="border-t pt-6">
+                      <p className="text-xs text-gray-400 leading-relaxed">
+                        <strong>Transparence :</strong> Les chiffres présentés sont basés sur l'activité réelle des dernières 24h sur nos différents sites partenaires. 
+                        Ces données ne représentent qu'une partie de la demande totale du marché et peuvent varier selon la saison, 
+                        les événements locaux et l'évolution du secteur. Nous privilégions la transparence à la sur-promesse.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-center">
+            <div className="mb-4 sm:mb-0">
+              <p className="text-sm text-gray-300">
+                © 2024 Portail Habitat. Tous droits réservés.
+              </p>
+            </div>
+            <div className="flex space-x-6 mt-4 sm:mt-0">
+              <a href="/conditions" className="text-sm text-gray-500 hover:text-gray-700">
+                Conditions
+              </a>
+              <a href="/confidentialite" className="text-sm text-gray-500 hover:text-gray-700">
+                Confidentialité
+              </a>
+              <a href="/support" className="text-sm text-gray-500 hover:text-gray-700">
+                Support
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+}

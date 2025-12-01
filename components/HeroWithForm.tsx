@@ -96,8 +96,8 @@ export default function HeroWithForm() {
         step: "1"
       });
 
-      // Rediriger vers la page secteur avec les paramètres
-      router.push(`/devenir-pro/secteur?${params.toString()}`);
+      // Rediriger vers la page onboarding step2 avec les paramètres
+      router.push(`/onboarding/step2?${params.toString()}`);
       
     } catch (error) {
       console.error("Erreur lors de la création du prospect:", error);
@@ -110,7 +110,7 @@ export default function HeroWithForm() {
         profession: formData.profession,
         step: "1"
       });
-      router.push(`/devenir-pro/secteur?${params.toString()}`);
+      router.push(`/onboarding/step2?${params.toString()}`);
     }
   };
 
