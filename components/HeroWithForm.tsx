@@ -286,23 +286,26 @@ export default function HeroWithForm() {
                   </div>
 
                   {/* Case à cocher CGV */}
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-start gap-3">
                     <Checkbox 
                       id="cgv" 
                       checked={formData.acceptedTerms}
                       onCheckedChange={(checked) => setFormData({...formData, acceptedTerms: !!checked})}
                       required
+                      className="mt-0.5"
                     />
-                    <Label htmlFor="cgv" className="text-xs text-gray-500 leading-relaxed cursor-pointer">
-                      J'accepte les{" "}
-                      <a href="/conditions-generales" className="text-gray-600 hover:text-gray-700 underline">
-                        conditions générales d'utilisation
-                      </a>
-                      {" "}et la{" "}
-                      <a href="/politique-confidentialite" className="text-gray-600 hover:text-gray-700 underline">
-                        politique de confidentialité
-                      </a>
-                    </Label>
+                    <div className="flex-1">
+                      <Label htmlFor="cgv" className="text-xs text-gray-500 leading-4 cursor-pointer block">
+                        J'accepte les{" "}
+                        <a href="/conditions-generales" className="text-gray-600 hover:text-gray-700 underline">
+                          conditions générales d'utilisation
+                        </a>
+                        {" "}et la{" "}
+                        <a href="/politique-confidentialite" className="text-gray-600 hover:text-gray-700 underline">
+                          politique de confidentialité
+                        </a>
+                      </Label>
+                    </div>
                   </div>
 
                   <Button type="submit" className="w-full text-lg py-3" style={{backgroundColor: '#16a34a'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803d'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}>

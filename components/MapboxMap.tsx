@@ -104,10 +104,17 @@ export default function MapboxMap({ onLocationSelect, selectedCity, selectedRadi
       onLocationSelect(suggestion.place_name, suggestion.center);
       
       if (map.current) {
-        // Centrer la carte avec un zoom moins fort
+        // Calculer le zoom selon le rayon
+        const getZoomForRadius = (radius: number) => {
+          if (radius <= 30) return 9;
+          if (radius <= 50) return 8;
+          return 7; // Pour 100km et plus
+        };
+
+        // Centrer la carte avec un zoom adapté au rayon
         map.current.flyTo({
           center: suggestion.center,
-          zoom: 8 // Réduit de 10 à 8 pour moins zoomer
+          zoom: getZoomForRadius(selectedRadius)
         });
 
         // Ajouter/mettre à jour le marqueur
@@ -197,11 +204,23 @@ export default function MapboxMap({ onLocationSelect, selectedCity, selectedRadi
     circle.current = true;
   };
 
-  // Mettre à jour le cercle quand le rayon change
+  // Mettre à jour le cercle et le zoom quand le rayon change
   useEffect(() => {
     if (selectedCity && marker.current && map.current) {
       const center = marker.current.getLngLat();
       updateCircle([center.lng, center.lat], selectedRadius);
+      
+      // Ajuster le zoom selon le nouveau rayon
+      const getZoomForRadius = (radius: number) => {
+        if (radius <= 30) return 9;
+        if (radius <= 50) return 8;
+        return 7; // Pour 100km et plus
+      };
+      
+      map.current.flyTo({
+        center: [center.lng, center.lat],
+        zoom: getZoomForRadius(selectedRadius)
+      });
     }
   }, [selectedRadius, selectedCity]);
 

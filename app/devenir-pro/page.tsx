@@ -9,6 +9,7 @@ import ProfessionsSection from "@/components/ProfessionsSection";
 import ArtisanPageFeatures from "@/components/ArtisanPageFeatures";
 import MobileAppSection from "@/components/MobileAppSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import RevenueSection from "@/components/RevenueSection";
 import FinalCTA from "@/components/FinalCTA";
 
 export const metadata: Metadata = {
@@ -41,6 +42,7 @@ export default function DevenirPro() {
         <HowItWorks />
         <ArtisanPageFeatures />
         <ProfessionsSection />
+        <RevenueSection />
         <TestimonialsSection />
         <MobileAppSection />
       </main>

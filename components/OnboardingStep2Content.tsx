@@ -210,9 +210,9 @@ export default function OnboardingStep2Content() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col" style={{ minHeight: '100vh' }}>
+    <div className="h-screen bg-gray-50 flex flex-col lg:min-h-screen">
       {/* Header */}
-      <header className="bg-white border-b shadow-sm">
+      <header className="bg-white border-b shadow-sm flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -232,15 +232,17 @@ export default function OnboardingStep2Content() {
               <p className="text-sm text-gray-600">
                 {prospectData.firstName} {prospectData.lastName}
               </p>
-              <p className="text-xs text-gray-500">{prospectData.email}</p>
+              <p className="text-xs text-gray-500 lg:hidden">Étape 2/3</p>
+              <p className="text-xs text-gray-500 hidden lg:block">{prospectData.email}</p>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Carte mobile pleine largeur */}
-      <div className="lg:hidden">
-        <div className="relative h-[50vh] min-h-[300px]">
+      {/* Layout mobile : header + carte + barre = 100vh */}
+      <div className="lg:hidden flex flex-col h-screen">
+        {/* Carte qui prend l'espace restant */}
+        <div className="flex-1 relative">
           <MapboxMap 
             onLocationSelect={handleCitySearch}
             selectedCity={selectedCity}
@@ -276,93 +278,44 @@ export default function OnboardingStep2Content() {
             </div>
           )}
         </div>
-      </div>
 
-      {/* Bloc rassurance mobile pleine largeur */}
-      <div className="lg:hidden">
-        <Card className="shadow-xl mx-4 my-6">
-          <CardContent className="p-6">
-            
-            {/* Ligne dynamique */}
-            <div className="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-5 w-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">
-                  {selectedCity || "Sélectionnez une ville"} – {getProfessionLabel(profession)}
-                </span>
-              </div>
-            </div>
-
-            {/* Statistiques */}
-            <div className="space-y-4 mb-6">
+        {/* Barre en bas mobile (partie intégrante du layout) */}
+        <div className="bg-white border-t shadow-lg p-4">
+          <div className="flex items-center justify-between">
+            {/* Gauche : Étape ou recherches */}
+            <div className="flex-1">
               {selectedCity ? (
-                <>
-                  <div className="flex items-center space-x-3">
-                    <Search className="h-5 w-5 text-orange-600" />
-                    <span className="text-gray-700">
-                      {isLoadingStats ? (
-                        <>
-                          <div className="inline-flex items-center space-x-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
-                            <span>Analyse en cours...</span>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          <strong>~{estimatedSearches} recherches</strong> estimées ces dernières 24h pour {getProfessionLabel(profession).toLowerCase()} à {selectedCity}
-                        </>
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <Users className="h-5 w-5 text-blue-600" />
-                    <span className="text-gray-700">
-                      <strong>1 demande garantie par mois</strong> • En moyenne nos artisans en ont entre 4 et 6
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-3">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <span className="text-gray-700">
-                      <strong>Disponible immédiatement</strong>
-                    </span>
-                  </div>
-                </>
+                <div className="text-sm">
+                  {isLoadingStats ? (
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
+                      <span className="text-gray-600">Analyse...</span>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="font-semibold text-gray-900">~{estimatedSearches} recherches</p>
+                      <p className="text-xs text-gray-500">dernières 24h à {selectedCity}</p>
+                    </div>
+                  )}
+                </div>
               ) : (
-                <div className="text-center p-6 bg-gray-50 rounded-lg">
-                  <MapPin className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600">
-                    Choisissez une ville pour voir les informations sur votre secteur
-                  </p>
+                <div className="text-sm">
+                  <p className="font-semibold text-gray-900">Étape 2/3</p>
+                  <p className="text-xs text-gray-500">Choisissez votre zone</p>
                 </div>
               )}
             </div>
 
-            {/* Bouton CTA */}
+            {/* Droite : Bouton */}
             <Button
               onClick={handleReserveZone}
               disabled={!selectedCity}
-              className="w-full py-4 text-lg font-semibold bg-green-600 hover:bg-green-700 disabled:bg-gray-300 mb-4"
+              className="px-6 py-3 font-semibold bg-green-600 hover:bg-green-700 disabled:bg-gray-300"
             >
-              RÉSERVER CETTE ZONE →
+              RÉSERVER
             </Button>
-
-            {/* Texte sécurisé */}
-            <p className="text-xs text-gray-500 text-center mb-4">
-              +3200 artisans • +64000 demandes/mois • 1 demande garantie chaque mois
-            </p>
-
-            {/* Message d'anti-vente */}
-            <div className="border-t pt-4">
-              <p className="text-xs text-gray-400 leading-relaxed">
-                <strong>Transparence :</strong> Les chiffres présentés sont basés sur l'activité réelle des dernières 24h sur nos différents sites partenaires. 
-                Ces données ne représentent qu'une partie de la demande totale du marché et peuvent varier selon la saison, 
-                les événements locaux et l'évolution du secteur. Nous privilégions la transparence à la sur-promesse.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {/* Contenu principal desktop */}
@@ -504,8 +457,8 @@ export default function OnboardingStep2Content() {
         </div>
       </div>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8">
+      {/* Footer desktop seulement */}
+      <footer className="hidden lg:block bg-gray-900 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <div className="mb-4 sm:mb-0">
