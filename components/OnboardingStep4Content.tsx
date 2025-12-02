@@ -11,10 +11,12 @@ import { Progress } from "@/components/ui/progress";
 import { MapPin, CheckCircle, Lock, Shield, ArrowRight, CreditCard } from "lucide-react";
 
 interface ProspectData {
-  prospectId?: string;
+  artisanId?: string;
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
+  postalCode: string;
   profession: string;
   step: string;
   selectedCity?: string;
@@ -38,6 +40,8 @@ export default function OnboardingStep4Content() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
+    postalCode: "",
     profession: "",
     step: "4"
   });
@@ -55,10 +59,12 @@ export default function OnboardingStep4Content() {
   // Charger les données depuis les paramètres URL
   useEffect(() => {
     const data: ProspectData = {
-      prospectId: searchParams.get("prospectId") || undefined,
+      artisanId: searchParams.get("artisanId") || undefined,
       firstName: searchParams.get("firstName") || "",
       lastName: searchParams.get("lastName") || "",
       email: searchParams.get("email") || "",
+      phone: searchParams.get("phone") || "",
+      postalCode: searchParams.get("postalCode") || "",
       profession: searchParams.get("profession") || "",
       step: "4",
       selectedCity: searchParams.get("city") || "",
@@ -187,23 +193,50 @@ export default function OnboardingStep4Content() {
     setIsProcessing(true);
     
     try {
-      // TODO: Intégrer le vrai paiement Stripe ici
-      // Pour l'instant, on simule un paiement réussi
-      console.log("Simulation paiement upsell pour:", paymentData);
+      console.log("Démarrage paiement upsell Stripe pour:", paymentData);
       
-      // Simuler un délai de traitement
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 1. Créer le PaymentIntent pour l'upsell
+      const paymentIntentResponse = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: 6900, // 69€ en centimes
+          prospectData: {
+            ...prospectData,
+            artisanId: prospectData.artisanId // Utiliser artisanId au lieu de prospectId
+          },
+          type: 'upsell_site'
+        }),
+      });
+
+      if (!paymentIntentResponse.ok) {
+        throw new Error('Erreur lors de la création du PaymentIntent');
+      }
+
+      const { clientSecret, status, paymentIntentId } = await paymentIntentResponse.json();
+      console.log('PaymentIntent créé et confirmé pour upsell:', { paymentIntentId, status });
+
+      // Vérifier que le paiement est réussi
+      if (status !== 'succeeded') {
+        throw new Error(`Paiement échoué. Status: ${status}`);
+      }
+
+      console.log('Paiement upsell réussi:', paymentIntentId);
       
       // Mettre à jour Firebase avec l'upsell
-      if (prospectData.prospectId) {
-        console.log('Mise à jour Firebase pour:', prospectData.prospectId);
+      console.log('🔍 Données artisan complètes:', prospectData);
+      
+      if (prospectData.artisanId) {
+        console.log('Mise à jour Firebase pour artisan:', prospectData.artisanId);
         const firebaseResponse = await fetch('/api/update-artisan-upsell', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            prospectId: prospectData.prospectId,
+            artisanId: prospectData.artisanId,
             sitePricePaid: 69,
             hasPremiumSite: true,
             paymentData: paymentData
@@ -217,7 +250,7 @@ export default function OnboardingStep4Content() {
           console.error('Erreur Firebase:', firebaseResult);
         }
       } else {
-        console.error('Pas de prospectId pour la mise à jour Firebase');
+        console.error('Pas d\'artisanId pour la mise à jour Firebase');
       }
       
       // Envoyer email de remerciement upsell
@@ -298,8 +331,13 @@ export default function OnboardingStep4Content() {
             {/* Récapitulatif mobile */}
             <Card className="bg-white border border-gray-200">
               <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Votre site internet professionnel complet pour 69 € au lieu de 299 €</h2>
-                <p className="text-sm text-gray-600 mb-6">Donnez immédiatement une image sérieuse et crédible à votre entreprise, augmentez vos demandes et démarquez-vous dans votre secteur.</p>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Vous êtes bien inscrit sur Portail Habitat.</h2>
+                <p className="text-sm text-gray-600 mb-6">Ce site professionnel est une option facultative destinée à vous aider à recevoir encore plus de demandes et améliorer votre visibilité Google Local.</p>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
+                  <p className="text-xs text-green-800 font-medium">
+                    <span className="text-base font-bold">69€ seulement</span> <span className="line-through text-gray-500">au lieu de 299€</span> - Offre spéciale inscription
+                  </p>
+                </div>
                 
                 {/* Vidéo du site livré */}
                 <div className="mb-6">
@@ -501,8 +539,13 @@ export default function OnboardingStep4Content() {
             {/* Colonne gauche - Récapitulatif */}
             <Card className="bg-white border border-gray-200">
               <CardContent className="p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Votre site internet professionnel complet pour 69 € au lieu de 299 €</h2>
-                <p className="text-base text-gray-600 mb-8">Donnez immédiatement une image sérieuse et crédible à votre entreprise, augmentez vos demandes et démarquez-vous dans votre secteur.</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Vous êtes bien inscrit sur Portail Habitat.</h2>
+                <p className="text-base text-gray-600 mb-8">Ce site professionnel est une option facultative destinée à vous aider à recevoir encore plus de demandes et améliorer votre visibilité Google Local.</p>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
+                  <p className="text-sm text-green-800 font-medium">
+                    <span className="text-lg font-bold">69€ seulement</span> <span className="line-through text-gray-500">au lieu de 299€</span> - Offre spéciale inscription
+                  </p>
+                </div>
                 
                 {/* Vidéo du site livré */}
                 <div className="mb-8">

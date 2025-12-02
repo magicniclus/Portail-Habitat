@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const extractedData = body;
     prospectId = extractedData.prospectId;
-    const { firstName, lastName, email, profession, selectedCity, selectedZoneRadius } = extractedData;
+    const { firstName, lastName, email, phone, postalCode, profession, selectedCity, selectedZoneRadius } = extractedData;
 
     if (!prospectId || !firstName || !lastName || !email || !profession) {
       return NextResponse.json(
@@ -259,7 +259,7 @@ export async function POST(request: NextRequest) {
     // Créer le document utilisateur selon le schéma exact
     await db.collection('users').doc(userRecord.uid).set({
       email,
-      phone: '', // À compléter par l'artisan
+      phone: phone || '', // Téléphone du formulaire
       role: 'artisan',
       createdAt: new Date(),
       lastLoginAt: null,
@@ -273,11 +273,11 @@ export async function POST(request: NextRequest) {
       slug,
       firstName,
       lastName,
-      phone: '', // À compléter par l'artisan
+      phone: phone || '', // Téléphone du formulaire
       email,
       siret: '', // À compléter par l'artisan
       city: selectedCity || '',
-      postalCode: '', // À compléter par l'artisan
+      postalCode: postalCode || '', // Code postal du formulaire
       fullAddress: '', // À compléter par l'artisan
       coordinates: { lat: 0, lng: 0 }, // À compléter par l'artisan
       profession,
@@ -299,6 +299,7 @@ export async function POST(request: NextRequest) {
       reviewCount: 0,
       hasSocialFeed: false,
       publishedPostsCount: 0,
+      originalProspectId: prospectId, // Garder une trace du prospect d'origine
       createdAt: new Date(),
       updatedAt: new Date(),
       isPriority: false
@@ -320,17 +321,18 @@ export async function POST(request: NextRequest) {
       updatedAt: new Date()
     });
 
-    // Mettre à jour le prospect pour indiquer qu'il est devenu artisan (transaction finale)
+    // Supprimer le prospect car il est maintenant artisan (transaction finale)
     await db.runTransaction(async (transaction) => {
-      transaction.update(prospectRef, {
-        funnelStep: 'converted',
-        artisanId: userRecord.uid,
-        convertedAt: new Date(),
-        updatedAt: new Date(),
-        processing: false, // Retirer le flag de traitement
-        processingCompletedAt: new Date()
+      // Ajouter la date de conversion à l'artisan
+      transaction.update(db.collection('artisans').doc(userRecord.uid), {
+        convertedAt: new Date()
       });
+      
+      // Supprimer le document prospect
+      transaction.delete(prospectRef);
     });
+
+    console.log(`Prospect ${prospectId} supprimé - maintenant artisan ${userRecord.uid}`);
 
     // Envoyer l'email de bienvenue
     const emailData = createWelcomeEmailTemplate(firstName, lastName, email, generatedPassword, profession);

@@ -1,17 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
+// Initialiser Firebase Admin
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+}
+
+const db = getFirestore();
 
 export async function POST(request: NextRequest) {
+  let artisanId = '';
   try {
-    const { prospectId, sitePricePaid, hasPremiumSite, paymentData } = await request.json();
+    const requestData = await request.json();
+    console.log('🔥 Données reçues par l\'API Firebase:', requestData);
+    
+    artisanId = requestData.artisanId;
+    const { sitePricePaid, hasPremiumSite, paymentData } = requestData;
 
-    if (!prospectId) {
-      return NextResponse.json({ error: 'ID prospect manquant' }, { status: 400 });
+    if (!artisanId) {
+      console.log('❌ Pas d\'artisanId dans les données:', requestData);
+      return NextResponse.json({ error: 'ID artisan manquant' }, { status: 400 });
     }
 
-    // Référence du document artisan
-    const artisanRef = doc(db, 'artisans', prospectId);
+    console.log('✅ ArtisanId trouvé:', artisanId);
+
+    // Référence directe du document artisan
+    const artisanRef = db.collection('artisans').doc(artisanId);
 
     // Données à mettre à jour selon le schéma Firestore
     const updateData = {
@@ -20,27 +41,29 @@ export async function POST(request: NextRequest) {
       sitePricePaid: sitePricePaid || 69,
       
       // Informations de paiement (optionnel, pour audit)
-      lastPaymentDate: serverTimestamp(),
+      lastPaymentDate: new Date(),
       lastPaymentAmount: sitePricePaid,
       
       // Mise à jour timestamp
-      updatedAt: serverTimestamp(),
+      updatedAt: new Date(),
       
       // Statut pour suivi
       upsellCompleted: true,
-      upsellCompletedAt: serverTimestamp()
+      upsellCompletedAt: new Date()
     };
 
-    // Mettre à jour le document
-    await updateDoc(artisanRef, updateData);
+    console.log('📝 Données à mettre à jour:', updateData);
 
-    console.log(`Artisan ${prospectId} mis à jour avec upsell site premium`);
+    // Mettre à jour le document (même structure que create-artisan)
+    await artisanRef.update(updateData);
+
+    console.log(`Artisan ${artisanId} mis à jour avec upsell site premium`);
 
     return NextResponse.json({ 
       success: true, 
       message: 'Artisan mis à jour avec succès',
       data: {
-        prospectId,
+        artisanId,
         sitePricePaid,
         hasPremiumSite
       }
@@ -49,7 +72,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Erreur lors de la mise à jour de l\'artisan:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de la mise à jour de l\'artisan' },
+      { 
+        error: 'Erreur lors de la mise à jour de l\'artisan',
+        details: error instanceof Error ? error.message : 'Erreur inconnue',
+        artisanId: artisanId || 'non fourni'
+      },
       { status: 500 }
     );
   }

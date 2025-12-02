@@ -18,6 +18,8 @@ interface ProspectData {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
+  postalCode: string;
   profession: string;
   step: string;
   selectedCity?: string;
@@ -41,6 +43,8 @@ export default function OnboardingStep3Content() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
+    postalCode: "",
     profession: "",
     step: "3"
   });
@@ -62,6 +66,8 @@ export default function OnboardingStep3Content() {
       firstName: searchParams.get("firstName") || "",
       lastName: searchParams.get("lastName") || "",
       email: searchParams.get("email") || "",
+      phone: searchParams.get("phone") || "",
+      postalCode: searchParams.get("postalCode") || "",
       profession: searchParams.get("profession") || "",
       step: "3",
       selectedCity: searchParams.get("city") || "",
@@ -218,24 +224,31 @@ export default function OnboardingStep3Content() {
           firstName: prospectData.firstName,
           lastName: prospectData.lastName,
           email: prospectData.email,
+          phone: prospectData.phone,
+          postalCode: prospectData.postalCode,
           profession: prospectData.profession,
           selectedCity: prospectData.selectedCity,
           selectedZoneRadius: prospectData.selectedZoneRadius
         }),
       });
 
+      let artisanId = '';
       if (response.ok) {
-        console.log('Compte artisan créé avec succès');
+        const result = await response.json();
+        artisanId = result.artisanId;
+        console.log('Compte artisan créé avec succès, ID:', artisanId);
       } else {
         console.error('Erreur lors de la création du compte artisan');
       }
 
-      // Créer l'URL pour step4 (upsell) avec tous les paramètres
+      // Créer l'URL pour step4 (upsell) avec l'artisanId
       const params = new URLSearchParams({
-        prospectId: prospectData.prospectId || "",
+        artisanId: artisanId || "",
         firstName: prospectData.firstName,
         lastName: prospectData.lastName,
         email: prospectData.email,
+        phone: prospectData.phone,
+        postalCode: prospectData.postalCode,
         profession: prospectData.profession,
         city: prospectData.selectedCity || "",
         selectedZoneRadius: prospectData.selectedZoneRadius?.toString() || "30"

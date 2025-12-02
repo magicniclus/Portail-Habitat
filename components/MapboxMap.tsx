@@ -27,6 +27,7 @@ export default function MapboxMap({ onLocationSelect, selectedCity, selectedRadi
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   // Initialiser la carte
   useEffect(() => {
@@ -226,19 +227,50 @@ export default function MapboxMap({ onLocationSelect, selectedCity, selectedRadi
 
   return (
     <div className="relative h-full w-full">
-      {/* Barre de recherche */}
+        {/* Barre de recherche */}
       <div className="absolute top-4 left-4 right-4 z-10">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 transition-colors duration-300 ${
+            !hasInteracted && !searchQuery
+              ? 'text-green-500'
+              : 'text-gray-400'
+          }`} />
           <Input
-            placeholder="Ville, région, département ou code postal..."
+            placeholder="Saisissez votre adresse"
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setIsSelected(false); // Permettre les nouvelles suggestions si on retape
+              if (!hasInteracted) {
+                setHasInteracted(true);
+              }
             }}
-            className="pl-10 bg-white shadow-lg border-0"
+            onFocus={() => {
+              if (!hasInteracted) {
+                setHasInteracted(true);
+              }
+            }}
+            className={`pl-10 bg-white shadow-lg transition-all duration-300 ${
+              !hasInteracted && !searchQuery
+                ? 'border-2 border-green-400 ring-2 ring-green-300 ring-opacity-75'
+                : 'border-0'
+            }`}
           />
+          
+          {/* Bulle d'aide */}
+          {!hasInteracted && !searchQuery && (
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 z-30">
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 px-4 py-3 max-w-xs">
+                {/* Flèche pointant vers l'input */}
+                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                  <div className="w-4 h-4 bg-white border-l border-t border-gray-200 transform rotate-45"></div>
+                </div>
+                <p className="text-sm text-gray-700 text-center font-medium">
+                  Saisissez votre secteur d'activité
+                </p>
+              </div>
+            </div>
+          )}
           
           {/* Suggestions */}
           {showSuggestions && suggestions.length > 0 && (

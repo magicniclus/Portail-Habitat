@@ -6,11 +6,17 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, firstName, lastName, profession } = await request.json();
+    const requestData = await request.json();
+    console.log('📧 Données reçues par l\'API Email:', requestData);
+    
+    const { email, firstName, lastName, profession } = requestData;
 
     if (!email || !firstName) {
+      console.log('❌ Email ou firstName manquant:', { email, firstName });
       return NextResponse.json({ error: 'Données manquantes' }, { status: 400 });
     }
+
+    console.log('✅ Email et firstName trouvés:', { email, firstName });
 
     const professionLabel = getProfessionLabel(profession);
 
@@ -80,15 +86,19 @@ export async function POST(request: NextRequest) {
       </html>
     `;
 
-    // Envoyer l'email avec SendGrid
-    const msg = {
+    // Envoyer l'email avec SendGrid (même structure que create-artisan)
+    const emailData = {
       to: email,
-      from: 'noreply@portail-habitat.fr', // Doit être vérifié dans SendGrid
+      from: {
+        email: 'service@trouver-mon-chantier.fr',
+        name: 'Portail Habitat'
+      },
       subject: `Merci ${firstName} ! Votre site professionnel est en cours de création`,
       html: emailHtml,
     };
 
-    await sgMail.send(msg);
+    console.log('📧 Envoi email avec données:', { to: email, from: emailData.from });
+    await sgMail.send(emailData);
 
     console.log(`Email de confirmation upsell envoyé à ${email}`);
 
@@ -100,7 +110,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Erreur lors de l\'envoi de l\'email:', error);
     return NextResponse.json(
-      { error: 'Erreur lors de l\'envoi de l\'email' },
+      { 
+        error: 'Erreur lors de l\'envoi de l\'email',
+        details: error instanceof Error ? error.message : 'Erreur inconnue',
+        stack: error instanceof Error ? error.stack : undefined
+      },
       { status: 500 }
     );
   }

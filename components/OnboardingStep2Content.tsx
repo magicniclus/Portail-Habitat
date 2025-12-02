@@ -16,6 +16,8 @@ interface ProspectData {
   firstName: string;
   lastName: string;
   email: string;
+  phone: string;
+  postalCode: string;
   profession: string;
   step: string;
   selectedCity?: string;
@@ -31,6 +33,8 @@ export default function OnboardingStep2Content() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
+    postalCode: "",
     profession: "",
     step: "2"
   });
@@ -48,6 +52,8 @@ export default function OnboardingStep2Content() {
       firstName: searchParams.get("firstName") || "",
       lastName: searchParams.get("lastName") || "",
       email: searchParams.get("email") || "",
+      phone: searchParams.get("phone") || "",
+      postalCode: searchParams.get("postalCode") || "",
       profession: searchParams.get("profession") || "",
       step: "2",
       selectedCity: searchParams.get("city") || ""
@@ -163,6 +169,8 @@ export default function OnboardingStep2Content() {
         firstName: prospectData.firstName,
         lastName: prospectData.lastName,
         email: prospectData.email,
+        phone: prospectData.phone,
+        postalCode: prospectData.postalCode,
         profession: prospectData.profession,
         city: selectedCity,
         selectedZoneRadius: selectedRadius.toString(),
@@ -181,6 +189,8 @@ export default function OnboardingStep2Content() {
         firstName: prospectData.firstName,
         lastName: prospectData.lastName,
         email: prospectData.email,
+        phone: prospectData.phone,
+        postalCode: prospectData.postalCode,
         profession: prospectData.profession,
         city: selectedCity,
         selectedZoneRadius: selectedRadius.toString(),

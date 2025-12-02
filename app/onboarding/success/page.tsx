@@ -5,13 +5,35 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, ArrowRight, Mail, Globe } from "lucide-react";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from 'next/navigation';
 
 function SuccessContent() {
   // Vérifier si c'est un upsell via les paramètres URL
   const searchParams = useSearchParams();
-  const hasUpsell = searchParams.get('upsell') === 'true';
+  const [hasUpsell, setHasUpsell] = useState(false);
+
+  useEffect(() => {
+    const upsellParam = searchParams.get('upsell');
+    setHasUpsell(upsellParam === 'true');
+    
+    // Nettoyer complètement le localStorage une fois sur la page de succès
+    localStorage.removeItem('prospectData');
+    localStorage.removeItem('onboardingStep');
+    localStorage.removeItem('paymentData');
+    
+    // Nettoyer toutes les clés qui commencent par 'onboarding' ou 'prospect'
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.startsWith('onboarding') || key.startsWith('prospect'))) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    
+    console.log('🧹 Toutes les données d\'onboarding supprimées du localStorage');
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen bg-gray-50">

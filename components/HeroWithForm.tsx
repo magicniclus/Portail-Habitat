@@ -20,6 +20,8 @@ export default function HeroWithForm() {
     firstName: "",
     lastName: "",
     email: "",
+    phone: "",
+    postalCode: "",
     profession: "",
     acceptedTerms: false
   });
@@ -34,6 +36,8 @@ export default function HeroWithForm() {
           firstName: parsedData.firstName || "",
           lastName: parsedData.lastName || "",
           email: parsedData.email || "",
+          phone: parsedData.phone || "",
+          postalCode: parsedData.postalCode || "",
           profession: parsedData.profession || "",
           acceptedTerms: false // Toujours demander de re-accepter les CGV
         });
@@ -64,6 +68,8 @@ export default function HeroWithForm() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
+        phone: formData.phone,
+        postalCode: formData.postalCode,
         profession: formData.profession,
         funnelStep: "step1",
         createdAt: serverTimestamp(),
@@ -79,6 +85,8 @@ export default function HeroWithForm() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
+        phone: formData.phone,
+        postalCode: formData.postalCode,
         profession: formData.profession,
         funnelStep: "step1",
         step: "1",
@@ -93,6 +101,8 @@ export default function HeroWithForm() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
+        phone: formData.phone,
+        postalCode: formData.postalCode,
         profession: formData.profession,
         step: "1"
       });
@@ -108,6 +118,8 @@ export default function HeroWithForm() {
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
+        phone: formData.phone,
+        postalCode: formData.postalCode,
         profession: formData.profession,
         step: "1"
       });
@@ -228,6 +240,33 @@ export default function HeroWithForm() {
                       onChange={(e) => setFormData({...formData, email: e.target.value})}
                       required
                     />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Téléphone</Label>
+                      <Input 
+                        id="phone" 
+                        type="tel" 
+                        placeholder="06 12 34 56 78" 
+                        value={formData.phone}
+                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="postalCode">Code postal</Label>
+                      <Input 
+                        id="postalCode" 
+                        type="text" 
+                        placeholder="75001" 
+                        maxLength={5}
+                        pattern="[0-9]{5}"
+                        value={formData.postalCode}
+                        onChange={(e) => setFormData({...formData, postalCode: e.target.value})}
+                        required
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-2">
