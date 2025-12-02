@@ -31,4 +31,6 @@ trigger: always_on
 
 10. Utilise dans chaque page le footer et la nav, sauf cas spécifique. 
 
+11. Pour les mail utilise toujours sendgrid.
+
 Ces règles sont PRIORITAIRES sur tout le reste.
