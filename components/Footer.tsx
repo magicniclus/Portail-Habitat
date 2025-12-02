@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -6,7 +7,13 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Portail Habitat</h3>
+            <Image
+              src="/logo.png"
+              alt="Portail Habitat"
+              width={200}
+              height={80}
+              className="h-16 w-auto mb-4 brightness-0 invert"
+            />
             <p className="text-gray-400">
               La plateforme de référence pour vos projets habitat
             </p>

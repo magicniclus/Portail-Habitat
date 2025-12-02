@@ -48,7 +48,8 @@ artisans
     ├── coverUrl
     ├── photos []
     ├── hasPremiumSite (true/false)
-    ├── sitePricePaid (0 | 69 | 129)
+    ├── monthlySubscriptionPrice (int)
+    ├── sitePricePaid (0 | 69 | 299)
     ├── subscriptionStatus ("active" | "canceled" | "past_due" | "trialing")
     ├── stripeSubscriptionId
     ├── currentPeriodEnd
@@ -134,3 +135,18 @@ stats
     ├── searchesToday
     ├── demandsLast30d
     ├── updatedAt
+
+subscriptions (collection - pour tracking des abonnements)
+└── {subscriptionId}
+    ├── artisanId (ref → artisans/{artisanId})
+    ├── userId (ref → users/{userId})
+    ├── monthlyPrice (int) // 89, 129, etc.
+    ├── status ("active" | "canceled" | "past_due" | "trialing")
+    ├── stripeSubscriptionId
+    ├── stripePriceId
+    ├── currentPeriodStart
+    ├── currentPeriodEnd
+    ├── canceledAt (timestamp | null)
+    ├── cancelReason (string | null)
+    ├── createdAt
+    └── updatedAt

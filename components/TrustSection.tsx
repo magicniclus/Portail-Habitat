@@ -56,7 +56,7 @@ export default function TrustSection() {
   };
 
   return (
-    <section className="py-16 bg-white border-t border-gray-100">
+    <section className="py-16  bg-gray-50 border-t border-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Layout principal : texte à gauche, cards à droite */}

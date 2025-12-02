@@ -47,7 +47,8 @@ export default function HeroWithForm() {
     "Votre **page artisan dédiée**, optimisée **Google local**",
     "**Priorité** sur « **plombier + ville** », « **peintre + ville** », etc.",
     "**3 à 6 demandes par mois** pour la plupart des artisans",
-    "**1 demande garantie** ou le mois est **gratuit**"
+    "**1 demande garantie** ou le mois est **gratuit**",
+    "**Inclus** : une **application mobile dédiée** pour recevoir vos demandes en temps réel"
   ];
 
   // Fonction de soumission du formulaire
@@ -313,7 +314,7 @@ export default function HeroWithForm() {
                   </Button>
 
                   <p className="text-xs text-gray-500 text-center">
-                    3200 artisans • + 64000 projets/mois • Activation immédiate
+                    <b>+ 3200</b> artisans • <b>+ 64000</b> projets/mois • Activation immédiate
                   </p>
                 </form>
               </CardContent>

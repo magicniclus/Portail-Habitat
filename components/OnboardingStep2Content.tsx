@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { MapPin, Search, Users, CheckCircle } from "lucide-react";
+import { MapPin, Search, Users, CheckCircle, Navigation, MousePointer } from "lucide-react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import MapboxMap from "@/components/MapboxMap";
@@ -20,7 +20,7 @@ interface ProspectData {
   step: string;
   selectedCity?: string;
   coordinates?: { lat: number; lng: number };
-  radius?: number;
+  selectedZoneRadius?: number;
 }
 
 export default function OnboardingStep2Content() {
@@ -140,7 +140,7 @@ export default function OnboardingStep2Content() {
         const prospectRef = doc(db, "prospects", prospectData.prospectId);
         await updateDoc(prospectRef, {
           selectedCity,
-          radius: selectedRadius,
+          selectedZoneRadius: selectedRadius,
           coordinates: prospectData.coordinates,
           step: "3",
           updatedAt: serverTimestamp()
@@ -151,7 +151,7 @@ export default function OnboardingStep2Content() {
       const completeData = {
         ...prospectData,
         selectedCity,
-        radius: selectedRadius,
+        selectedZoneRadius: selectedRadius,
         coordinates: prospectData.coordinates,
         step: "3"
       };
@@ -165,7 +165,7 @@ export default function OnboardingStep2Content() {
         email: prospectData.email,
         profession: prospectData.profession,
         city: selectedCity,
-        radius: selectedRadius.toString(),
+        selectedZoneRadius: selectedRadius.toString(),
         ...(prospectData.coordinates && {
           lat: prospectData.coordinates.lat.toString(),
           lng: prospectData.coordinates.lng.toString()
@@ -183,7 +183,7 @@ export default function OnboardingStep2Content() {
         email: prospectData.email,
         profession: prospectData.profession,
         city: selectedCity,
-        radius: selectedRadius.toString(),
+        selectedZoneRadius: selectedRadius.toString(),
         ...(prospectData.coordinates && {
           lat: prospectData.coordinates.lat.toString(),
           lng: prospectData.coordinates.lng.toString()
@@ -210,6 +210,8 @@ export default function OnboardingStep2Content() {
   };
 
   return (
+    <>
+    
     <div className="h-screen bg-gray-50 flex flex-col lg:min-h-screen">
       {/* Header */}
       <header className="bg-white border-b shadow-sm flex-shrink-0">
@@ -373,9 +375,9 @@ export default function OnboardingStep2Content() {
                     {/* Ligne dynamique */}
                     <div className="mb-8 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
                       <div className="flex items-center space-x-2">
-                        <MapPin className="h-5 w-5 text-blue-600" />
+                        <MapPin className="w-8 h-8 flex-shrink-0 text-blue-600" />
                         <span className="font-semibold text-gray-900">
-                          {selectedCity || "Sélectionnez une ville"} – {getProfessionLabel(profession)}
+                          Choisissez votre zone d'intervention – {getProfessionLabel(profession)}
                         </span>
                       </div>
                     </div>
@@ -385,7 +387,7 @@ export default function OnboardingStep2Content() {
                       {selectedCity ? (
                         <>
                           <div className="flex items-center space-x-3">
-                            <Search className="h-6 w-6 text-orange-600" />
+                            <MousePointer className="w-8 h-8 flex-shrink-0 text-blue-600" />
                             <span className="text-lg text-gray-700">
                               {isLoadingStats ? (
                                 <>
@@ -396,21 +398,23 @@ export default function OnboardingStep2Content() {
                                 </>
                               ) : (
                                 <>
-                                  <strong>~{estimatedSearches} recherches</strong> estimées ces dernières 24h pour {getProfessionLabel(profession).toLowerCase()} à {selectedCity}
+                                  <strong>Environ {estimatedSearches} recherches</strong> ces dernières 24h pour un {getProfessionLabel(profession).toLowerCase()} sur {selectedCity}
+                                  <br />
+                                  <span className="text-sm text-green-600 font-medium">Zone très active en ce moment</span>
                                 </>
                               )}
                             </span>
                           </div>
 
                           <div className="flex items-center space-x-3">
-                            <Users className="h-6 w-6 text-blue-600" />
+                            <CheckCircle className="w-8 h-8 flex-shrink-0 text-green-600" />
                             <span className="text-lg text-gray-700">
-                              <strong>1 demande garantie par mois</strong> • En moyenne nos artisans en ont entre 4 et 6
+                              <strong>1 demande minimum garantie / mois</strong> • La plupart de nos artisans en reçoivent entre 4 et 6
                             </span>
                           </div>
                           
                           <div className="flex items-center space-x-3">
-                            <CheckCircle className="h-6 w-6 text-green-600" />
+                            <CheckCircle className="w-8 h-8 flex-shrink-0 text-green-600" />
                             <span className="text-lg text-gray-700">
                               <strong>Disponible immédiatement</strong>
                             </span>
@@ -437,16 +441,14 @@ export default function OnboardingStep2Content() {
                       RÉSERVER CETTE ZONE →
                     </Button>
 
-                    <p className="text-sm text-gray-500 text-center">
-                      +3200 artisans • +64000 demandes/mois • 1 demande garantie chaque mois
+                    <p className="text-xs text-gray-400 text-center">
+                      Zone disponible aujourd'hui • Plus de 64 000 demandes mensuelles sur le portail
                     </p>
 
                     {/* Message d'anti-vente */}
                     <div className="border-t pt-6">
                       <p className="text-xs text-gray-400 leading-relaxed">
-                        <strong>Transparence :</strong> Les chiffres présentés sont basés sur l'activité réelle des dernières 24h sur nos différents sites partenaires. 
-                        Ces données ne représentent qu'une partie de la demande totale du marché et peuvent varier selon la saison, 
-                        les événements locaux et l'évolution du secteur. Nous privilégions la transparence à la sur-promesse.
+                        <strong>Transparence :</strong> Données basées sur l'activité réelle des dernières 24h. Elles peuvent varier selon la saison, les tendances locales et la demande du secteur. Nous privilégions la transparence à la sur-promesse.
                       </p>
                     </div>
                   </div>
@@ -458,6 +460,7 @@ export default function OnboardingStep2Content() {
       </div>
 
       {/* Footer desktop seulement */}
+    </div>
       <footer className="hidden lg:block bg-gray-900 text-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row justify-between items-center">
@@ -480,6 +483,6 @@ export default function OnboardingStep2Content() {
           </div>
         </div>
       </footer>
-    </div>
+    </>
   );
 }
