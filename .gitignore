@@ -39,3 +39,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+portail-habitat-2ac32-firebase-adminsdk-29y7j-f35d49e8df.json
