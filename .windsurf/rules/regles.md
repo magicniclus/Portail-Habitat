@@ -33,4 +33,17 @@ trigger: always_on
 
 11. Pour les mail utilise toujours sendgrid.
 
+12. Pour les gestion de la base de donnée d'image utilise toujours storage de firebase et réfère toi toujours au fichier .windsurf/STORAGE.md 
+
+14. CHARGEMENT UNIFORME OBLIGATOIRE :
+
+Utilise TOUJOURS Loader2 de lucide-react pour tous les états de chargement
+JAMAIS de PageSpinner, SpinnerOverlay ou autres composants personnalisés
+Format standard : <Loader2 className="h-X w-X animate-spin" /> avec texte optionnel
+Pour les images : utilise TOUJOURS le composant Skeleton de shadcn/ui
+Skeleton avec onLoad/onError pour masquer le skeleton une fois l'image chargée
+Style cohérent : Loader2 + texte pour les pages, Skeleton pour les images
+
+14. En cas d'erreur jsx ne refais jamais un fichier corrige l'originale 
+
 Ces règles sont PRIORITAIRES sur tout le reste.

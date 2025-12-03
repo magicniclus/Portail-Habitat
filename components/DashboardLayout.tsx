@@ -34,9 +34,12 @@ import {
   User,
   LogOut,
   ChevronUp,
-  BarChart3,
   MessageSquare,
-  CreditCard,
+  Mail,
+  Globe,
+  HelpCircle,
+  IdCard,
+  Star,
 } from "lucide-react";
 
 const navigation = [
@@ -48,45 +51,35 @@ const navigation = [
         url: "/dashboard",
         icon: Home,
       },
-      {
-        title: "Statistiques",
-        url: "/dashboard/stats",
-        icon: BarChart3,
-      },
     ],
   },
   {
     title: "Gestion",
     items: [
       {
-        title: "Leads",
-        url: "/dashboard/leads",
-        icon: Users,
+        title: "Mes demandes",
+        url: "/dashboard/demandes",
+        icon: Mail,
       },
       {
-        title: "Devis",
-        url: "/dashboard/devis",
-        icon: FileText,
+        title: "Ma fiche",
+        url: "/dashboard/fiche",
+        icon: IdCard,
       },
       {
-        title: "Chantiers",
-        url: "/dashboard/chantiers",
-        icon: Calendar,
+        title: "Mon site",
+        url: "/dashboard/site",
+        icon: Globe,
       },
       {
-        title: "Messages",
-        url: "/dashboard/messages",
-        icon: MessageSquare,
+        title: "Avis",
+        url: "/dashboard/avis",
+        icon: Star,
       },
-    ],
-  },
-  {
-    title: "Finances",
-    items: [
       {
-        title: "Facturation",
-        url: "/dashboard/facturation",
-        icon: CreditCard,
+        title: "Contact & support",
+        url: "/dashboard/support",
+        icon: HelpCircle,
       },
     ],
   },
@@ -113,7 +106,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   height={40}
                   className="h-8 w-auto"
                 />
-                <span className="text-sm font-semibold text-sidebar-primary">Pro</span>
               </Link>
             </div>
           </SidebarHeader>
@@ -193,12 +185,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <Separator orientation="vertical" className="mr-2 h-4" />
             <div className="flex flex-1 items-center justify-between">
               <h1 className="text-lg font-semibold">Dashboard Pro</h1>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Paramètres
-                </Button>
-              </div>
             </div>
           </header>
 

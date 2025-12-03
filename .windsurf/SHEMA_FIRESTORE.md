@@ -59,6 +59,9 @@ artisans
     ├── reviewCount
     ├── hasSocialFeed
     ├── publishedPostsCount
+    ├── averageQuoteMin (int)    ← prix minimum d'un devis en euros
+    ├── averageQuoteMax (int)    ← prix maximum d'un devis en euros
+    ├── certifications []        ← certifications et labels (ex: ["RGE", "Qualibat", "Garantie décennale"])
     ├── createdAt
     ├── updatedAt
     └── isPriority (true/false)
@@ -84,21 +87,28 @@ artisans
             ├── createdAt
             └── displayed
 
-    └── posts (sous-collection – chantiers publiés)
-        └── {postId}
-            ├── title
-            ├── description
-            ├── city
-            ├── profession
-            ├── projectType
-            ├── beforeAfter []
-            ├── otherPhotos []
-            ├── isPublished
-            ├── likesCount
-            ├── commentsCount
-            ├── sharesCount
-            ├── createdAt
-            └── updatedAt
+    └── posts/                     ← tous les chantiers publiés
+        └── {postId}/
+            ├── title                string
+            ├── description          string
+            ├── city                 string
+            ├── projectType          string ex: "Rénovation salle de bain"
+            ├── isPublished          boolean
+            ├── isPubliclyVisible    boolean  ← validation artisan pour affichage public
+            ├── createdAt            timestamp
+            ├── photos               array<string>   ← URLs dans l'ordre choisi par l'artisan
+            ├── likesCount           number
+            ├── commentsCount        number
+
+            └── likes/               ← sous-collection (facultatif si tu veux savoir qui a liké)
+                └── {likeId} → userId ou IP + timestamp
+
+            └── comments/            ← sous-collection
+                └── {commentId}
+                    ├── authorName   string (anonyme ou prénom)
+                    ├── text         string
+                    ├── createdAt    timestamp
+                    ├── isApproved   boolean (modération si besoin)
 
 payments
 └── {paymentId}
