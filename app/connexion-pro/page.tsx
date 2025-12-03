@@ -23,6 +23,7 @@ export default function ConnexionPro() {
       linkHref="/devenir-pro"
       linkLabel="Pas encore professionnel ?"
       colorScheme="green"
+      isProfessional={true}
     />
   );
 }
