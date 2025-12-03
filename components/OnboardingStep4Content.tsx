@@ -297,7 +297,7 @@ export default function OnboardingStep4Content() {
       </div>
 
       {/* Layout principal Step4 */}
-      <div className="max-w-6xl mx-auto px-4 py-10 md:py-12 lg:py-16 grid gap-10 lg:grid-cols-2">
+      <div className="max-w-6xl mx-auto px-4 py-10 md:py-16 lg:py-20 grid gap-10 lg:grid-cols-2">
         
         {/* Colonne gauche : contenu upsell */}
         <div className="space-y-6">
@@ -414,8 +414,8 @@ export default function OnboardingStep4Content() {
               </div>
             </div>
 
-            {/* Date d'expiration + CVV */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* Date d'expiration + CVV - responsive */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="expiryDate" className="text-base font-medium">Date d'expiration</Label>
                 <Input
