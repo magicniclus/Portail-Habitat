@@ -288,55 +288,49 @@ export default function OnboardingStep4Content() {
 
   return (
     <div className="bg-white min-h-screen">
-      {/* Hero section */}
-      <section className="w-full bg-[#FFF5EC] border-b border-orange-100 py-10">
-        <div className="max-w-5xl mx-auto text-center px-4">
-          <p className="text-3xl md:text-4xl font-semibold text-green-600 mb-2">
-            🎉 Votre inscription est confirmée !
-          </p>
-          <p className="text-2xl md:text-3xl font-semibold text-orange-700 leading-tight">
-            🎁 Offre spéciale réservée à votre inscription — disponible uniquement maintenant
-          </p>
-        </div>
-      </section>
+      {/* Header très visible, plein pot, façon "UPSELL" */}
+      <div className="w-full text-center py-8 bg-[#FFF7EB] border-b border-orange-300">
+        <h1 className="text-4xl font-extrabold text-green-600 mb-4">🎉 Votre inscription est confirmée !</h1>
+        <h2 className="text-3xl font-bold text-orange-700">
+          🎁 Offre spéciale réservée à votre inscription — disponible uniquement maintenant
+        </h2>
+      </div>
 
-      {/* Contenu principal en deux colonnes */}
-      <section className="max-w-6xl mx-auto py-10 px-4 grid md:grid-cols-2 gap-8">
+      {/* Layout principal Step4 */}
+      <div className="max-w-6xl mx-auto px-4 py-10 md:py-12 lg:py-16 grid gap-10 lg:grid-cols-2">
         
-        {/* Colonne gauche - Contenu de l'upsell */}
-        <div>
-          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-2">
-            Obtenez maintenant votre site professionnel pour attirer encore plus de clients !
-          </h1>
+        {/* Colonne gauche : contenu upsell */}
+        <div className="space-y-6">
+          {/* Titre principal plus commercial */}
+          <h2 className="text-3xl font-bold text-gray-900 leading-tight">
+            Obtenez maintenant votre site professionnel complet<br />
+            <span className="text-green-600">pour attirer encore plus de clients</span>
+          </h2>
 
-          <p className="text-sm md:text-base text-slate-600 mb-5">
-            Option facultative : cette offre ne fait pas partie de votre abonnement.
-            Elle vous permet d'obtenir un site professionnel complet pour un tarif
-            exceptionnel réservé à votre inscription, afin d'améliorer votre visibilité
-            sur Google Local et en dehors de Portail Habitat.
+          {/* Bloc de texte d'introduction modifié */}
+          <p className="text-gray-700 leading-relaxed">
+            Option facultative : cette offre ne fait pas partie de votre abonnement Portail Habitat.
+            Elle vous permet d'obtenir un <strong>site professionnel complet</strong> au format vitrine,
+            <strong>visible sur Google</strong> et en dehors de Portail Habitat, pour un tarif exceptionnel
+            réservé à votre inscription. Ce site vous aide à améliorer votre visibilité, votre crédibilité
+            et à recevoir encore plus de demandes.
           </p>
 
-          {/* Bandeau prix */}
-          <div className="mb-5 rounded-lg bg-green-50 border border-green-100 px-4 py-3 inline-flex items-center gap-2">
-            <span className="text-lg font-semibold text-green-700">
-              69€ seulement
-            </span>
-            <span className="text-sm text-slate-400 line-through">
-              au lieu de 299€
-            </span>
-            <span className="text-xs font-medium text-green-700 uppercase tracking-wide">
-              Offre spéciale inscription
-            </span>
+          {/* Bloc prix — "deal ultime" */}
+          <div className="inline-flex items-center gap-3 px-5 py-3 rounded-lg bg-green-50 border border-green-300">
+            <span className="text-xl font-bold text-green-700">69€ seulement</span>
+            <span className="line-through text-gray-400 text-sm">299€</span>
+            <span className="text-green-600 text-sm font-semibold">— Offre spéciale inscription</span>
           </div>
 
-          {/* Image du site */}
-          <div className="mb-4 rounded-xl border border-slate-200 overflow-hidden shadow-sm bg-white">
+          {/* Preview du site améliorée */}
+          <div className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <video 
               autoPlay 
               muted 
               loop 
               playsInline
-              className="w-full aspect-video object-cover"
+              className="w-full h-auto"
             >
               <source src="/video/ecran.mp4" type="video/mp4" />
               <div className="flex items-center justify-center h-full bg-gray-200">
@@ -344,43 +338,61 @@ export default function OnboardingStep4Content() {
               </div>
             </video>
           </div>
-
-          <p className="text-xs text-slate-500 mb-6">
-            Aperçu du type de site que vous allez recevoir (adapté à votre métier et votre secteur).
+          
+          {/* Caption amélioré */}
+          <p className="text-center text-gray-500 text-xs mt-2">
+            Aperçu du type de site que vous allez recevoir (adapté à votre métier et votre secteur)
           </p>
 
-          {/* Liste « Votre site inclut » */}
-          <h2 className="text-sm font-semibold text-slate-900 mb-2">
-            Votre site inclut :
-          </h2>
+          {/* Liste des bénéfices avec checkmarks plus puissants */}
+          <div className="mt-6 space-y-3">
+            <h2 className="text-sm font-semibold text-slate-900">
+              Votre site inclut&nbsp;:
+            </h2>
 
-          <ul className="space-y-1.5 text-sm text-slate-700 mb-4">
-            <li>✅ Nom de domaine .fr offert (valeur 12€/an)</li>
-            <li>✅ Site professionnel optimisé Google Local — visible dans votre zone</li>
-            <li>✅ Image sérieuse et crédible pour attirer plus de demandes</li>
-            <li>✅ Site livré en 72h, prêt à l'emploi</li>
-            <li>✅ Compatible mobile & ultra rapide</li>
-          </ul>
+            <ul className="space-y-2 mt-4">
+              <li className="flex items-start gap-2">
+                <span className="text-green-600 text-lg">✔</span>
+                Nom de domaine .fr offert (valeur 12€/an)
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-600 text-lg">✔</span>
+                Site optimisé Google Local — visible dans votre zone
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-600 text-lg">✔</span>
+                Image professionnelle et crédible pour attirer plus de demandes
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-600 text-lg">✔</span>
+                Site livré en 72h, prêt à l'emploi
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-green-600 text-lg">✔</span>
+                Compatible mobile & ultra rapide
+              </li>
+            </ul>
+          </div>
 
-          {/* Mention sur le lien avec l'abonnement */}
-          <p className="text-xs text-slate-500 italic mb-4">
-            Ce site reste actif tant que votre abonnement Portail Habitat est en cours.
+          {/* Avertissement "offre limitée" en bas */}
+          <p className="text-orange-600 text-sm font-semibold mt-4">
+            ⚠ Offre réservée uniquement à votre inscription — cette page ne sera plus proposée plus tard.
+          </p>
+           {/* Phrase indispensable sous le prix */}
+          <p className="text-xs mt-2 text-gray-500">
+            Ce site reste actif tant que votre abonnement Portail Habitat est en cours.  
             En cas de résiliation, le site pourra être désactivé.
-          </p>
-
-          {/* Avertissement bas de colonne */}
-          <p className="text-xs text-orange-600 font-medium">
-            ⚠️ Offre réservée uniquement à votre inscription — cette page ne sera plus
-            proposée plus tard.
           </p>
         </div>
 
-        {/* Colonne droite - Paiement sécurisé */}
-        <div className="bg-white border border-slate-200 rounded-xl p-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <Lock className="h-6 w-6 text-green-600" />
-            <h2 className="text-2xl font-bold text-slate-900">Paiement sécurisé</h2>
-          </div>
+        {/* Colonne droite : paiement sécurisé */}
+        <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6 md:p-7 space-y-6">
+          <h2 className="text-lg md:text-xl font-semibold text-slate-900 flex items-center gap-2">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+              🔒
+            </span>
+            <span>Paiement sécurisé</span>
+          </h2>
 
           <form onSubmit={handlePayment} className="space-y-6">
             {/* Numéro de carte */}
@@ -457,25 +469,19 @@ export default function OnboardingStep4Content() {
               />
             </div>
 
-            {/* Bouton principal */}
-            <Button
+            {/* Style du bouton "Obtenir mon site – 69€" */}
+            <button
               type="submit"
               disabled={isProcessing}
-              className="w-full text-xl py-6 font-semibold bg-green-600 hover:bg-green-700 text-white flex items-center justify-center space-x-3"
+              className="bg-green-600 hover:bg-green-700 text-white w-full py-4 text-lg font-semibold rounded-md shadow-md transition"
             >
-              <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Obtenir mon site – 69 €"}</span>
-              {!isProcessing && <ArrowRight className="h-6 w-6" />}
-            </Button>
+              {isProcessing ? "TRAITEMENT EN COURS..." : "Obtenir mon site – 69 €"}
+            </button>
 
-            {/* Texte rassurant */}
-            <div className="text-center mt-2 space-y-1">
-              <p className="text-xs text-slate-500">
-                Paiement unique — aucun abonnement ajouté à votre formule.
-              </p>
-              <p className="text-xs text-slate-500">
-                Livré sous 72h — garantie satisfaction.
-              </p>
-            </div>
+            {/* Mini-message sous le bouton Stripe */}
+            <p className="text-center text-gray-400 text-xs mt-3">
+              Option facultative — aucun abonnement supplémentaire n'est ajouté à votre formule.
+            </p>
 
             {/* Badges sécurité */}
             <PaymentSecurityBadges />
@@ -492,7 +498,7 @@ export default function OnboardingStep4Content() {
           </form>
         </div>
 
-      </section>
+      </div>
     </div>
   );
 }
