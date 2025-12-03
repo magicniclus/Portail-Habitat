@@ -1,58 +1,58 @@
-import { Metadata } from "next";
+"use client";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Plus, Eye, MessageSquare, Phone, Mail } from "lucide-react";
+import { Search, Filter, Plus, Eye, MessageSquare, Phone, Mail, Loader2 } from "lucide-react";
+import { collection, query, orderBy, onSnapshot, where } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase';
 
-export const metadata: Metadata = {
-  title: "Mes demandes - Dashboard Pro - Portail Habitat",
-  description: "Gérez toutes vos demandes et communications clients.",
-  robots: {
-    index: false,
-    follow: false,
-  },
+// Interface pour les leads
+interface Lead {
+  id: string;
+  clientName: string;
+  clientPhone: string;
+  clientEmail: string;
+  projectType: string;
+  city: string;
+  budget: string;
+  source: string;
+  status: string;
+  createdAt: any;
+  notes: string;
+}
+
+// Fonction pour mapper les statuts Firestore vers les statuts de l'interface
+const mapFirestoreStatus = (firestoreStatus: string) => {
+  const statusMap: { [key: string]: string } = {
+    'new': 'nouveau',
+    'contacted': 'en_cours',
+    'converted': 'repondu',
+    'lost': 'ferme'
+  };
+  return statusMap[firestoreStatus] || 'nouveau';
 };
 
-const demandes = [
-  {
-    id: 1,
-    type: "devis",
-    client: "Marie Dubois",
-    email: "marie.dubois@email.com",
-    phone: "06 12 34 56 78",
-    sujet: "Demande de devis - Rénovation salle de bain",
-    message: "Bonjour, je souhaiterais obtenir un devis pour la rénovation complète de ma salle de bain...",
-    status: "nouveau",
-    date: "2024-12-03",
-    priority: "high",
-  },
-  {
-    id: 2,
-    type: "information",
-    client: "Pierre Martin",
-    email: "p.martin@email.com",
-    phone: "06 98 76 54 32",
-    sujet: "Question sur vos services électricité",
-    message: "Bonjour, j'aimerais savoir si vous intervenez dans le 92 pour des installations électriques...",
-    status: "repondu",
-    date: "2024-12-02",
-    priority: "medium",
-  },
-  {
-    id: 3,
-    type: "urgence",
-    client: "Sophie Laurent",
-    email: "sophie.l@email.com",
-    phone: "06 11 22 33 44",
-    sujet: "Urgence plomberie - Fuite d'eau",
-    message: "Bonjour, j'ai une fuite d'eau importante dans ma cuisine, pouvez-vous intervenir rapidement ?",
-    status: "en_cours",
-    date: "2024-12-01",
-    priority: "high",
-  },
-];
+// Fonction pour déterminer le type basé sur les données
+const determineType = (lead: Lead) => {
+  const notes = lead.notes?.toLowerCase() || '';
+  const projectType = lead.projectType?.toLowerCase() || '';
+  
+  if (notes.includes('urgent') || projectType.includes('urgent')) {
+    return 'urgence';
+  }
+  if (notes.includes('devis') || projectType.includes('devis')) {
+    return 'devis';
+  }
+  if (notes.includes('information') || notes.includes('question')) {
+    return 'information';
+  }
+  return 'devis'; // Par défaut
+};
 
 const getStatusBadge = (status: string) => {
   const statusConfig = {
@@ -87,6 +87,102 @@ const getTypeBadge = (type: string) => {
 };
 
 export default function DemandesPage() {
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [artisanId, setArtisanId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+
+  // Récupérer l'ID de l'artisan connecté
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          // Récupérer l'artisan correspondant à cet utilisateur
+          const artisansRef = collection(db, 'artisans');
+          const q = query(artisansRef, where('userId', '==', user.uid));
+          
+          const unsubscribeArtisan = onSnapshot(q, (querySnapshot) => {
+            if (!querySnapshot.empty) {
+              const artisanDoc = querySnapshot.docs[0];
+              setArtisanId(artisanDoc.id);
+            }
+          });
+
+          return () => unsubscribeArtisan();
+        } catch (error) {
+          console.error('Erreur lors de la récupération de l\'artisan:', error);
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Récupérer les leads de l'artisan
+  useEffect(() => {
+    if (!artisanId) return;
+
+    const leadsRef = collection(db, 'artisans', artisanId, 'leads');
+    const q = query(leadsRef, orderBy('createdAt', 'desc'));
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const leadsData: Lead[] = [];
+      querySnapshot.forEach((doc) => {
+        leadsData.push({
+          id: doc.id,
+          ...doc.data()
+        } as Lead);
+      });
+      setLeads(leadsData);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [artisanId]);
+
+  // Filtrer les leads
+  const filteredLeads = leads.filter(lead => {
+    const matchesSearch = searchTerm === "" || 
+      lead.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.clientEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.projectType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.notes.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const mappedStatus = mapFirestoreStatus(lead.status);
+    const matchesStatus = statusFilter === "all" || mappedStatus === statusFilter;
+    
+    const leadType = determineType(lead);
+    const matchesType = typeFilter === "all" || leadType === typeFilter;
+
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
+  const formatDate = (date: any) => {
+    if (!date) return 'Date inconnue';
+    const dateObj = date.toDate ? date.toDate() : new Date(date);
+    return new Intl.DateTimeFormat('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(dateObj);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Chargement de vos demandes...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -111,7 +207,7 @@ export default function DemandesPage() {
             <Mail className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{demandes.length}</div>
+            <div className="text-2xl font-bold">{leads.length}</div>
             <p className="text-xs text-muted-foreground">
               Ce mois
             </p>
@@ -123,7 +219,7 @@ export default function DemandesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {demandes.filter(d => d.status === 'nouveau').length}
+              {leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'nouveau').length}
             </div>
             <p className="text-xs text-muted-foreground">
               À traiter
@@ -136,7 +232,7 @@ export default function DemandesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {demandes.filter(d => d.status === 'en_cours').length}
+              {leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'en_cours').length}
             </div>
             <p className="text-xs text-muted-foreground">
               En traitement
@@ -149,7 +245,7 @@ export default function DemandesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {demandes.filter(d => d.type === 'urgence').length}
+              {leads.filter((lead: Lead) => determineType(lead) === 'urgence').length}
             </div>
             <p className="text-xs text-muted-foreground">
               Priorité haute
@@ -171,10 +267,12 @@ export default function DemandesPage() {
                 <Input
                   placeholder="Rechercher par client, sujet ou message..."
                   className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
             </div>
-            <Select>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
@@ -186,7 +284,7 @@ export default function DemandesPage() {
                 <SelectItem value="suivi">Suivi</SelectItem>
               </SelectContent>
             </Select>
-            <Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Statut" />
               </SelectTrigger>
@@ -212,39 +310,61 @@ export default function DemandesPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {demandes.map((demande) => (
-              <div key={demande.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                <div className="flex items-start space-x-4 flex-1">
-                  <div className="space-y-2 flex-1">
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-medium">{demande.client}</h3>
-                      {getTypeBadge(demande.type)}
-                      {getStatusBadge(demande.status)}
+            {filteredLeads.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Aucune demande trouvée.</p>
+              </div>
+            ) : (
+              filteredLeads.map((lead: Lead) => {
+                const mappedStatus = mapFirestoreStatus(lead.status);
+                const leadType = determineType(lead);
+                
+                return (
+                  <div key={lead.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-start space-x-4 flex-1">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-medium">{lead.clientName}</h3>
+                          {getTypeBadge(leadType)}
+                          {getStatusBadge(mappedStatus)}
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground">{lead.projectType}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{lead.notes || 'Aucune description fournie'}</p>
+                        <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                          <span>{lead.clientEmail}</span>
+                          <span>•</span>
+                          <span>{lead.clientPhone}</span>
+                          <span>•</span>
+                          <span>{formatDate(lead.createdAt)}</span>
+                          {lead.city && (
+                            <>
+                              <span>•</span>
+                              <span>{lead.city}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground">{demande.sujet}</p>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{demande.message}</p>
-                    <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                      <span>{demande.email}</span>
-                      <span>•</span>
-                      <span>{demande.phone}</span>
-                      <span>•</span>
-                      <span>{demande.date}</span>
+                    <div className="flex items-center space-x-2">
+                      <Button variant="ghost" size="sm" title="Voir les détails">
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" title="Envoyer un message">
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        title="Appeler le client"
+                        onClick={() => window.open(`tel:${lead.clientPhone}`, '_self')}
+                      >
+                        <Phone className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <MessageSquare className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Phone className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+                );
+              })
+            )}
           </div>
         </CardContent>
       </Card>

@@ -287,475 +287,212 @@ export default function OnboardingStep4Content() {
   };
 
   return (
-    <div className="bg-gray-50">
-      {/* Banner offre exclusive - fixe au-dessus de tout */}
-      <div className="bg-gradient-to-r from-orange-50 to-red-50 border-b border-orange-100 py-3 fixed top-0 left-0 right-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-orange-800 font-medium flex items-center justify-center space-x-2">
-            <span className="text-lg">🎁</span>
-            <span>Offre spéciale réservée à votre inscription — disponible uniquement maintenant</span>
+    <div className="bg-white min-h-screen">
+      {/* Hero section */}
+      <section className="w-full bg-[#FFF5EC] border-b border-orange-100 py-10">
+        <div className="max-w-5xl mx-auto text-center px-4">
+          <p className="text-3xl md:text-4xl font-semibold text-green-600 mb-2">
+            🎉 Votre inscription est confirmée !
+          </p>
+          <p className="text-2xl md:text-3xl font-semibold text-orange-700 leading-tight">
+            🎁 Offre spéciale réservée à votre inscription — disponible uniquement maintenant
           </p>
         </div>
-      </div>
+      </section>
 
-      {/* Header identique à Step 3 */}
-      <header className="bg-white border-b shadow-sm" style={{ marginTop: '52px' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Image
-                src="/logo.png"
-                alt="Portail Habitat"
-                width={150}
-                height={60}
-                className="h-12 w-auto"
+      {/* Contenu principal en deux colonnes */}
+      <section className="max-w-6xl mx-auto py-10 px-4 grid md:grid-cols-2 gap-8">
+        
+        {/* Colonne gauche - Contenu de l'upsell */}
+        <div>
+          <h1 className="text-2xl md:text-3xl font-semibold text-slate-900 mb-2">
+            Obtenez maintenant votre site professionnel pour attirer encore plus de clients !
+          </h1>
+
+          <p className="text-sm md:text-base text-slate-600 mb-5">
+            Option facultative : cette offre ne fait pas partie de votre abonnement.
+            Elle vous permet d'obtenir un site professionnel complet pour un tarif
+            exceptionnel réservé à votre inscription, afin d'améliorer votre visibilité
+            sur Google Local et en dehors de Portail Habitat.
+          </p>
+
+          {/* Bandeau prix */}
+          <div className="mb-5 rounded-lg bg-green-50 border border-green-100 px-4 py-3 inline-flex items-center gap-2">
+            <span className="text-lg font-semibold text-green-700">
+              69€ seulement
+            </span>
+            <span className="text-sm text-slate-400 line-through">
+              au lieu de 299€
+            </span>
+            <span className="text-xs font-medium text-green-700 uppercase tracking-wide">
+              Offre spéciale inscription
+            </span>
+          </div>
+
+          {/* Image du site */}
+          <div className="mb-4 rounded-xl border border-slate-200 overflow-hidden shadow-sm bg-white">
+            <video 
+              autoPlay 
+              muted 
+              loop 
+              playsInline
+              className="w-full aspect-video object-cover"
+            >
+              <source src="/video/ecran.mp4" type="video/mp4" />
+              <div className="flex items-center justify-center h-full bg-gray-200">
+                <p className="text-gray-600">Aperçu : Site artisan professionnel</p>
+              </div>
+            </video>
+          </div>
+
+          <p className="text-xs text-slate-500 mb-6">
+            Aperçu du type de site que vous allez recevoir (adapté à votre métier et votre secteur).
+          </p>
+
+          {/* Liste « Votre site inclut » */}
+          <h2 className="text-sm font-semibold text-slate-900 mb-2">
+            Votre site inclut :
+          </h2>
+
+          <ul className="space-y-1.5 text-sm text-slate-700 mb-4">
+            <li>✅ Nom de domaine .fr offert (valeur 12€/an)</li>
+            <li>✅ Site professionnel optimisé Google Local — visible dans votre zone</li>
+            <li>✅ Image sérieuse et crédible pour attirer plus de demandes</li>
+            <li>✅ Site livré en 72h, prêt à l'emploi</li>
+            <li>✅ Compatible mobile & ultra rapide</li>
+          </ul>
+
+          {/* Mention sur le lien avec l'abonnement */}
+          <p className="text-xs text-slate-500 italic mb-4">
+            Ce site reste actif tant que votre abonnement Portail Habitat est en cours.
+            En cas de résiliation, le site pourra être désactivé.
+          </p>
+
+          {/* Avertissement bas de colonne */}
+          <p className="text-xs text-orange-600 font-medium">
+            ⚠️ Offre réservée uniquement à votre inscription — cette page ne sera plus
+            proposée plus tard.
+          </p>
+        </div>
+
+        {/* Colonne droite - Paiement sécurisé */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <Lock className="h-6 w-6 text-green-600" />
+            <h2 className="text-2xl font-bold text-slate-900">Paiement sécurisé</h2>
+          </div>
+
+          <form onSubmit={handlePayment} className="space-y-6">
+            {/* Numéro de carte */}
+            <div className="space-y-2">
+              <Label htmlFor="cardNumber" className="text-base font-medium">Numéro de carte</Label>
+              <div className="relative">
+                <Input
+                  id="cardNumber"
+                  placeholder="1234 5678 9012 3456"
+                  value={paymentData.cardNumber}
+                  onChange={(e) => setPaymentData({...paymentData, cardNumber: formatCardNumber(e.target.value)})}
+                  maxLength={19}
+                  className="text-lg py-4 px-4 pr-16 border-2"
+                  required
+                />
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  <CardLogo type={getCardType(paymentData.cardNumber)} className="h-7 w-11" />
+                </div>
+              </div>
+            </div>
+
+            {/* Date d'expiration + CVV */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="expiryDate" className="text-base font-medium">Date d'expiration</Label>
+                <Input
+                  id="expiryDate"
+                  placeholder="MM/AA"
+                  value={paymentData.expiryDate}
+                  onChange={(e) => setPaymentData({...paymentData, expiryDate: formatExpiryDate(e.target.value)})}
+                  maxLength={5}
+                  className="text-lg py-4 px-4 border-2"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cvv" className="text-base font-medium">CVV</Label>
+                <Input
+                  id="cvv"
+                  placeholder="123"
+                  value={paymentData.cvv}
+                  onChange={(e) => setPaymentData({...paymentData, cvv: e.target.value.replace(/\D/g, '').slice(0, 3)})}
+                  maxLength={3}
+                  className="text-lg py-4 px-4 border-2"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Nom sur la carte */}
+            <div className="space-y-2">
+              <Label htmlFor="cardholderName" className="text-base font-medium">Nom sur la carte</Label>
+              <Input
+                id="cardholderName"
+                placeholder="Prénom Nom"
+                value={paymentData.cardholderName}
+                onChange={(e) => setPaymentData({...paymentData, cardholderName: e.target.value})}
+                className="text-lg py-4 px-4 border-2"
+                required
               />
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">
-                {prospectData.firstName} {prospectData.lastName}
-              </p>
-              <p className="text-xs text-gray-500">{prospectData.email}</p>
+
+            {/* Code postal */}
+            <div className="space-y-2">
+              <Label htmlFor="postalCode" className="text-base font-medium">Code postal</Label>
+              <Input
+                id="postalCode"
+                placeholder="75000"
+                value={paymentData.postalCode}
+                onChange={(e) => setPaymentData({...paymentData, postalCode: e.target.value.replace(/\D/g, '').slice(0, 5)})}
+                maxLength={5}
+                className="text-lg py-4 px-4 border-2"
+                required
+              />
             </div>
-          </div>
+
+            {/* Bouton principal */}
+            <Button
+              type="submit"
+              disabled={isProcessing}
+              className="w-full text-xl py-6 font-semibold bg-green-600 hover:bg-green-700 text-white flex items-center justify-center space-x-3"
+            >
+              <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Obtenir mon site – 69 €"}</span>
+              {!isProcessing && <ArrowRight className="h-6 w-6" />}
+            </Button>
+
+            {/* Texte rassurant */}
+            <div className="text-center mt-2 space-y-1">
+              <p className="text-xs text-slate-500">
+                Paiement unique — aucun abonnement ajouté à votre formule.
+              </p>
+              <p className="text-xs text-slate-500">
+                Livré sous 72h — garantie satisfaction.
+              </p>
+            </div>
+
+            {/* Badges sécurité */}
+            <PaymentSecurityBadges />
+
+            {/* Lien de refus discret */}
+            <div className="mt-6 text-center">
+              <a 
+                href="/onboarding/success" 
+                className="text-sm hover:underline text-slate-400"
+              >
+                Non merci, je ne souhaite pas de site professionnel
+              </a>
+            </div>
+          </form>
         </div>
-      </header>
 
-      {/* Contenu principal */}
-      <main className="lg:min-h-[calc(100vh-170px)] bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          
-          {/* Layout mobile : 1 colonne */}
-          <div className="lg:hidden space-y-6">
-            
-            {/* Récapitulatif mobile */}
-            <Card className="bg-white border border-gray-200">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">Vous êtes bien inscrit sur Portail Habitat.</h2>
-                <p className="text-sm text-gray-600 mb-6">Ce site professionnel est une option facultative destinée à vous aider à recevoir encore plus de demandes et améliorer votre visibilité Google Local.</p>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
-                  <p className="text-xs text-green-800 font-medium">
-                    <span className="text-base font-bold">69€ seulement</span> <span className="line-through text-gray-500">au lieu de 299€</span> - Offre spéciale inscription
-                  </p>
-                </div>
-                
-                {/* Vidéo du site livré */}
-                <div className="mb-6">
-                  <div className="relative w-full rounded-lg shadow-md overflow-hidden">
-                    <video 
-                      autoPlay 
-                      muted 
-                      loop 
-                      playsInline
-                      className="w-full aspect-video object-cover"
-                    >
-                      <source src="/video/ecran.mp4" type="video/mp4" />
-                      {/* Fallback si la vidéo ne charge pas */}
-                      <div className="flex items-center justify-center h-full bg-gray-200">
-                        <p className="text-gray-600">Aperçu : Site artisan professionnel</p>
-                      </div>
-                    </video>
-                    
-                    {/* Texte superposé en bas de la vidéo */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 via-slate-900/70 to-transparent p-4">
-                      <p className="text-base text-white text-center font-medium">
-                        Aperçu du type de site que vous allez recevoir
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-6">
-                  {/* Avantages site */}
-                  <div className="pb-4 border-b border-gray-100">
-                    <h3 className="text-gray-600 text-sm font-medium mb-3">Votre site inclut :</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Nom de domaine .fr offert</span>
-                      </div>
-                      <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Site professionnel optimisé Google Local — visible dans votre zone</span>
-                      </div>
-                      <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Image sérieuse et crédible pour attirer plus de demandes</span>
-                      </div>
-                      <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Site livré en 72h, prêt à l'emploi</span>
-                      </div>
-                      <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Compatible mobile & ultra rapide</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Prix */}
-                  <div className="pb-4 border-b border-gray-100">
-                    <h3 className="text-gray-600 text-sm font-medium mb-2">Prix :</h3>
-                    <div className="space-y-1">
-                      <p className="text-sm">
-                        <span className="text-gray-500 line-through text-xs">299 €</span>
-                        <span className="font-bold text-green-600 text-lg ml-2">→ 69 €</span>
-                        <span className="text-gray-600 text-xs ml-1">(paiement unique)</span>
-                      </p>
-                      <p className="text-xs font-bold text-green-700 mt-1">🎁 Offre réservée uniquement à votre inscription — non proposée plus tard</p>
-                    </div>
-                  </div>
-                  
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Paiement mobile */}
-            <Card className="bg-white border border-gray-200">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-2 mb-6">
-                  <Lock className="h-5 w-5 text-green-600" />
-                  <h2 className="text-xl font-bold text-gray-900">Paiement sécurisé</h2>
-                </div>
-
-                <form onSubmit={handlePayment} className="space-y-6">
-                  {/* Numéro de carte - gros et clair */}
-                  <div className="space-y-2">
-                    <Label htmlFor="cardNumber" className="text-base font-medium">Numéro de carte</Label>
-                    <div className="relative">
-                      <Input
-                        id="cardNumber"
-                        placeholder="1234 5678 9012 3456"
-                        value={paymentData.cardNumber}
-                        onChange={(e) => setPaymentData({...paymentData, cardNumber: formatCardNumber(e.target.value)})}
-                        maxLength={19}
-                        className="text-lg py-4 px-4 pr-16 border-2"
-                        required
-                      />
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <CardLogo type={getCardType(paymentData.cardNumber)} className="h-7 w-11" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Date d'expiration + CVV */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expiryDate" className="text-base font-medium">Date d'expiration</Label>
-                      <Input
-                        id="expiryDate"
-                        placeholder="MM/AA"
-                        value={paymentData.expiryDate}
-                        onChange={(e) => setPaymentData({...paymentData, expiryDate: formatExpiryDate(e.target.value)})}
-                        maxLength={5}
-                        className="text-lg py-4 px-4 border-2"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cvv" className="text-base font-medium">CVV</Label>
-                      <Input
-                        id="cvv"
-                        placeholder="123"
-                        value={paymentData.cvv}
-                        onChange={(e) => setPaymentData({...paymentData, cvv: e.target.value.replace(/\D/g, '').slice(0, 3)})}
-                        maxLength={3}
-                        className="text-lg py-4 px-4 border-2"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Nom sur la carte */}
-                  <div className="space-y-2">
-                    <Label htmlFor="cardholderName" className="text-base font-medium">Nom sur la carte</Label>
-                    <Input
-                      id="cardholderName"
-                      placeholder="Prénom Nom"
-                      value={paymentData.cardholderName}
-                      onChange={(e) => setPaymentData({...paymentData, cardholderName: e.target.value})}
-                      className="text-lg py-4 px-4 border-2"
-                      required
-                    />
-                  </div>
-
-                  {/* Code postal */}
-                  <div className="space-y-2">
-                    <Label htmlFor="postalCode" className="text-base font-medium">Code postal</Label>
-                    <Input
-                      id="postalCode"
-                      placeholder="75000"
-                      value={paymentData.postalCode}
-                      onChange={(e) => setPaymentData({...paymentData, postalCode: e.target.value.replace(/\D/g, '').slice(0, 5)})}
-                      maxLength={5}
-                      className="text-lg py-4 px-4 border-2"
-                      required
-                    />
-                  </div>
-
-                  {/* Bouton énorme */}
-                  <Button
-                    type="submit"
-                    disabled={isProcessing}
-                    className="w-full text-xl py-6 font-bold bg-green-700 hover:bg-green-800 text-white flex items-center justify-center space-x-3"
-                    style={{backgroundColor: '#16a34a'}}
-                  >
-                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "👉 Obtenir mon site professionnel maintenant – 69 €"}</span>
-                    {!isProcessing && <ArrowRight className="h-6 w-6" />}
-                  </Button>
-
-                  {/* Micro-ligne rassurante */}
-                  <div className="text-center mt-3 space-y-1">
-                    <p className="text-xs text-gray-500">
-                      Paiement unique — aucun abonnement ajouté à votre formule.
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Livré sous 72h – garantie satisfaction
-                    </p>
-                  </div>
-
-                  {/* Badges sécurité */}
-                  <PaymentSecurityBadges />
-                  
-
-                  {/* Lien de refus discret */}
-                  <div className="mt-6 text-center">
-                    <a 
-                      href="/onboarding/success" 
-                      className="text-xs hover:underline"
-                      style={{ color: '#9CA3AF' }}
-                    >
-                      Non merci, je ne souhaite pas de site professionnel
-                    </a>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Layout desktop : 2 colonnes 50/50 */}
-          <div className="hidden lg:grid lg:grid-cols-2 lg:gap-8">
-            
-            {/* Colonne gauche - Récapitulatif */}
-            <Card className="bg-white border border-gray-200">
-              <CardContent className="p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Vous êtes bien inscrit sur Portail Habitat.</h2>
-                <p className="text-base text-gray-600 mb-8">Ce site professionnel est une option facultative destinée à vous aider à recevoir encore plus de demandes et améliorer votre visibilité Google Local.</p>
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
-                  <p className="text-sm text-green-800 font-medium">
-                    <span className="text-lg font-bold">69€ seulement</span> <span className="line-through text-gray-500">au lieu de 299€</span> - Offre spéciale inscription
-                  </p>
-                </div>
-                
-                {/* Vidéo du site livré */}
-                <div className="mb-8">
-                  <div className="relative w-full rounded-lg shadow-md overflow-hidden">
-                    <video 
-                      autoPlay 
-                      muted 
-                      loop 
-                      playsInline
-                      className="w-full aspect-video object-cover"
-                    >
-                      <source src="/video/ecran.mp4" type="video/mp4" />
-                      {/* Fallback si la vidéo ne charge pas */}
-                      <div className="flex items-center justify-center h-full bg-gray-200">
-                        <p className="text-gray-600">Aperçu : Site artisan professionnel</p>
-                      </div>
-                    </video>
-                    
-                    {/* Texte superposé en bas de la vidéo */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 via-slate-900/70 to-transparent p-6">
-                      <p className="text-lg text-white text-center font-medium">
-                        Aperçu du type de site que vous allez recevoir
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="space-y-8">
-                  {/* Avantages site */}
-                  <div className="pb-6 border-b border-gray-100">
-                    <h3 className="text-gray-600 text-base font-medium mb-4">Votre site inclut :</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Nom de domaine .fr offert (valeur 12€/an)</span>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Site professionnel optimisé Google Local — visible dans votre zone</span>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Image sérieuse et crédible pour attirer plus de demandes</span>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Site livré en 72h, prêt à l'emploi</span>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Compatible mobile & ultra rapide</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Prix */}
-                  <div className=" border-gray-100">
-                    <h3 className="text-gray-600 text-base font-medium mb-3">Prix :</h3>
-                    <div className="space-y-2">
-                      <p className="text-base">
-                        <span className="text-gray-500 line-through text-sm">299 €</span>
-                        <span className="font-bold text-green-600 text-xl ml-3">→ 69 €</span>
-                        <span className="text-gray-600 text-sm ml-2">(paiement unique)</span>
-                      </p>
-                      <p className="text-sm font-bold text-green-700 mt-1">🎁 Offre réservée uniquement à votre inscription — non proposée plus tard</p>
-                    </div>
-                  </div>
-                  
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Colonne droite - Paiement */}
-            <Card className="bg-white border border-gray-200">
-              <CardContent className="p-8">
-                <div className="flex items-center space-x-3 mb-8">
-                  <Lock className="h-6 w-6 text-green-600" />
-                  <h2 className="text-2xl font-bold text-gray-900">Paiement sécurisé</h2>
-                </div>
-
-                <form onSubmit={handlePayment} className="space-y-8">
-                  {/* Numéro de carte - gros et clair */}
-                  <div className="space-y-3">
-                    <Label htmlFor="cardNumber-desktop" className="text-lg font-medium">Numéro de carte</Label>
-                    <div className="relative">
-                      <Input
-                        id="cardNumber-desktop"
-                        placeholder="1234 5678 9012 3456"
-                        value={paymentData.cardNumber}
-                        onChange={(e) => setPaymentData({...paymentData, cardNumber: formatCardNumber(e.target.value)})}
-                        maxLength={19}
-                        className="text-xl py-6 px-6 pr-20 border-2 rounded-lg"
-                        required
-                      />
-                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                        <CardLogo type={getCardType(paymentData.cardNumber)} className="h-9 w-14" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Date d'expiration + CVV */}
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <Label htmlFor="expiryDate-desktop" className="text-lg font-medium">Date d'expiration</Label>
-                      <Input
-                        id="expiryDate-desktop"
-                        placeholder="MM/AA"
-                        value={paymentData.expiryDate}
-                        onChange={(e) => setPaymentData({...paymentData, expiryDate: formatExpiryDate(e.target.value)})}
-                        maxLength={5}
-                        className="text-xl py-6 px-6 border-2 rounded-lg"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="cvv-desktop" className="text-lg font-medium">CVV</Label>
-                      <Input
-                        id="cvv-desktop"
-                        placeholder="123"
-                        value={paymentData.cvv}
-                        onChange={(e) => setPaymentData({...paymentData, cvv: e.target.value.replace(/\D/g, '').slice(0, 3)})}
-                        maxLength={3}
-                        className="text-xl py-6 px-6 border-2 rounded-lg"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Nom sur la carte */}
-                  <div className="space-y-3">
-                    <Label htmlFor="cardholderName-desktop" className="text-lg font-medium">Nom sur la carte</Label>
-                    <Input
-                      id="cardholderName-desktop"
-                      placeholder="Prénom Nom"
-                      value={paymentData.cardholderName}
-                      onChange={(e) => setPaymentData({...paymentData, cardholderName: e.target.value})}
-                      className="text-xl py-6 px-6 border-2 rounded-lg"
-                      required
-                    />
-                  </div>
-
-                  {/* Code postal */}
-                  <div className="space-y-3">
-                    <Label htmlFor="postalCode-desktop" className="text-lg font-medium">Code postal</Label>
-                    <Input
-                      id="postalCode-desktop"
-                      placeholder="75000"
-                      value={paymentData.postalCode}
-                      onChange={(e) => setPaymentData({...paymentData, postalCode: e.target.value.replace(/\D/g, '').slice(0, 5)})}
-                      maxLength={5}
-                      className="text-xl py-6 px-6 border-2 rounded-lg"
-                      required
-                    />
-                  </div>
-
-                  {/* Bouton énorme */}
-                  <Button
-                    type="submit"
-                    disabled={isProcessing}
-                    className="w-full text-2xl py-8 font-bold bg-green-700 hover:bg-green-800 text-white flex items-center justify-center space-x-4 rounded-lg"
-                    style={{backgroundColor: '#16a34a'}}
-                  >
-                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Obtenir mon site – 69 €"}</span>
-                    {!isProcessing && <ArrowRight className="h-7 w-7" />}
-                  </Button>
-
-                  {/* Micro-ligne rassurante */}
-                  <div className="text-center mt-4 space-y-1">
-                    <p className="text-sm text-gray-500">
-                      Paiement unique — aucun abonnement ajouté à votre formule.
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      Livré sous 72h – garantie satisfaction
-                    </p>
-                  </div>
-
-                  {/* Badges sécurité */}
-                  <PaymentSecurityBadges />
-                  
-
-                  {/* Lien de refus discret */}
-                  <div className="mt-6 text-center">
-                    <a 
-                      href="/onboarding/success" 
-                      className="text-sm hover:underline"
-                      style={{ color: '#9CA3AF' }}
-                    >
-                      Non merci, je ne souhaite pas de site professionnel
-                    </a>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-
-      {/* Footer simple comme Step 2 */}
-      <footer className="bg-gray-900 text-white py-6 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-300">
-              © 2025 Portail Habitat. Tous droits réservés.
-            </p>
-            <a href="/conditions-generales" className="text-sm text-gray-300 hover:text-white">
-              Conditions générales
-            </a>
-          </div>
-        </div>
-      </footer>
+      </section>
     </div>
   );
 }

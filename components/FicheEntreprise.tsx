@@ -20,13 +20,17 @@ import {
   Edit,
   Check,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  CheckCircle
 } from "lucide-react";
+import { collection, addDoc, updateDoc, doc, increment } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import ZoneInterventionMap from "./ZoneInterventionMap";
 import PrestationsDrawer from "./PrestationsDrawer";
 import CertificationsDrawer from "./CertificationsDrawer";
 import AddProjectModal from "./AddProjectModal";
 import ProjectCard from "./ProjectCard";
+import RequestReviewsModal from "./RequestReviewsModal";
 
 interface FicheEntrepriseProps {
   entreprise: {
@@ -105,6 +109,10 @@ export default function FicheEntreprise({
   const [isLogoLoading, setIsLogoLoading] = useState(true);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [showAllProjects, setShowAllProjects] = useState(false);
+  const [isSubmittingForm, setIsSubmittingForm] = useState(false);
+  const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+  const [isRequestReviewsModalOpen, setIsRequestReviewsModalOpen] = useState(false);
+  const [formErrorMessage, setFormErrorMessage] = useState("");
   const [isEditingQuoteRange, setIsEditingQuoteRange] = useState(false);
   const [tempQuoteMin, setTempQuoteMin] = useState(entreprise.averageQuoteMin || 0);
   const [tempQuoteMax, setTempQuoteMax] = useState(entreprise.averageQuoteMax || 0);
@@ -129,6 +137,7 @@ export default function FicheEntreprise({
     prenom: "",
     email: "",
     telephone: "",
+    codePostal: "",
     description: ""
   });
 
@@ -140,9 +149,88 @@ export default function FicheEntreprise({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Formulaire soumis:', formData);
+    
+    // Reset error message
+    setFormErrorMessage("");
+    
+    // Validation des champs requis (tous sauf description)
+    if (!formData.nom.trim() || !formData.prenom.trim() || !formData.email.trim() || !formData.telephone.trim() || !formData.codePostal.trim()) {
+      setFormErrorMessage('Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+
+    // Validation du code postal (5 chiffres)
+    if (!/^\d{5}$/.test(formData.codePostal)) {
+      setFormErrorMessage('Le code postal doit contenir exactement 5 chiffres.');
+      return;
+    }
+
+    setIsSubmittingForm(true);
+
+    try {
+      // Créer le lead dans la sous-collection de l'artisan
+      const leadsRef = collection(db, 'artisans', entreprise.id, 'leads');
+      
+      await addDoc(leadsRef, {
+        clientName: `${formData.prenom} ${formData.nom}`,
+        clientPhone: formData.telephone,
+        clientEmail: formData.email,
+        projectType: formData.description || 'Non spécifié',
+        city: formData.codePostal, // On utilise le code postal comme ville pour l'instant
+        budget: 'Non spécifié',
+        source: 'mini-site',
+        status: 'new',
+        createdAt: new Date(),
+        notes: formData.description || ''
+      });
+
+      // Mettre à jour les compteurs de l'artisan
+      const artisanRef = doc(db, 'artisans', entreprise.id);
+      await updateDoc(artisanRef, {
+        leadCountThisMonth: increment(1),
+        totalLeads: increment(1),
+        updatedAt: new Date()
+      });
+
+      // Envoyer l'email de notification à l'artisan
+      try {
+        const emailResponse = await fetch('/api/send-lead-notification', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            artisanEmail: entreprise.email,
+            artisanName: entreprise.nom,
+            clientName: `${formData.prenom} ${formData.nom}`,
+            clientEmail: formData.email,
+            clientPhone: formData.telephone,
+            clientPostalCode: formData.codePostal,
+            projectDescription: formData.description
+          }),
+        });
+
+        if (!emailResponse.ok) {
+          console.error('Erreur lors de l\'envoi de l\'email de notification');
+        } else {
+          console.log('Email de notification envoyé avec succès');
+        }
+      } catch (emailError) {
+        console.error('Erreur lors de l\'envoi de l\'email:', emailError);
+        // On ne fait pas échouer la soumission si l'email échoue
+      }
+
+      // Afficher le message de confirmation
+      setIsFormSubmitted(true);
+      
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi du formulaire:', error);
+      setFormErrorMessage('Une erreur est survenue lors de l\'envoi de votre demande. Veuillez réessayer.');
+    } finally {
+      setIsSubmittingForm(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -330,7 +418,7 @@ export default function FicheEntreprise({
 
       {/* Bannière */}
       <div 
-        className={`relative h-64 ${canEdit ? 'cursor-pointer group' : ''}`}
+        className={`relative h-96 ${canEdit ? 'cursor-pointer group' : ''}`}
         onClick={handleCoverClick}
       >
         {entreprise.banniere ? (
@@ -509,6 +597,7 @@ export default function FicheEntreprise({
                       variant="outline"
                       size="sm"
                       className="w-fit"
+                      onClick={() => setIsRequestReviewsModalOpen(true)}
                     >
                       Demander des avis
                     </Button>
@@ -586,7 +675,7 @@ export default function FicheEntreprise({
                     {entreprise.description && entreprise.description.length > 300 && (
                       <button
                         onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
-                        className="text-blue-600 hover:text-blue-800 text-sm font-medium mt-2 flex items-center"
+                        className="text-gray-600 hover:text-gray-800 text-sm font-medium mt-2 flex items-center"
                       >
                         {isDescriptionExpanded ? (
                           <>
@@ -860,25 +949,53 @@ export default function FicheEntreprise({
             <div className="lg:col-span-1">
               <Card className="sticky top-6">
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-4">Demander un devis</h3>
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  {isFormSubmitted ? (
+                    <div className="text-center space-y-4 flex flex-col justify-center" style={{ minHeight: '400px' }}>
+                      <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                        <CheckCircle className="h-8 w-8 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">Merci !</h3>
+                        <p className="text-gray-600 mb-4">
+                          Votre demande a été transmise avec succès à {entreprise.nom}.
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Vous devriez recevoir une réponse dans les plus brefs délais.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <h3 className="text-xl font-semibold mb-4">Demander un devis</h3>
+                      
+                      {/* Message d'erreur */}
+                      {formErrorMessage && (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3 mb-4">
+                          <CheckCircle className="h-5 w-5 text-red-600" />
+                          <p className="text-red-800 font-medium">{formErrorMessage}</p>
+                        </div>
+                      )}
+                      
+                      <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <Input
                           name="prenom"
-                          placeholder="Prénom"
+                          placeholder="Prénom *"
                           value={formData.prenom}
                           onChange={handleInputChange}
                           required
+                          disabled={isSubmittingForm}
                         />
                       </div>
                       <div>
                         <Input
                           name="nom"
-                          placeholder="Nom"
+                          placeholder="Nom *"
                           value={formData.nom}
                           onChange={handleInputChange}
                           required
+                          disabled={isSubmittingForm}
                         />
                       </div>
                     </div>
@@ -886,50 +1003,84 @@ export default function FicheEntreprise({
                     <Input
                       name="email"
                       type="email"
-                      placeholder="Email"
+                      placeholder="Email *"
                       value={formData.email}
                       onChange={handleInputChange}
                       required
+                      disabled={isSubmittingForm}
                     />
                     
                     <Input
                       name="telephone"
                       type="tel"
-                      placeholder="Téléphone"
+                      placeholder="Téléphone *"
                       value={formData.telephone}
                       onChange={handleInputChange}
+                      required
+                      disabled={isSubmittingForm}
+                    />
+                    
+                    <Input
+                      name="codePostal"
+                      type="text"
+                      placeholder="Code postal *"
+                      value={formData.codePostal}
+                      onChange={handleInputChange}
+                      maxLength={5}
+                      pattern="[0-9]{5}"
+                      required
+                      disabled={isSubmittingForm}
                     />
                     
                     <Textarea
                       name="description"
-                      placeholder="Description de votre projet..."
+                      placeholder="Description de votre projet (optionnel)"
                       value={formData.description}
                       onChange={handleInputChange}
                       className="min-h-[100px] resize-none"
-                      required
+                      disabled={isSubmittingForm}
                     />
                     
-                    <Button type="submit" className="w-full">
-                      <Send className="h-4 w-4 mr-2" />
-                      Envoyer ma demande
+                    <Button type="submit" id="submit-lead-form" className="w-full" disabled={isSubmittingForm}>
+                      {isSubmittingForm ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Envoi en cours...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-4 w-4 mr-2" />
+                          Envoyer ma demande
+                        </>
+                      )}
                     </Button>
                     
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={handlePhoneClick}
-                    >
-                      <Phone className="h-4 w-4 mr-2" />
-                      {showPhone ? entreprise.telephone : "Voir le numéro de téléphone"}
-                    </Button>
-                  </form>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full"
+                          onClick={handlePhoneClick}
+                        >
+                          <Phone className="h-4 w-4 mr-2" />
+                          {showPhone ? entreprise.telephone : "Voir le numéro de téléphone"}
+                        </Button>
+                      </form>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
           )}
         </div>
       </div>
+
+      {/* Modal de demande d'avis */}
+      <RequestReviewsModal
+        isOpen={isRequestReviewsModalOpen}
+        onClose={() => setIsRequestReviewsModalOpen(false)}
+        artisanId={entreprise.id}
+        artisanName={entreprise.nom}
+      />
     </div>
   );
 }
