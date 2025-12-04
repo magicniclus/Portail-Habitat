@@ -62,6 +62,18 @@ artisans
     ├── averageQuoteMin (int)    ← prix minimum d'un devis en euros
     ├── averageQuoteMax (int)    ← prix maximum d'un devis en euros
     ├── certifications []        ← certifications et labels (ex: ["RGE", "Qualibat", "Garantie décennale"])
+    ├── notifications {          ← préférences de notifications (objet)
+    │   ├── emailLeads: true     ← recevoir emails pour nouvelles demandes
+    │   ├── emailReviews: true   ← recevoir emails pour nouveaux avis
+    │   ├── emailMarketing: false ← recevoir emails marketing/newsletters
+    │   └── pushNotifications: true ← notifications push navigateur
+    │   }
+    ├── privacy {                ← paramètres de confidentialité (objet)
+    │   ├── profileVisible: true ← profil visible dans les recherches
+    │   ├── showPhone: true      ← afficher le téléphone publiquement
+    │   ├── showEmail: false     ← afficher l'email publiquement
+    │   └── allowDirectContact: true ← autoriser contact direct sans formulaire
+    │   }
     ├── createdAt
     ├── updatedAt
     └── isPriority (true/false)

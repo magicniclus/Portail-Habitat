@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import FicheEntreprise from "@/components/FicheEntreprise";
 import { uploadCoverPhoto, uploadLogoPhoto, updateArtisanDescription, updateArtisanPrestations, updateArtisanQuoteRange, updateArtisanCertifications, addArtisanProject, getArtisanProjects, updateProjectVisibility, deleteArtisanProject, updateArtisanProject } from "@/lib/storage";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, query, where, collection, getDocs } from "firebase/firestore";
+import { doc, getDoc, query, where, collection, getDocs, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { 
   ExternalLink,
@@ -17,6 +17,7 @@ import { XIcon, FacebookIcon } from "@/components/icons/SocialIcons";
 export default function MaFichePage() {
   const [entreprise, setEntreprise] = useState<any>(null);
   const [projects, setProjects] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -73,6 +74,51 @@ export default function MaFichePage() {
 
     return () => unsubscribe();
   }, []);
+
+  // Écouter les avis en temps réel et mettre à jour les statistiques
+  useEffect(() => {
+    if (!entreprise?.id) return;
+
+    const reviewsRef = collection(db, 'artisans', entreprise.id, 'reviews');
+    const unsubscribe = onSnapshot(reviewsRef, (snapshot) => {
+      const reviewsData: any[] = [];
+      snapshot.forEach((doc) => {
+        reviewsData.push({
+          id: doc.id,
+          ...doc.data()
+        });
+      });
+      
+      // Trier par date de création (plus récent en premier)
+      reviewsData.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      setReviews(reviewsData);
+
+      // Calculer et mettre à jour les statistiques
+      if (reviewsData.length > 0) {
+        const totalRating = reviewsData.reduce((sum, review) => sum + review.rating, 0);
+        const averageRating = totalRating / reviewsData.length;
+        
+        setEntreprise((prev: any) => ({
+          ...prev,
+          note: Math.round(averageRating * 10) / 10,
+          nombreAvis: reviewsData.length
+        }));
+      } else {
+        setEntreprise((prev: any) => ({
+          ...prev,
+          note: 0,
+          nombreAvis: 0
+        }));
+      }
+    });
+
+    return () => unsubscribe();
+  }, [entreprise?.id]);
 
   // Fonction pour gérer le changement de photo de couverture
   const handleCoverChange = async (file: File) => {
@@ -415,6 +461,7 @@ export default function MaFichePage() {
           onQuoteRangeChange={handleQuoteRangeChange}
           onCertificationsChange={handleCertificationsChange}
           projects={projects}
+          reviews={reviews}
           onAddProject={handleAddProject}
           onProjectVisibilityToggle={handleProjectVisibilityToggle}
           onEditProject={handleEditProject}

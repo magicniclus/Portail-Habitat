@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import {
   Sidebar,
   SidebarContent,
@@ -91,6 +93,16 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      router.push('/connexion-pro');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -158,16 +170,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     align="end"
                     sideOffset={4}
                   >
-                    <DropdownMenuItem>
-                      <Settings className="h-4 w-4 mr-2" />
-                      Paramètres
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/parametres">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Paramètres
+                      </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
-                      <User className="h-4 w-4 mr-2" />
-                      Profil
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/profil">
+                        <User className="h-4 w-4 mr-2" />
+                        Profil
+                      </Link>
                     </DropdownMenuItem>
                     <Separator />
-                    <DropdownMenuItem className="text-red-600">
+                    <DropdownMenuItem className="text-red-600" onClick={handleLogout}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Déconnexion
                     </DropdownMenuItem>

@@ -1,97 +1,41 @@
-import { Metadata } from "next";
+"use client";
+
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Star, 
-  Search, 
-  Filter, 
   MessageSquare, 
   ThumbsUp, 
-  ThumbsDown,
-  Calendar,
   User,
-  TrendingUp,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Mail,
+  Loader2
 } from "lucide-react";
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { db, auth } from '@/lib/firebase';
 
-export const metadata: Metadata = {
-  title: "Avis - Dashboard Pro - Portail Habitat",
-  description: "Gérez vos avis clients et votre réputation en ligne.",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+interface Review {
+  id: string;
+  rating: number;
+  comment: string;
+  clientName: string;
+  createdAt: any;
+  displayed: boolean;
+}
 
-const avisData = [
-  {
-    id: 1,
-    client: "Marie Dubois",
-    note: 5,
-    titre: "Excellent travail de rénovation",
-    commentaire: "Très satisfaite du travail réalisé. L'artisan est ponctuel, professionnel et le résultat est parfait. Je recommande vivement !",
-    date: "2024-11-28",
-    projet: "Rénovation salle de bain",
-    repondu: true,
-    reponse: "Merci beaucoup Marie pour ce retour positif ! C'était un plaisir de travailler sur votre projet.",
-    verifie: true,
-  },
-  {
-    id: 2,
-    client: "Pierre Martin",
-    note: 4,
-    titre: "Bon travail dans l'ensemble",
-    commentaire: "Travail de qualité, quelques petits détails à revoir mais globalement très satisfait. Bon rapport qualité-prix.",
-    date: "2024-11-25",
-    projet: "Installation électrique",
-    repondu: false,
-    reponse: "",
-    verifie: true,
-  },
-  {
-    id: 3,
-    client: "Sophie Laurent",
-    note: 5,
-    titre: "Parfait !",
-    commentaire: "Travail impeccable, délais respectés, très bon contact. Je ferai de nouveau appel à cet artisan sans hésiter.",
-    date: "2024-11-20",
-    projet: "Peinture appartement",
-    repondu: true,
-    reponse: "Merci Sophie ! Au plaisir de travailler à nouveau ensemble.",
-    verifie: true,
-  },
-  {
-    id: 4,
-    client: "Jean Moreau",
-    note: 3,
-    titre: "Correct mais peut mieux faire",
-    commentaire: "Le travail est correct mais j'ai eu quelques problèmes de communication. Le résultat final est satisfaisant.",
-    date: "2024-11-15",
-    projet: "Plomberie cuisine",
-    repondu: false,
-    reponse: "",
-    verifie: true,
-  },
-];
-
-const statistiquesAvis = {
-  noteGlobale: 4.3,
-  totalAvis: avisData.length,
-  repartition: {
-    5: 2,
-    4: 1,
-    3: 1,
-    2: 0,
-    1: 0,
-  },
-  tauxReponse: Math.round((avisData.filter(a => a.repondu).length / avisData.length) * 100),
-  avisRecents: avisData.filter(a => new Date(a.date) > new Date('2024-11-20')).length,
-};
+interface EmailForm {
+  to: string;
+  subject: string;
+  content: string;
+}
 
 const getStarRating = (note: number) => {
   return Array.from({ length: 5 }, (_, i) => (
@@ -111,6 +55,184 @@ const getNoteBadge = (note: number) => {
 };
 
 export default function AvisPage() {
+  const [artisanId, setArtisanId] = useState<string | null>(null);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [emailForm, setEmailForm] = useState<EmailForm>({
+    to: "",
+    subject: "",
+    content: ""
+  });
+  const [emailMessage, setEmailMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
+
+  // Récupérer l'ID de l'artisan connecté
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const artisansRef = collection(db, 'artisans');
+          const q = query(artisansRef, where('userId', '==', user.uid));
+          const querySnapshot = await getDocs(q);
+          
+          if (!querySnapshot.empty) {
+            const artisanDoc = querySnapshot.docs[0];
+            setArtisanId(artisanDoc.id);
+          }
+        } catch (error) {
+          console.error('Erreur lors de la récupération de l\'artisan:', error);
+        }
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Récupérer les avis en temps réel
+  useEffect(() => {
+    if (!artisanId) return;
+
+    const reviewsRef = collection(db, 'artisans', artisanId, 'reviews');
+    const unsubscribe = onSnapshot(reviewsRef, (snapshot) => {
+      const reviewsData: Review[] = [];
+      snapshot.forEach((doc) => {
+        reviewsData.push({
+          id: doc.id,
+          ...doc.data()
+        } as Review);
+      });
+      
+      // Trier par date de création (plus récent en premier)
+      reviewsData.sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt);
+        const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt);
+        return dateB.getTime() - dateA.getTime();
+      });
+      
+      setReviews(reviewsData);
+    });
+
+    return () => unsubscribe();
+  }, [artisanId]);
+
+  // Calculer les statistiques
+  const calculateStats = () => {
+    if (reviews.length === 0) {
+      return {
+        noteGlobale: 0,
+        totalAvis: 0,
+        repartition: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+        avisPositifs: 0
+      };
+    }
+
+    const totalRating = reviews.reduce((sum, review) => sum + review.rating, 0);
+    const noteGlobale = totalRating / reviews.length;
+    
+    const repartition = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach(review => {
+      repartition[review.rating as keyof typeof repartition]++;
+    });
+
+    const avisPositifs = Math.round(((repartition[4] + repartition[5]) / reviews.length) * 100);
+
+    return {
+      noteGlobale: Math.round(noteGlobale * 10) / 10,
+      totalAvis: reviews.length,
+      repartition,
+      avisPositifs
+    };
+  };
+
+  const stats = calculateStats();
+
+  // Fonction pour ouvrir la modale d'email
+  const handleRequestReview = () => {
+    const reviewUrl = artisanId ? `${window.location.origin}/avis/${artisanId}` : '[URL non disponible]';
+    
+    setEmailForm({
+      to: "",
+      subject: "Votre avis nous intéresse - Portail Habitat",
+      content: `Bonjour,
+
+J'espère que vous êtes satisfait(e) des travaux que j'ai réalisés pour vous.
+
+Votre avis est très important pour moi et m'aide à améliorer mes services. Si vous avez quelques minutes, pourriez-vous laisser un avis sur mon profil Portail Habitat ?
+
+Vous pouvez laisser votre avis en suivant ce lien : ${reviewUrl}
+
+Je vous remercie par avance pour votre retour.
+
+Cordialement,`
+    });
+    setIsEmailModalOpen(true);
+  };
+
+  // Fonction pour envoyer l'email
+  const handleSubmitEmail = async () => {
+    if (!emailForm.to || !emailForm.subject || !emailForm.content) {
+      setEmailMessage({type: 'error', text: "Veuillez remplir tous les champs."});
+      return;
+    }
+
+    setIsSubmitting(true);
+    setEmailMessage(null);
+    
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: emailForm.to,
+          subject: emailForm.subject,
+          content: emailForm.content,
+          fromName: 'Portail Habitat',
+          fromEmail: 'service@trouver-mon-chantier.fr'
+        }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setEmailMessage({type: 'success', text: "Email envoyé avec succès !"});
+        setTimeout(() => {
+          setIsEmailModalOpen(false);
+          setEmailForm({ to: "", subject: "", content: "" });
+          setEmailMessage(null);
+        }, 2000);
+      } else {
+        setEmailMessage({type: 'error', text: result.error || "Erreur lors de l'envoi de l'email."});
+      }
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      setEmailMessage({type: 'error', text: "Erreur de connexion lors de l'envoi de l'email."});
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Formater la date
+  const formatDate = (timestamp: any) => {
+    const date = timestamp?.toDate?.() || new Date(timestamp);
+    return date.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -121,219 +243,245 @@ export default function AvisPage() {
             Gérez vos avis clients et votre réputation en ligne
           </p>
         </div>
-        <Button>
+        <Button onClick={handleRequestReview}>
           <MessageSquare className="h-4 w-4 mr-2" />
           Demander un avis
         </Button>
       </div>
 
-      {/* Statistiques des avis */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Note globale</CardTitle>
-            <Star className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statistiquesAvis.noteGlobale}/5</div>
-            <div className="flex items-center space-x-1 mt-1">
-              {getStarRating(Math.round(statistiquesAvis.noteGlobale))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total avis</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statistiquesAvis.totalAvis}</div>
-            <p className="text-xs text-muted-foreground">
-              {statistiquesAvis.avisRecents} ce mois
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taux de réponse</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{statistiquesAvis.tauxReponse}%</div>
-            <p className="text-xs text-muted-foreground">
-              Avis avec réponse
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avis positifs</CardTitle>
-            <ThumbsUp className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {Math.round(((statistiquesAvis.repartition[4] + statistiquesAvis.repartition[5]) / statistiquesAvis.totalAvis) * 100)}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              4-5 étoiles
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Répartition des notes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Répartition des notes</CardTitle>
-          <CardDescription>
-            Distribution de vos avis par nombre d'étoiles
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[5, 4, 3, 2, 1].map((note) => (
-              <div key={note} className="flex items-center space-x-4">
-                <div className="flex items-center space-x-1 w-16">
-                  <span className="text-sm font-medium">{note}</span>
-                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+      {reviews.length > 0 ? (
+        <>
+          {/* Statistiques des avis */}
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Note globale</CardTitle>
+                <Star className="h-4 w-4 text-yellow-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.noteGlobale}/5</div>
+                <div className="flex items-center space-x-1 mt-1">
+                  {getStarRating(Math.round(stats.noteGlobale))}
                 </div>
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-yellow-400 h-2 rounded-full"
-                    style={{
-                      width: `${(statistiquesAvis.repartition[note as keyof typeof statistiquesAvis.repartition] / statistiquesAvis.totalAvis) * 100}%`
-                    }}
-                  ></div>
-                </div>
-                <span className="text-sm text-muted-foreground w-8">
-                  {statistiquesAvis.repartition[note as keyof typeof statistiquesAvis.repartition]}
-                </span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
 
-      {/* Filtres */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtres</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="Rechercher dans les avis..."
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Select>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Note" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les notes</SelectItem>
-                <SelectItem value="5">5 étoiles</SelectItem>
-                <SelectItem value="4">4 étoiles</SelectItem>
-                <SelectItem value="3">3 étoiles</SelectItem>
-                <SelectItem value="2">2 étoiles</SelectItem>
-                <SelectItem value="1">1 étoile</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les avis</SelectItem>
-                <SelectItem value="repondu">Avec réponse</SelectItem>
-                <SelectItem value="non_repondu">Sans réponse</SelectItem>
-                <SelectItem value="recent">Récents</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total avis</CardTitle>
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.totalAvis}</div>
+                <p className="text-xs text-muted-foreground">
+                  Avis clients
+                </p>
+              </CardContent>
+            </Card>
 
-      {/* Liste des avis */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Tous les avis ({avisData.length})</CardTitle>
-          <CardDescription>
-            Gérez vos avis clients et répondez-y
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {avisData.map((avis) => (
-              <div key={avis.id} className="border rounded-lg p-4 space-y-4">
-                {/* En-tête de l'avis */}
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-1">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{avis.client}</span>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Avis positifs</CardTitle>
+                <ThumbsUp className="h-4 w-4 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.avisPositifs}%</div>
+                <p className="text-xs text-muted-foreground">
+                  4-5 étoiles
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Derniers avis</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{reviews.slice(0, 3).length}</div>
+                <p className="text-xs text-muted-foreground">
+                  Récents
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Répartition des notes */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Répartition des notes</CardTitle>
+              <CardDescription>
+                Distribution de vos avis par nombre d'étoiles
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {[5, 4, 3, 2, 1].map((note) => (
+                  <div key={note} className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-1 w-16">
+                      <span className="text-sm font-medium">{note}</span>
+                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                    </div>
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-yellow-400 h-2 rounded-full"
+                        style={{
+                          width: stats.totalAvis > 0 ? `${(stats.repartition[note as keyof typeof stats.repartition] / stats.totalAvis) * 100}%` : '0%'
+                        }}
+                      ></div>
+                    </div>
+                    <span className="text-sm text-muted-foreground w-8">
+                      {stats.repartition[note as keyof typeof stats.repartition]}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Liste des avis */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Tous les avis ({reviews.length})</CardTitle>
+              <CardDescription>
+                Vos avis clients récents
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {reviews.map((review) => (
+                  <div key={review.id} className="border rounded-lg p-4 space-y-4">
+                    {/* En-tête de l'avis */}
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-1">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{review.clientName}</span>
+                          </div>
+                          {getNoteBadge(review.rating)}
+                          <Badge variant="outline" className="text-xs">
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                            Vérifié
+                          </Badge>
+                        </div>
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                          <div className="flex items-center space-x-1">
+                            {getStarRating(review.rating)}
+                          </div>
+                          <span>•</span>
+                          <span>{formatDate(review.createdAt)}</span>
+                        </div>
                       </div>
-                      {getNoteBadge(avis.note)}
-                      {avis.verifie && (
-                        <Badge variant="outline" className="text-xs">
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                          Vérifié
-                        </Badge>
-                      )}
                     </div>
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-1">
-                        {getStarRating(avis.note)}
-                      </div>
-                      <span>•</span>
-                      <span>{avis.projet}</span>
-                      <span>•</span>
-                      <span>{avis.date}</span>
-                    </div>
-                  </div>
-                </div>
 
-                {/* Contenu de l'avis */}
-                <div className="space-y-2">
-                  <h4 className="font-medium">{avis.titre}</h4>
-                  <p className="text-sm text-muted-foreground">{avis.commentaire}</p>
-                </div>
-
-                {/* Réponse */}
-                {avis.repondu ? (
-                  <div className="bg-muted/50 rounded-lg p-3 space-y-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium">Votre réponse :</span>
-                      <Badge variant="outline" className="text-xs">
-                        <CheckCircle className="h-3 w-3 mr-1" />
-                        Répondu
-                      </Badge>
+                    {/* Contenu de l'avis */}
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">{review.comment}</p>
                     </div>
-                    <p className="text-sm">{avis.reponse}</p>
                   </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <AlertCircle className="h-4 w-4 text-orange-500" />
-                    <span className="text-sm text-muted-foreground">Aucune réponse</span>
-                    <Button variant="outline" size="sm">
-                      <MessageSquare className="h-4 w-4 mr-2" />
-                      Répondre
-                    </Button>
-                  </div>
-                )}
+                ))}
               </div>
-            ))}
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        /* État vide - Pas d'avis */
+        <Card className="text-center py-12">
+          <CardContent>
+            <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+              <Star className="h-8 w-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Aucun avis pour le moment
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              Vous n'avez pas encore reçu d'avis clients. Demandez à vos clients satisfaits 
+              de laisser un avis pour améliorer votre réputation en ligne.
+            </p>
+            <Button onClick={handleRequestReview} size="lg">
+              <Mail className="h-4 w-4 mr-2" />
+              Demandez vos premiers avis
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Modale pour envoyer un email */}
+      <Dialog open={isEmailModalOpen} onOpenChange={setIsEmailModalOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Demander un avis client</DialogTitle>
+            <DialogDescription>
+              Envoyez un email à vos clients pour leur demander de laisser un avis
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="email-to">Email du client</Label>
+              <Input
+                id="email-to"
+                type="email"
+                value={emailForm.to}
+                onChange={(e) => setEmailForm({...emailForm, to: e.target.value})}
+                placeholder="client@exemple.com"
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="email-subject">Objet</Label>
+              <Input
+                id="email-subject"
+                value={emailForm.subject}
+                onChange={(e) => setEmailForm({...emailForm, subject: e.target.value})}
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="email-content">Message</Label>
+              <Textarea
+                id="email-content"
+                value={emailForm.content}
+                onChange={(e) => setEmailForm({...emailForm, content: e.target.value})}
+                className="mt-1 min-h-[200px]"
+                placeholder="Votre message..."
+              />
+            </div>
+
+            {emailMessage && (
+              <div className={`p-3 rounded-lg ${
+                emailMessage.type === 'success' 
+                  ? 'bg-green-50 border border-green-200 text-green-800' 
+                  : 'bg-red-50 border border-red-200 text-red-800'
+              }`}>
+                {emailMessage.text}
+              </div>
+            )}
           </div>
-        </CardContent>
-      </Card>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEmailModalOpen(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSubmitEmail} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Envoi en cours...
+                </>
+              ) : (
+                <>
+                  <Mail className="h-4 w-4 mr-2" />
+                  Envoyer l'email
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

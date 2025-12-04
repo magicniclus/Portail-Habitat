@@ -1,37 +1,43 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Calendar, MessageSquare, Settings, Users } from "lucide-react";
+import { Plus, FileText, Calendar, MessageSquare, Settings, Users, Star, IdCard } from "lucide-react";
+import Link from "next/link";
 
-const quickActions = [
-  {
-    title: "Nouveau devis",
-    description: "Créer un devis pour un client",
-    icon: FileText,
-    action: "create-quote",
-    color: "bg-blue-500 hover:bg-blue-600",
-  },
-  {
-    title: "Planifier chantier",
-    description: "Ajouter un nouveau chantier",
-    icon: Calendar,
-    action: "schedule-project",
-    color: "bg-green-500 hover:bg-green-600",
-  },
-  {
-    title: "Contacter lead",
-    description: "Répondre à une demande",
-    icon: MessageSquare,
-    action: "contact-lead",
-    color: "bg-purple-500 hover:bg-purple-600",
-  },
-  {
-    title: "Gérer profil",
-    description: "Mettre à jour vos infos",
-    icon: Settings,
-    action: "manage-profile",
-    color: "bg-orange-500 hover:bg-orange-600",
-  },
-];
+interface DashboardQuickActionsProps {
+  artisanData?: any;
+}
+
+export default function DashboardQuickActions({ artisanData }: DashboardQuickActionsProps) {
+  const quickActions = [
+    {
+      title: "Gérer mes demandes",
+      description: "Voir toutes mes demandes",
+      icon: MessageSquare,
+      href: "/dashboard/demandes",
+      color: "bg-blue-500 hover:bg-blue-600",
+    },
+    {
+      title: "Ma fiche entreprise",
+      description: "Modifier mon profil",
+      icon: IdCard,
+      href: "/dashboard/fiche",
+      color: "bg-green-500 hover:bg-green-600",
+    },
+    {
+      title: "Mes avis clients",
+      description: "Gérer les avis",
+      icon: Star,
+      href: "/dashboard/avis",
+      color: "bg-purple-500 hover:bg-purple-600",
+    },
+    {
+      title: "Paramètres",
+      description: "Configurer mon compte",
+      icon: Settings,
+      href: "/dashboard/parametres",
+      color: "bg-orange-500 hover:bg-orange-600",
+    },
+  ];
 
 const recentActivities = [
   {
@@ -74,7 +80,6 @@ const getActivityStatusColor = (status: string) => {
   return colors[status as keyof typeof colors] || "text-gray-600";
 };
 
-export default function DashboardQuickActions() {
   return (
     <div className="space-y-6">
       {/* Actions rapides */}
@@ -88,21 +93,22 @@ export default function DashboardQuickActions() {
         <CardContent>
           <div className="grid gap-3">
             {quickActions.map((action) => (
-              <Button
-                key={action.action}
-                variant="outline"
-                className="h-auto p-4 justify-start"
-              >
-                <div className={`p-2 rounded-md ${action.color} mr-3`}>
-                  <action.icon className="h-4 w-4 text-white" />
-                </div>
-                <div className="text-left">
-                  <div className="font-medium">{action.title}</div>
-                  <div className="text-sm text-muted-foreground">
-                    {action.description}
+              <Link key={action.href} href={action.href}>
+                <Button
+                  variant="outline"
+                  className="h-auto p-4 justify-start w-full"
+                >
+                  <div className={`p-2 rounded-md ${action.color} mr-3`}>
+                    <action.icon className="h-4 w-4 text-white" />
                   </div>
-                </div>
-              </Button>
+                  <div className="text-left">
+                    <div className="font-medium">{action.title}</div>
+                    <div className="text-sm text-muted-foreground">
+                      {action.description}
+                    </div>
+                  </div>
+                </Button>
+              </Link>
             ))}
           </div>
         </CardContent>
@@ -155,21 +161,21 @@ export default function DashboardQuickActions() {
                 <Users className="h-4 w-4 text-blue-500" />
                 <span className="text-sm">Nouveaux leads</span>
               </div>
-              <span className="font-medium">12</span>
+              <span className="font-medium">{artisanData?.leadCountThisMonth || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <FileText className="h-4 w-4 text-green-500" />
-                <span className="text-sm">Devis envoyés</span>
+                <Star className="h-4 w-4 text-green-500" />
+                <span className="text-sm">Avis reçus</span>
               </div>
-              <span className="font-medium">8</span>
+              <span className="font-medium">{artisanData?.reviewCount || 0}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Calendar className="h-4 w-4 text-purple-500" />
-                <span className="text-sm">Chantiers démarrés</span>
+                <FileText className="h-4 w-4 text-purple-500" />
+                <span className="text-sm">Total leads</span>
               </div>
-              <span className="font-medium">3</span>
+              <span className="font-medium">{artisanData?.totalLeads || 0}</span>
             </div>
           </div>
         </CardContent>

@@ -46,4 +46,6 @@ Style cohérent : Loader2 + texte pour les pages, Skeleton pour les images
 
 14. En cas d'erreur jsx ne refais jamais un fichier corrige l'originale 
 
+15. Nutilise jamais les alert native, utilise toujours celle proposé par shadcn
+
 Ces règles sont PRIORITAIRES sur tout le reste.

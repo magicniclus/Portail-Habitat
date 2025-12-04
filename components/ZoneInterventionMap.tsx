@@ -40,7 +40,7 @@ export default function ZoneInterventionMap({ zones, centerCity }: ZoneIntervent
 
       // Attendre que la carte soit chargée ou l'ajouter immédiatement si elle l'est déjà
       const addCircleToMap = () => {
-        if (!map.current) return;
+        if (!map.current || !map.current.isStyleLoaded()) return;
 
         // Vérifier si la source existe déjà et la supprimer si c'est le cas
         if (map.current.getSource('zone-circle')) {
@@ -87,9 +87,9 @@ export default function ZoneInterventionMap({ zones, centerCity }: ZoneIntervent
         });
       };
 
-      if (map.current.isStyleLoaded()) {
+      if (map.current && map.current.isStyleLoaded()) {
         addCircleToMap();
-      } else {
+      } else if (map.current) {
         map.current.on('load', addCircleToMap);
       }
     };
@@ -127,13 +127,15 @@ export default function ZoneInterventionMap({ zones, centerCity }: ZoneIntervent
       });
 
       // Désactiver tous les contrôles
-      map.current.scrollZoom.disable();
-      map.current.boxZoom.disable();
-      map.current.dragRotate.disable();
-      map.current.dragPan.disable();
-      map.current.keyboard.disable();
-      map.current.doubleClickZoom.disable();
-      map.current.touchZoomRotate.disable();
+      if (map.current) {
+        map.current.scrollZoom.disable();
+        map.current.boxZoom.disable();
+        map.current.dragRotate.disable();
+        map.current.dragPan.disable();
+        map.current.keyboard.disable();
+        map.current.doubleClickZoom.disable();
+        map.current.touchZoomRotate.disable();
+      }
 
       // Ajouter le marqueur et le cercle si on a une position valide
       if (initialCenter[0] !== 2.3522 || initialCenter[1] !== 48.8566) {

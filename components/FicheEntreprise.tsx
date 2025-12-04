@@ -23,8 +23,10 @@ import {
   Image as ImageIcon,
   CheckCircle
 } from "lucide-react";
-import { collection, addDoc, updateDoc, doc, increment } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, doc, increment, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { sendLeadNotificationIfAllowed } from '@/lib/notification-service';
+import { getArtisanPreferencesWithDefaults } from '@/lib/artisan-preferences';
 import ZoneInterventionMap from "./ZoneInterventionMap";
 import PrestationsDrawer from "./PrestationsDrawer";
 import CertificationsDrawer from "./CertificationsDrawer";
@@ -61,6 +63,7 @@ interface FicheEntrepriseProps {
   onQuoteRangeChange?: (min: number, max: number) => Promise<void>;
   onCertificationsChange?: (certifications: string[]) => Promise<void>;
   projects?: any[];
+  reviews?: any[];
   onAddProject?: (projectData: {
     title: string;
     description: string;
@@ -94,6 +97,7 @@ export default function FicheEntreprise({
   onQuoteRangeChange,
   onCertificationsChange,
   projects = [],
+  reviews = [],
   onAddProject,
   onProjectVisibilityToggle,
   onEditProject,
@@ -102,6 +106,12 @@ export default function FicheEntreprise({
   const [showPhone, setShowPhone] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [privacySettings, setPrivacySettings] = useState({
+    profileVisible: true,
+    showPhone: true,
+    showEmail: false,
+    allowDirectContact: true
+  });
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [tempDescription, setTempDescription] = useState(entreprise.description);
   const [isSavingDescription, setIsSavingDescription] = useState(false);
@@ -117,8 +127,33 @@ export default function FicheEntreprise({
   const [tempQuoteMin, setTempQuoteMin] = useState(entreprise.averageQuoteMin || 0);
   const [tempQuoteMax, setTempQuoteMax] = useState(entreprise.averageQuoteMax || 0);
   const [isSavingQuoteRange, setIsSavingQuoteRange] = useState(false);
+  const [isCardSticky, setIsCardSticky] = useState(false);
+  const [cardPosition, setCardPosition] = useState('static');
+  const [cardInitialTop, setCardInitialTop] = useState(0);
+  const [cardWidth, setCardWidth] = useState(0);
+  const [cardLeft, setCardLeft] = useState(0);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Récupérer les paramètres de confidentialité de l'artisan
+  useEffect(() => {
+    const fetchPrivacySettings = async () => {
+      try {
+        const artisanDoc = await getDoc(doc(db, 'artisans', entreprise.id));
+        if (artisanDoc.exists()) {
+          const data = artisanDoc.data();
+          const preferences = getArtisanPreferencesWithDefaults(data);
+          setPrivacySettings(preferences.privacy);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la récupération des paramètres de confidentialité:', error);
+      }
+    };
+
+    fetchPrivacySettings();
+  }, [entreprise.id]);
 
   // Mettre à jour la description temporaire quand la description de l'entreprise change
   useEffect(() => {
@@ -130,6 +165,46 @@ export default function FicheEntreprise({
     setTempQuoteMin(entreprise.averageQuoteMin || 0);
     setTempQuoteMax(entreprise.averageQuoteMax || 0);
   }, [entreprise.averageQuoteMin, entreprise.averageQuoteMax]);
+
+  // Capturer les dimensions initiales de la carte
+  useEffect(() => {
+    if (!showContactForm || !cardRef.current) return;
+
+    const captureInitialDimensions = () => {
+      const card = cardRef.current;
+      if (!card) return;
+
+      const cardRect = card.getBoundingClientRect();
+      const scrollY = window.scrollY;
+      
+      setCardInitialTop(cardRect.top + scrollY);
+      setCardWidth(cardRect.width);
+      setCardLeft(cardRect.left);
+    };
+
+    const timer = setTimeout(captureInitialDimensions, 100);
+    return () => clearTimeout(timer);
+  }, [showContactForm, entreprise]);
+
+  // Gérer le comportement sticky de la carte
+  useEffect(() => {
+    if (!showContactForm || cardInitialTop === 0) return;
+
+    const handleScroll = () => {
+      const scrollY = window.scrollY;
+      
+      // Déclenchement du sticky quand on arrive à 10px de la carte
+      const triggerPoint = cardInitialTop - 10;
+      const shouldBeSticky = scrollY >= triggerPoint;
+      
+      setIsCardSticky(shouldBeSticky);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Vérifier la position initiale
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [showContactForm, cardInitialTop]);
 
 
   const [formData, setFormData] = useState({
@@ -194,28 +269,22 @@ export default function FicheEntreprise({
         updatedAt: new Date()
       });
 
-      // Envoyer l'email de notification à l'artisan
+      // Envoyer l'email de notification à l'artisan (si autorisé par ses préférences)
       try {
-        const emailResponse = await fetch('/api/send-lead-notification', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            artisanEmail: entreprise.email,
-            artisanName: entreprise.nom,
-            clientName: `${formData.prenom} ${formData.nom}`,
-            clientEmail: formData.email,
-            clientPhone: formData.telephone,
-            clientPostalCode: formData.codePostal,
-            projectDescription: formData.description
-          }),
+        const notificationSent = await sendLeadNotificationIfAllowed(entreprise.id, {
+          artisanEmail: entreprise.email,
+          artisanName: entreprise.nom,
+          clientName: `${formData.prenom} ${formData.nom}`,
+          clientEmail: formData.email,
+          clientPhone: formData.telephone,
+          clientPostalCode: formData.codePostal,
+          projectDescription: formData.description
         });
 
-        if (!emailResponse.ok) {
-          console.error('Erreur lors de l\'envoi de l\'email de notification');
+        if (notificationSent) {
+          console.log('Email de notification lead envoyé avec succès');
         } else {
-          console.log('Email de notification envoyé avec succès');
+          console.log('Email de notification lead non envoyé (préférences ou erreur)');
         }
       } catch (emailError) {
         console.error('Erreur lors de l\'envoi de l\'email:', emailError);
@@ -515,7 +584,7 @@ export default function FicheEntreprise({
         </div>
 
         {/* Layout principal */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div ref={containerRef} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Partie gauche - Informations entreprise */}
           <div className="lg:col-span-2 space-y-10">
             {/* Nom et spécialités */}
@@ -713,10 +782,12 @@ export default function FicheEntreprise({
                         })()}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-3 text-gray-600">
-                      <Mail className="h-4 w-4" />
-                      <span>{entreprise.email}</span>
-                    </div>
+                    {privacySettings.showEmail && (
+                      <div className="flex items-center space-x-3 text-gray-600">
+                        <Mail className="h-4 w-4" />
+                        <span>{entreprise.email}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -863,6 +934,130 @@ export default function FicheEntreprise({
                 </div>
               </div>
 
+              {/* Formulaire de contact mobile */}
+              {showContactForm && (
+                <div className="lg:hidden mt-8">
+                  <Card>
+                    <CardContent className="p-6">
+                      {isFormSubmitted ? (
+                        <div className="text-center space-y-4 flex flex-col justify-center" style={{ minHeight: '300px' }}>
+                          <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+                            <CheckCircle className="h-8 w-8 text-green-600" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-semibold text-gray-900 mb-2">Merci !</h3>
+                            <p className="text-gray-600 mb-4">
+                              Votre demande a été transmise avec succès à {entreprise.nom}.
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Vous devriez recevoir une réponse dans les plus brefs délais.
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <h3 className="text-xl font-semibold text-gray-900 mb-4">Demander un devis</h3>
+                          
+                          {formErrorMessage && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                              {formErrorMessage}
+                            </div>
+                          )}
+                          
+                          <form onSubmit={handleSubmit} className="space-y-4">
+                            <div className="grid grid-cols-1 gap-3">
+                              <div>
+                                <Input
+                                  name="prenom"
+                                  placeholder="Prénom *"
+                                  value={formData.prenom}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <Input
+                                  name="nom"
+                                  placeholder="Nom *"
+                                  value={formData.nom}
+                                  onChange={handleInputChange}
+                                  required
+                                />
+                              </div>
+                            </div>
+                            
+                            <Input
+                              name="email"
+                              type="email"
+                              placeholder="Email *"
+                              value={formData.email}
+                              onChange={handleInputChange}
+                              required
+                            />
+                            
+                            <Input
+                              name="telephone"
+                              type="tel"
+                              placeholder="Téléphone *"
+                              value={formData.telephone}
+                              onChange={handleInputChange}
+                              required
+                            />
+                            
+                            <Input
+                              name="codePostal"
+                              placeholder="Code postal *"
+                              value={formData.codePostal}
+                              onChange={handleInputChange}
+                              required
+                            />
+                            
+                            <Textarea
+                              name="description"
+                              placeholder="Description de votre projet (optionnel)"
+                              value={formData.description}
+                              onChange={handleInputChange}
+                              rows={3}
+                            />
+                            
+                            <Button 
+                              type="submit" 
+                              className="w-full"
+                              disabled={isSubmittingForm}
+                            >
+                              {isSubmittingForm ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                  Envoi en cours...
+                                </>
+                              ) : (
+                                <>
+                                  <Send className="h-4 w-4 mr-2" />
+                                  Envoyer ma demande
+                                </>
+                              )}
+                            </Button>
+                          </form>
+                          
+                          {privacySettings.showPhone && (
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                              <Button
+                                variant="outline"
+                                className="w-full"
+                                onClick={() => setShowPhone(!showPhone)}
+                              >
+                                <Phone className="h-4 w-4 mr-2" />
+                                {showPhone ? entreprise.telephone : "Voir le numéro de téléphone"}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+
               {/* Projets réalisés */}
               <div className="space-y-6 mt-8">
                 <div className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-lg p-6">
@@ -877,7 +1072,7 @@ export default function FicheEntreprise({
 
                   {projects.length > 0 ? (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                         {(showAllProjects ? projects : projects.slice(0, 6)).map((project) => (
                           <ProjectCard
                             key={project.id}
@@ -941,13 +1136,102 @@ export default function FicheEntreprise({
                 </div>
               </div>
 
+              {/* Avis clients */}
+              {reviews.length > 0 && (
+                <div className="space-y-6 mt-8">
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">Avis clients</h3>
+                        <p className="text-sm text-gray-600">
+                          Découvrez les retours de nos clients satisfaits
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-5 w-5 ${
+                              i < Math.round(entreprise.note) 
+                                ? 'fill-yellow-400 text-yellow-400' 
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                        <span className="ml-2 text-sm font-medium text-gray-700">
+                          {entreprise.note}/5 ({entreprise.nombreAvis} avis)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      {reviews.slice(0, 6).map((review) => (
+                        <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <span className="text-sm font-medium text-blue-600">
+                                  {review.clientName.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div>
+                                <h4 className="font-medium text-gray-900">{review.clientName}</h4>
+                                <div className="flex items-center space-x-1">
+                                  {Array.from({ length: 5 }, (_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={`h-4 w-4 ${
+                                        i < review.rating 
+                                          ? 'fill-yellow-400 text-yellow-400' 
+                                          : 'text-gray-300'
+                                      }`}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                            <span className="text-sm text-gray-500">
+                              {review.createdAt?.toDate?.()?.toLocaleDateString('fr-FR', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              }) || 'Date inconnue'}
+                            </span>
+                          </div>
+                          <p className="text-gray-700 text-sm leading-relaxed">
+                            {review.comment}
+                          </p>
+                        </div>
+                      ))}
+                      
+                      {reviews.length > 6 && (
+                        <div className="text-center">
+                          <Button variant="outline" className="mt-4">
+                            Voir tous les avis ({reviews.length})
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
 
           {/* Partie droite - Formulaire de contact */}
           {showContactForm && (
-            <div className="lg:col-span-1">
-              <Card className="sticky top-6">
+            <div className="hidden lg:block lg:col-span-1">
+              <Card 
+                ref={cardRef}
+                className={`${
+                  isCardSticky ? 'fixed top-6 z-50' : ''
+                }`}
+                style={isCardSticky ? {
+                  left: `${cardLeft}px`,
+                  width: `${cardWidth}px`
+                } : {}}
+              >
                 <CardContent className="p-6">
                   {isFormSubmitted ? (
                     <div className="text-center space-y-4 flex flex-col justify-center" style={{ minHeight: '400px' }}>
@@ -1055,15 +1339,17 @@ export default function FicheEntreprise({
                       )}
                     </Button>
                     
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full"
-                          onClick={handlePhoneClick}
-                        >
-                          <Phone className="h-4 w-4 mr-2" />
-                          {showPhone ? entreprise.telephone : "Voir le numéro de téléphone"}
-                        </Button>
+                        {privacySettings.showPhone && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full"
+                            onClick={handlePhoneClick}
+                          >
+                            <Phone className="h-4 w-4 mr-2" />
+                            {showPhone ? entreprise.telephone : "Voir le numéro de téléphone"}
+                          </Button>
+                        )}
                       </form>
                     </>
                   )}
