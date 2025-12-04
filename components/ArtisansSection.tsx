@@ -274,7 +274,7 @@ export default function ArtisansSection() {
         </div>
 
         {/* Lien pour chercher un artisan */}
-        <div className="text-center mt-12">
+        <div className="text-left mt-12">
           <Button asChild variant="outline" size="lg">
             <Link href="/trouver-pro">
               Chercher un artisan

@@ -77,7 +77,7 @@ export default function ServicesSection() {
         </div>
         
         {/* CTA section */}
-        <div className="text-center mt-12 lg:mt-16">
+        <div className="text-left mt-12 lg:mt-16">
           <p className="text-gray-600 mb-6">
             Une question ? Besoin d'aide pour votre projet ?
           </p>

@@ -160,6 +160,11 @@ export default function Header() {
                 Trouver Pro
               </Link>
 
+              {/* Avis Pro */}
+              <Link href="/avis" className="text-gray-600 hover:text-gray-900">
+                Avis Pro
+              </Link>
+
               {/* Simuler mon devis */}
               <Button asChild variant="ghost" className="text-orange-600 hover:text-orange-700 font-semibold">
                 <Link href="/simulateur-devis">SIMULER MON DEVIS</Link>
@@ -253,6 +258,14 @@ export default function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Trouver Pro
+                  </Link>
+
+                  <Link 
+                    href="/avis" 
+                    className="block text-gray-600 hover:text-gray-900 font-semibold text-lg py-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Avis Pro
                   </Link>
 
                   <Button asChild variant="ghost" className="w-full text-orange-600 hover:text-orange-700 font-semibold text-lg">

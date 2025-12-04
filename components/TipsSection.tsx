@@ -118,7 +118,7 @@ export default function TipsSection() {
         </div>
 
         {/* Bouton pour voir plus d'astuces */}
-        <div className="text-center mt-12">
+        <div className="text-left mt-12">
           <Button asChild variant="outline" size="lg">
             <Link href="/blog" className="flex items-center gap-2">
               Voir toutes nos astuces
