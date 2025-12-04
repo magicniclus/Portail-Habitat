@@ -146,7 +146,7 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
           )}
 
           {/* Boutons Desktop */}
-          <div className="hidden xl:flex items-center space-x-3">
+          <div className="hidden xl:flex items-center space-x-6">
             {isDashboard ? (
               <>
                 <span className="text-gray-700 hidden lg:block">Professionnel</span>
@@ -159,9 +159,9 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
               </>
             ) : (
               <>
-                <Button variant="outline" asChild className="hidden lg:flex">
-                  <Link href="/demander-demo">Demander une démo</Link>
-                </Button>
+                <Link href="/" className="text-gray-600 hover:text-gray-900 hidden lg:block">
+                  Vous êtes un particulier ?
+                </Link>
                 <Button asChild>
                   <Link href="/connexion-pro">Se connecter</Link>
                 </Button>
@@ -369,11 +369,13 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
                   </div>
                   
                   <div className="border-t pt-6 space-y-4">
-                    <Button variant="outline" asChild className="w-full">
-                      <Link href="/demander-demo" onClick={() => setIsMenuOpen(false)}>
-                        Demander une démo
-                      </Link>
-                    </Button>
+                    <Link 
+                      href="/" 
+                      className="block text-center text-gray-600 hover:text-gray-900 py-5"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Vous êtes un particulier ?
+                    </Link>
                     <Button asChild className="w-full">
                       <Link href="/connexion-pro" onClick={() => setIsMenuOpen(false)}>
                         Se connecter
