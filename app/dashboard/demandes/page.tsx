@@ -30,16 +30,6 @@ interface Lead {
   notes: string;
 }
 
-// Fonction pour mapper les statuts Firestore vers les statuts de l'interface
-const mapFirestoreStatus = (firestoreStatus: string) => {
-  const statusMap: { [key: string]: string } = {
-    'new': 'nouveau',
-    'contacted': 'en_cours',
-    'converted': 'repondu',
-    'lost': 'ferme'
-  };
-  return statusMap[firestoreStatus] || 'nouveau';
-};
 
 // Fonction pour déterminer le type basé sur les données
 const determineType = (lead: Lead) => {
@@ -60,13 +50,13 @@ const determineType = (lead: Lead) => {
 
 const getStatusBadge = (status: string) => {
   const statusConfig = {
-    nouveau: { label: "Nouveau", className: "bg-blue-100 text-blue-800" },
-    en_cours: { label: "En cours", className: "bg-yellow-100 text-yellow-800" },
-    repondu: { label: "Répondu", className: "bg-green-100 text-green-800" },
-    ferme: { label: "Fermé", className: "bg-gray-100 text-gray-800" },
+    new: { label: "Nouveau", className: "bg-blue-100 text-blue-800" },
+    contacted: { label: "Contacté", className: "bg-yellow-100 text-yellow-800" },
+    converted: { label: "Converti", className: "bg-green-100 text-green-800" },
+    lost: { label: "Perdu", className: "bg-gray-100 text-gray-800" },
   };
   
-  const config = statusConfig[status as keyof typeof statusConfig];
+  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.new;
   return (
     <Badge className={config.className}>
       {config.label}
@@ -187,8 +177,7 @@ export default function DemandesPage() {
       lead.projectType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       lead.notes.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const mappedStatus = mapFirestoreStatus(lead.status);
-    const matchesStatus = statusFilter === "all" || mappedStatus === statusFilter;
+    const matchesStatus = statusFilter === "all" || lead.status === statusFilter;
     
     const leadType = determineType(lead);
     const matchesType = typeFilter === "all" || leadType === typeFilter;
@@ -602,14 +591,14 @@ export default function DemandesPage() {
       </div>
 
       {/* Statistiques rapides */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total demandes</CardTitle>
-            <Mail className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-xs md:text-sm font-medium">Total demandes</CardTitle>
+            <Mail className="h-3 w-3 md:h-4 md:w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{leads.length}</div>
+            <div className="text-xl md:text-2xl font-bold">{leads.length}</div>
             <p className="text-xs text-muted-foreground">
               Ce mois
             </p>
@@ -617,26 +606,27 @@ export default function DemandesPage() {
         </Card>
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-blue-800">Nouvelles</CardTitle>
-            <div className="h-4 w-4 rounded-full bg-blue-500"></div>
+            <CardTitle className="text-xs md:text-sm font-medium text-blue-800">Nouvelles</CardTitle>
+            <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-blue-500"></div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-900">
-              {leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'nouveau').length}
+            <div className="text-xl md:text-2xl font-bold text-blue-900">
+              {leads.filter((lead: Lead) => lead.status === 'new').length}
             </div>
             <p className="text-xs text-blue-700">
               À traiter
             </p>
-            {leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'nouveau').length > 0 && (
-              <div className="mt-2 space-y-1">
-                {leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'nouveau').slice(0, 2).map((lead) => (
+            {/* Aperçu masqué sur mobile pour économiser l'espace */}
+            {leads.filter((lead: Lead) => lead.status === 'new').length > 0 && (
+              <div className="mt-2 space-y-1 hidden md:block">
+                {leads.filter((lead: Lead) => lead.status === 'new').slice(0, 2).map((lead) => (
                   <div key={lead.id} className="text-xs text-blue-800 truncate">
                     ✨ {lead.clientName} - {lead.projectType}
                   </div>
                 ))}
-                {leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'nouveau').length > 2 && (
+                {leads.filter((lead: Lead) => lead.status === 'new').length > 2 && (
                   <div className="text-xs text-blue-600">
-                    +{leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'nouveau').length - 2} nouvelles...
+                    +{leads.filter((lead: Lead) => lead.status === 'new').length - 2} nouvelles...
                   </div>
                 )}
               </div>
@@ -645,54 +635,54 @@ export default function DemandesPage() {
         </Card>
         <Card className="border-yellow-200 bg-yellow-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-yellow-800">En cours</CardTitle>
-            <div className="h-4 w-4 rounded-full bg-yellow-500"></div>
+            <CardTitle className="text-xs md:text-sm font-medium text-yellow-800">Contactées</CardTitle>
+            <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-yellow-500"></div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-900">
-              {leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'en_cours').length}
+            <div className="text-xl md:text-2xl font-bold text-yellow-900">
+              {leads.filter((lead: Lead) => lead.status === 'contacted').length}
             </div>
             <p className="text-xs text-yellow-700">
               En traitement
             </p>
-            {leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'en_cours').length > 0 && (
-              <div className="mt-2 space-y-1">
-                {leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'en_cours').slice(0, 2).map((lead) => (
+            {leads.filter((lead: Lead) => lead.status === 'contacted').length > 0 && (
+              <div className="mt-2 space-y-1 hidden md:block">
+                {leads.filter((lead: Lead) => lead.status === 'contacted').slice(0, 2).map((lead) => (
                   <div key={lead.id} className="text-xs text-yellow-800 truncate">
-                    • {lead.clientName} - {lead.projectType}
+                    📞 {lead.clientName} - {lead.projectType}
                   </div>
                 ))}
-                {leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'en_cours').length > 2 && (
+                {leads.filter((lead: Lead) => lead.status === 'contacted').length > 2 && (
                   <div className="text-xs text-yellow-600">
-                    +{leads.filter((lead: Lead) => mapFirestoreStatus(lead.status) === 'en_cours').length - 2} autres...
+                    +{leads.filter((lead: Lead) => lead.status === 'contacted').length - 2} autres...
                   </div>
                 )}
               </div>
             )}
           </CardContent>
         </Card>
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-green-200 bg-green-50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-red-800">Urgences</CardTitle>
-            <div className="h-4 w-4 rounded-full bg-red-500 animate-pulse"></div>
+            <CardTitle className="text-xs md:text-sm font-medium text-green-800">Converties</CardTitle>
+            <div className="h-3 w-3 md:h-4 md:w-4 rounded-full bg-green-500"></div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-900">
-              {leads.filter((lead: Lead) => determineType(lead) === 'urgence').length}
+            <div className="text-xl md:text-2xl font-bold text-green-900">
+              {leads.filter((lead: Lead) => lead.status === 'converted').length}
             </div>
-            <p className="text-xs text-red-700">
-              Priorité haute
+            <p className="text-xs text-green-700">
+              Clients acquis
             </p>
-            {leads.filter((lead: Lead) => determineType(lead) === 'urgence').length > 0 && (
-              <div className="mt-2 space-y-1">
-                {leads.filter((lead: Lead) => determineType(lead) === 'urgence').slice(0, 2).map((lead) => (
-                  <div key={lead.id} className="text-xs text-red-800 truncate font-medium">
-                    🚨 {lead.clientName} - {lead.projectType}
+            {leads.filter((lead: Lead) => lead.status === 'converted').length > 0 && (
+              <div className="mt-2 space-y-1 hidden md:block">
+                {leads.filter((lead: Lead) => lead.status === 'converted').slice(0, 2).map((lead) => (
+                  <div key={lead.id} className="text-xs text-green-800 truncate">
+                    ✅ {lead.clientName} - {lead.projectType}
                   </div>
                 ))}
-                {leads.filter((lead: Lead) => determineType(lead) === 'urgence').length > 2 && (
-                  <div className="text-xs text-red-600">
-                    +{leads.filter((lead: Lead) => determineType(lead) === 'urgence').length - 2} autres urgences...
+                {leads.filter((lead: Lead) => lead.status === 'converted').length > 2 && (
+                  <div className="text-xs text-green-600">
+                    +{leads.filter((lead: Lead) => lead.status === 'converted').length - 2} autres...
                   </div>
                 )}
               </div>
@@ -737,10 +727,10 @@ export default function DemandesPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="nouveau">Nouveau</SelectItem>
-                <SelectItem value="en_cours">En cours</SelectItem>
-                <SelectItem value="repondu">Répondu</SelectItem>
-                <SelectItem value="ferme">Fermé</SelectItem>
+                <SelectItem value="new">Nouveau</SelectItem>
+                <SelectItem value="contacted">Contacté</SelectItem>
+                <SelectItem value="converted">Converti</SelectItem>
+                <SelectItem value="lost">Perdu</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -763,60 +753,121 @@ export default function DemandesPage() {
               </div>
             ) : (
               filteredLeads.map((lead: Lead) => {
-                const mappedStatus = mapFirestoreStatus(lead.status);
                 const leadType = determineType(lead);
                 
                 return (
-                  <div key={lead.id} className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
-                    <div className="flex items-start space-x-4 flex-1">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="font-medium">{lead.clientName}</h3>
-                          {getTypeBadge(leadType)}
-                          {getStatusBadge(mappedStatus)}
-                        </div>
-                        <p className="text-sm font-medium text-muted-foreground">{lead.projectType}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{lead.notes || 'Aucune description fournie'}</p>
-                        <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-                          <span>{lead.clientEmail}</span>
-                          <span>•</span>
-                          <span>{lead.clientPhone}</span>
-                          <span>•</span>
-                          <span>{formatDate(lead.createdAt)}</span>
-                          {lead.city && (
-                            <>
-                              <span>•</span>
-                              <span>{lead.city}</span>
-                            </>
-                          )}
+                  <div key={lead.id} className="border rounded-lg hover:bg-muted/50 transition-colors">
+                    {/* Version Desktop */}
+                    <div className="hidden md:flex items-start justify-between p-4">
+                      <div className="flex items-start space-x-4 flex-1">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center space-x-2">
+                            <h3 className="font-medium">{lead.clientName}</h3>
+                            {getTypeBadge(leadType)}
+                            {getStatusBadge(lead.status)}
+                          </div>
+                          <p className="text-sm font-medium text-muted-foreground">{lead.projectType}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{lead.notes || 'Aucune description fournie'}</p>
+                          <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                            <span>{lead.clientEmail}</span>
+                            <span>•</span>
+                            <span>{lead.clientPhone}</span>
+                            <span>•</span>
+                            <span>{formatDate(lead.createdAt)}</span>
+                            {lead.city && (
+                              <>
+                                <span>•</span>
+                                <span>{lead.city}</span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
+                      <div className="flex items-center space-x-2">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          title="Voir les détails"
+                          onClick={() => handleViewLead(lead)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          title="Appeler le client"
+                          onClick={() => window.open(`tel:${lead.clientPhone}`, '_self')}
+                        >
+                          <Phone className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          title="Envoyer un email"
+                          onClick={() => handleSendEmail(lead)}
+                        >
+                          <Mail className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        title="Voir les détails"
-                        onClick={() => handleViewLead(lead)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        title="Envoyer un email"
-                        onClick={() => handleSendEmail(lead)}
-                      >
-                        <Mail className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        title="Appeler le client"
-                        onClick={() => window.open(`tel:${lead.clientPhone}`, '_self')}
-                      >
-                        <Phone className="h-4 w-4" />
-                      </Button>
+
+                    {/* Version Mobile */}
+                    <div className="md:hidden p-3 space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-sm truncate">{lead.clientName}</h3>
+                          <p className="text-xs text-muted-foreground truncate">{lead.projectType}</p>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="ml-2 flex-shrink-0"
+                          onClick={() => handleViewLead(lead)}
+                        >
+                          Voir
+                        </Button>
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-1">
+                        {getTypeBadge(leadType)}
+                        {getStatusBadge(lead.status)}
+                      </div>
+                      
+                      <div className="space-y-1 text-xs text-muted-foreground">
+                        <div className="truncate">{lead.clientEmail}</div>
+                        <div className="truncate">{lead.clientPhone}</div>
+                        <div className="flex items-center justify-between">
+                          <span>{formatDate(lead.createdAt)}</span>
+                          {lead.city && <span>{lead.city}</span>}
+                        </div>
+                      </div>
+                      
+                      {lead.notes && (
+                        <p className="text-xs text-muted-foreground line-clamp-2 bg-gray-50 p-2 rounded">
+                          {lead.notes}
+                        </p>
+                      )}
+                      
+                      <div className="flex gap-2 pt-2 border-t">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="flex-1 text-xs"
+                          onClick={() => handleSendEmail(lead)}
+                        >
+                          <Mail className="h-3 w-3 mr-1" />
+                          Email
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="flex-1 text-xs"
+                          onClick={() => window.open(`tel:${lead.clientPhone}`, '_self')}
+                        >
+                          <Phone className="h-3 w-3 mr-1" />
+                          Appeler
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );
