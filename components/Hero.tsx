@@ -251,7 +251,7 @@ export default function Hero() {
                 >
                   <Search className="mr-2 h-5 w-5" />
                   <span className="lg:hidden">Rechercher</span>
-                  <span className="hidden lg:inline">Chercher parmi plus de 12 000 artisans</span>
+                  <span className="hidden lg:inline">Chercher parmi plus de 3 000 artisans</span>
                 </Button>
               </div>
               
@@ -259,7 +259,7 @@ export default function Hero() {
               <div className="mt-6 lg:mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 text-white/90">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="text-sm">+12 000 artisans</span>
+                  <span className="text-sm">+3 000 artisans</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-sm">✓ Vérifiés et qualifiés</span>

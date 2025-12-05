@@ -307,7 +307,7 @@ export default function ArtisansClient() {
     console.log('Debug promo - searchTerm:', searchTerm, 'user:', !!user, 'isArtisan:', isArtisan, 'paginatedArtisans:', paginatedArtisans.length);
     
     // Vérifier si c'est une vraie recherche manuelle (pas géographique)
-    const urlParams = new URLSearchParams(window.location.search);
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
     const hasManualSearch = urlParams.get('projet') && searchTerm.includes(urlParams.get('projet') || '');
     
     if (hasManualSearch || (user && isArtisan)) {
