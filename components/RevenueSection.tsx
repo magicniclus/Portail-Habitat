@@ -110,22 +110,31 @@ export default function RevenueSection() {
               </span>
             </div>
 
-            {/* Bouton CTA */}
-            <div className="flex justify-start">
-              <Button 
-                className="w-full sm:w-auto text-lg py-3 px-8 font-semibold"
-                style={{backgroundColor: '#16a34a'}} 
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803d'} 
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
-                onClick={() => {
-                  const formulaire = document.querySelector('form');
-                  if (formulaire) {
-                    formulaire.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }}
-              >
-                Commencer maintenant
-              </Button>
+            {/* CTA section avec trait vert */}
+            <div className="text-left flex items-stretch gap-4">
+              {/* Barre verticale verte */}
+              <div className="w-1 bg-green-600 rounded-full flex-shrink-0"></div>
+              
+              {/* Contenu */}
+              <div className="flex-1">
+                <p className="text-gray-600 mb-6">
+                  Transformez votre activité et multipliez vos revenus dès maintenant !
+                </p>
+                <Button 
+                  className="w-full sm:w-auto text-lg py-3 px-8 font-semibold"
+                  style={{backgroundColor: '#16a34a'}} 
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803d'} 
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
+                  onClick={() => {
+                    const formulaire = document.querySelector('form');
+                    if (formulaire) {
+                      formulaire.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                  }}
+                >
+                  Commencer maintenant
+                </Button>
+              </div>
             </div>
           </div>
 

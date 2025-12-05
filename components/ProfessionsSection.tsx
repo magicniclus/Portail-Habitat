@@ -187,15 +187,24 @@ export default function ProfessionsSection() {
               </div>
             </div>
 
-            {/* Bouton CTA */}
-            <div className="mt-8">
-              <Button 
-                size="lg" 
-                className="w-full sm:w-auto px-8 py-4 text-lg font-semibold bg-green-600 hover:bg-green-700"
-                onClick={scrollToForm}
-              >
-                Je m'inscris
-              </Button>
+            {/* CTA section avec trait vert */}
+            <div className="text-left mt-8 flex items-stretch gap-4">
+              {/* Barre verticale verte */}
+              <div className="w-1 bg-green-600 rounded-full flex-shrink-0"></div>
+              
+              {/* Contenu */}
+              <div className="flex-1">
+                <p className="text-gray-600 mb-6">
+                  Développez votre activité dès aujourd'hui, quel que soit votre métier !
+                </p>
+                <Button 
+                  size="lg" 
+                  className="w-full sm:w-auto px-8 py-4 text-lg font-semibold bg-green-600 hover:bg-green-700"
+                  onClick={scrollToForm}
+                >
+                  Je m'inscris
+                </Button>
+              </div>
             </div>
           </div>
         </div>

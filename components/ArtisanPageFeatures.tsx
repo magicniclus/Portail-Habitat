@@ -90,18 +90,27 @@ export default function ArtisanPageFeatures() {
               })}
             </div>
 
-            {/* Bouton CTA */}
-            <div className="mt-8">
-              <Button 
-                size="lg" 
-                className="w-full sm:w-auto px-8 py-4 text-lg font-semibold"
-                style={{backgroundColor: '#16a34a'}} 
-                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803d'} 
-                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
-                onClick={scrollToForm}
-              >
-                Je m'inscris
-              </Button>
+            {/* CTA section avec trait vert */}
+            <div className="text-left mt-8 flex items-stretch gap-4">
+              {/* Barre verticale verte */}
+              <div className="w-1 bg-green-600 rounded-full flex-shrink-0"></div>
+              
+              {/* Contenu */}
+              <div className="flex-1">
+                <p className="text-gray-600 mb-6">
+                  Rejoignez plus de 3 200 artisans qui nous font déjà confiance !
+                </p>
+                <Button 
+                  size="lg" 
+                  className="w-full sm:w-auto px-8 py-4 text-lg font-semibold"
+                  style={{backgroundColor: '#16a34a'}} 
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803d'} 
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
+                  onClick={scrollToForm}
+                >
+                  Je m'inscris
+                </Button>
+              </div>
             </div>
           </div>
 
