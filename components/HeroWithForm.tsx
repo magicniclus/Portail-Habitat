@@ -173,7 +173,7 @@ export default function HeroWithForm() {
               Portail Habitat
             </h1>
             
-            <h2 className="text-2xl md:text-3xl font-semibold text-green-400 mb-6">
+            <h2 className="text-2xl md:text-3xl font-semibold text-white mb-6">
               L'annuaire n°1 des artisans du bâtiment en France
             </h2>
             
