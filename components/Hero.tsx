@@ -1,24 +1,163 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, MapPin, Users } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Hero() {
   const [projet, setProjet] = useState("");
-  const [metier, setMetier] = useState("");
   const [localisation, setLocalisation] = useState("");
+  const [selectedLocation, setSelectedLocation] = useState<{
+    name: string;
+    coordinates: [number, number];
+  } | null>(null);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLocationSelected, setIsLocationSelected] = useState(false);
+  const router = useRouter();
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const metiers = [
-    "Plomberie", "Électricité", "Peinture", "Maçonnerie", "Menuiserie",
-    "Carrelage", "Chauffage", "Couverture", "Isolation", "Climatisation"
-  ];
+  // Fermer les suggestions quand on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (inputRef.current && !inputRef.current.parentElement?.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Fonction pour rechercher des suggestions avec Mapbox
+  const searchLocations = async (query: string) => {
+    if (query.length < 3) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    // Vérifier que la clé API est disponible
+    const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+    console.log('Mapbox token présent:', !!mapboxToken);
+    
+    if (!mapboxToken) {
+      console.error('Clé API Mapbox manquante - Ajoutez NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN dans votre fichier .env.local');
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?` +
+        `access_token=${mapboxToken}&` +
+        `country=FR&` +
+        `types=place,locality,postcode&` +
+        `limit=5`;
+      
+      console.log('URL de recherche Mapbox:', url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        console.error(`Erreur API Mapbox: ${response.status} - ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Détails de l\'erreur:', errorText);
+        setSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('Réponse complète Mapbox:', data);
+      console.log('Suggestions reçues:', data.features);
+      
+      if (data.features && data.features.length > 0) {
+        setSuggestions(data.features);
+        setShowSuggestions(true);
+      } else {
+        console.log('Aucune suggestion trouvée pour:', query);
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    } catch (error) {
+      console.error('Erreur lors de la recherche de localisation:', error);
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  // Debounce pour la recherche
+  useEffect(() => {
+    if (localisation.length >= 3 && !isLocationSelected) {
+      const timeoutId = setTimeout(() => {
+        console.log('Recherche API pour:', localisation);
+        searchLocations(localisation);
+      }, 300);
+      
+      return () => clearTimeout(timeoutId);
+    } else if (localisation.length < 3 && !isLocationSelected) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [localisation, isLocationSelected]);
+
+  // Gérer le changement de saisie
+  const handleLocationChange = (value: string) => {
+    console.log('Changement de saisie:', value);
+    setLocalisation(value);
+    setIsLocationSelected(false); // Reset la sélection quand on tape
+    console.log('isLocationSelected reset à false');
+  };
+
+  // Sélectionner une suggestion
+  const selectLocation = (feature: any) => {
+    const locationName = feature.place_name;
+    const coordinates = feature.center;
+    
+    console.log('Sélection de:', locationName, coordinates);
+    
+    // Marquer comme sélectionné AVANT de changer la localisation
+    setIsLocationSelected(true);
+    setSelectedLocation({
+      name: locationName,
+      coordinates: coordinates
+    });
+    setLocalisation(locationName);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    
+    console.log('État après sélection - isLocationSelected:', true);
+  };
 
   const handleSearch = () => {
-    console.log("Recherche:", { projet, metier, localisation });
+    // Vérifier qu'une localisation a été sélectionnée
+    if (!isLocationSelected || !selectedLocation) {
+      alert('Veuillez sélectionner une localisation dans la liste des suggestions.');
+      return;
+    }
+    
+    // Construire l'URL avec les paramètres de recherche
+    const params = new URLSearchParams();
+    
+    if (projet.trim()) {
+      params.set('projet', projet.trim());
+    }
+    params.set('localisation', localisation.trim());
+    
+    // Ajouter les coordonnées si disponibles
+    if (selectedLocation?.coordinates) {
+      params.set('lat', selectedLocation.coordinates[1].toString());
+      params.set('lng', selectedLocation.coordinates[0].toString());
+    }
+    
+    // Rediriger vers la page artisans avec les filtres
+    router.push(`/artisans?${params.toString()}`);
   };
 
   return (
@@ -66,43 +205,49 @@ export default function Hero() {
                   />
                 </div>
                 
-                <div className="space-y-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:space-y-0">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
-                      Type de métier
-                    </label>
-                    <Select value={metier} onValueChange={setMetier}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choisir un métier" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {metiers.map((m) => (
-                          <SelectItem key={m} value={m.toLowerCase()}>
-                            {m}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
+                    <MapPin className="inline h-4 w-4 mr-1" />
+                    Localisation
+                  </label>
+                  <Input
+                    ref={inputRef}
+                    placeholder="Ville ou code postal"
+                    value={localisation}
+                    onChange={(e) => handleLocationChange(e.target.value)}
+                    className="w-full"
+                    autoComplete="off"
+                  />
                   
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
-                      <MapPin className="inline h-4 w-4 mr-1" />
-                      Localisation
-                    </label>
-                    <Input
-                      placeholder="Ville ou code postal"
-                      value={localisation}
-                      onChange={(e) => setLocalisation(e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
+                  {/* Suggestions dropdown */}
+                  {showSuggestions && suggestions.length > 0 && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                      {suggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            console.log('Clic sur suggestion:', suggestion.place_name);
+                            selectLocation(suggestion);
+                          }}
+                        >
+                          <div className="flex items-center">
+                            <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                            <span>{suggestion.place_name}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
                 <Button 
                   onClick={handleSearch}
-                  className="w-full bg-orange-600 hover:bg-orange-700 text-white text-lg py-3"
+                  disabled={!isLocationSelected}
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-lg py-3"
                   size="lg"
+                  onMouseEnter={() => console.log('État bouton - isLocationSelected:', isLocationSelected, 'selectedLocation:', selectedLocation)}
                 >
                   <Search className="mr-2 h-5 w-5" />
                   <span className="lg:hidden">Rechercher</span>

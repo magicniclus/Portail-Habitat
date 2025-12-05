@@ -358,7 +358,7 @@ export default function MaFichePage() {
 
   // Fonction pour partager la fiche
   const handleShare = async () => {
-    const url = `${window.location.origin}/artisan/${entreprise?.slug || entreprise?.id}`;
+    const url = `${window.location.origin}/artisans/${entreprise?.slug || entreprise?.id}`;
     
     if (navigator.share) {
       try {
@@ -383,14 +383,14 @@ export default function MaFichePage() {
 
   // Fonction pour partager sur Facebook
   const handleShareFacebook = () => {
-    const url = `${window.location.origin}/artisan/${entreprise?.slug || entreprise?.id}`;
+    const url = `${window.location.origin}/artisans/${entreprise?.slug || entreprise?.id}`;
     const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
     window.open(facebookUrl, '_blank', 'width=600,height=400');
   };
 
   // Fonction pour partager sur X (Twitter)
   const handleShareX = () => {
-    const url = `${window.location.origin}/artisan/${entreprise?.slug || entreprise?.id}`;
+    const url = `${window.location.origin}/artisans/${entreprise?.slug || entreprise?.id}`;
     const text = `Découvrez la fiche de ${entreprise?.nom} - Artisan professionnel`;
     const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     window.open(xUrl, '_blank', 'width=600,height=400');

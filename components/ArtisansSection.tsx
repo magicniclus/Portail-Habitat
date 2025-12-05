@@ -242,7 +242,7 @@ export default function ArtisansSection() {
                     {/* Actions */}
                     <div className="flex flex-col sm:flex-row gap-3 mt-4">
                       <Button asChild className="bg-orange-600 hover:bg-orange-700">
-                        <Link href={`/artisan/${artisan.slug}`}>
+                        <Link href={`/artisans/${artisan.slug}`}>
                           <ExternalLink className="h-4 w-4 mr-2" />
                           Voir le profil
                         </Link>
