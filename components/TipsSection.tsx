@@ -10,7 +10,7 @@ export default function TipsSection() {
   const mainTip = {
     title: "Comment bien choisir son artisan pour sa rénovation",
     excerpt: "Découvrez nos conseils d'experts pour sélectionner le bon professionnel et éviter les pièges courants lors de vos travaux de rénovation.",
-    image: "/tips/main-tip.jpg",
+    image: "/photos/accueil/TipsSection/renovation.png",
     author: "Marie Dupont",
     readTime: "5 min",
     link: "/blog/choisir-artisan-renovation"
@@ -20,14 +20,14 @@ export default function TipsSection() {
     {
       title: "Les 5 erreurs à éviter en plomberie",
       excerpt: "Évitez les problèmes courants qui peuvent coûter cher...",
-      image: "/tips/plomberie-tips.jpg",
+      image: "/photos/accueil/TipsSection/erreur-plomberie.png",
       readTime: "3 min",
       link: "/blog/erreurs-plomberie"
     },
     {
       title: "Budget rénovation : comment bien l'estimer",
       excerpt: "Nos astuces pour prévoir le coût de vos travaux...",
-      image: "/tips/budget-tips.jpg",
+      image: "/photos/accueil/TipsSection/budget-renovation.png",
       readTime: "4 min",
       link: "/blog/budget-renovation"
     }
@@ -50,7 +50,7 @@ export default function TipsSection() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Article principal - 2/3 de la largeur */}
-          <Card className="lg:col-span-2 overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group h-full">
+          <div className="lg:col-span-2 overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group h-full rounded-lg">
             <Link href={mainTip.link} className="block h-full">
               <div className="relative h-full min-h-[320px] lg:min-h-[400px]">
                 <Image
@@ -82,14 +82,14 @@ export default function TipsSection() {
                 </div>
               </div>
             </Link>
-          </Card>
+          </div>
 
           {/* Articles secondaires - 1/3 de la largeur */}
           <div className="space-y-6">
             {sideTips.map((tip, index) => (
-              <Card key={index} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group">
-                <Link href={tip.link}>
-                  <div className="relative h-32">
+              <div key={index} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group rounded-lg bg-white flex flex-col h-48">
+                <Link href={tip.link} className="flex flex-col h-full">
+                  <div className="relative flex-1">
                     <Image
                       src={tip.image}
                       alt={tip.title}
@@ -99,7 +99,7 @@ export default function TipsSection() {
                     <div className="absolute inset-0 bg-black/40" />
                   </div>
                   
-                  <CardContent className="p-4">
+                  <div className="p-4 flex-shrink-0">
                     <div className="flex items-center gap-1 text-xs text-gray-500 mb-2">
                       <Clock className="h-3 w-3" />
                       <span>{tip.readTime}</span>
@@ -110,21 +110,30 @@ export default function TipsSection() {
                     <p className="text-sm text-gray-600 line-clamp-2">
                       {tip.excerpt}
                     </p>
-                  </CardContent>
+                  </div>
                 </Link>
-              </Card>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Bouton pour voir plus d'astuces */}
-        <div className="text-left mt-12">
-          <Button asChild variant="outline" size="lg">
-            <Link href="/blog" className="flex items-center gap-2">
-              Voir toutes nos astuces
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </Button>
+        {/* CTA section avec trait orange */}
+        <div className="text-left mt-12 flex items-stretch gap-4">
+          {/* Barre verticale orange */}
+          <div className="w-1 bg-orange-600 rounded-full flex-shrink-0"></div>
+          
+          {/* Contenu */}
+          <div className="flex-1">
+            <p className="text-gray-600 mb-4">
+              Découvrez plus de conseils d'experts
+            </p>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/blog" className="flex items-center gap-2">
+                Voir toutes nos astuces
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </section>

@@ -68,16 +68,27 @@ export default function SimulatorSection() {
               })}
             </div>
 
-            {/* Bouton CTA */}
-            <Button 
-              asChild 
-              size="lg"
-              className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3"
-            >
-              <Link href="/simulateur-devis">
-                Essayer le simulateur IA
-              </Link>
-            </Button>
+            {/* CTA section avec trait orange */}
+            <div className="flex items-stretch gap-4 mt-8">
+              {/* Barre verticale orange */}
+              <div className="w-1 bg-orange-600 rounded-full flex-shrink-0"></div>
+              
+              {/* Contenu */}
+              <div className="flex-1">
+                <p className="text-gray-600 mb-4">
+                  Prêt à estimer vos travaux ?
+                </p>
+                <Button 
+                  asChild 
+                  size="lg"
+                  className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3"
+                >
+                  <Link href="/simulateur-devis">
+                    Essayer le simulateur IA
+                  </Link>
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Vidéo à droite */}

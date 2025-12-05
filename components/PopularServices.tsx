@@ -9,27 +9,31 @@ export default function PopularServices() {
   const popularServices = [
     {
       title: "Plomberie",
-      image: "/popular/plomberie.jpg"
+      image: "/photos/accueil/popularServices/plomberie.png"
     },
     {
       title: "Électricité",
-      image: "/popular/electricite.jpg"
-    },
+      image: "/photos/accueil/popularServices/electricite.png"
+    },  
     {
       title: "Peinture",
-      image: "/popular/peinture.jpg"
+      image: "/photos/accueil/popularServices/peinture.png"
     },
     {
       title: "Carrelage",
-      image: "/popular/carrelage.jpg"
+      image: "/photos/accueil/popularServices/carrelage.png"
     },
     {
       title: "Chauffage",
-      image: "/popular/chauffage.jpg"
+      image: "/photos/accueil/popularServices/chauffage.png"
     },
     {
       title: "Menuiserie",
-      image: "/popular/menuiserie.jpg"
+      image: "/photos/accueil/popularServices/menuiserie.png"
+    },
+    {
+      title: "Couverture",
+      image: "/photos/accueil/popularServices/couverture.png"
     }
   ];
 
@@ -45,10 +49,10 @@ export default function PopularServices() {
 
         {/* Grille des cartes - 3-4 cartes par ligne */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-16 lg:mb-24">
-          {/* 6 services populaires */}
+          {/* 7 services populaires */}
           {popularServices.map((service, index) => (
-            <Card key={index} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="relative h-24 lg:h-32">
+            <div key={index} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg bg-white h-36 lg:h-44 flex flex-col">
+              <div className="relative flex-1">
                 {/* Image */}
                 <div 
                   className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -57,21 +61,21 @@ export default function PopularServices() {
               </div>
               
               {/* Titre aligné à gauche */}
-              <div className="p-2 lg:p-3">
+              <div className="p-2 lg:p-3 flex-shrink-0">
                 <h3 className="text-xs lg:text-sm font-semibold text-gray-900 text-left">
                   {service.title}
                 </h3>
               </div>
-            </Card>
+            </div>
           ))}
 
           {/* Carte spéciale simulation de devis */}
-          <Card className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-orange-500 to-orange-600">
-            <div className="h-24 lg:h-32 flex items-center justify-center">
+          <div className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg h-36 lg:h-44 flex flex-col">
+            <div className="flex-1 flex items-center justify-center">
               <Calculator className="h-6 w-6 lg:h-8 lg:w-8 text-white" />
             </div>
             
-            <div className="p-2 lg:p-3 text-center">
+            <div className="p-2 lg:p-3 text-center flex-shrink-0">
               <h3 className="text-xs lg:text-sm font-semibold text-white mb-1 lg:mb-2">
                 Simulation de devis
               </h3>
@@ -85,7 +89,7 @@ export default function PopularServices() {
                 </Link>
               </Button>
             </div>
-          </Card>
+          </div>
         </div>
 
         {/* Section Inspirations */}
@@ -100,23 +104,23 @@ export default function PopularServices() {
           {[
             {
               title: "Cuisine moderne",
-              image: "/inspirations/cuisine.jpg"
+              image: "/photos/accueil/PopularServices/cuisine.png"
             },
             {
               title: "Salle de bain zen",
-              image: "/inspirations/salle-bain.jpg"
+              image: "/photos/accueil/PopularServices/salle-de-bain.png"
             },
             {
               title: "Salon cosy",
-              image: "/inspirations/salon.jpg"
+              image: "/photos/accueil/PopularServices/salon.png"
             },
             {
               title: "Chambre parentale",
-              image: "/inspirations/chambre.jpg"
+              image: "/photos/accueil/PopularServices/chambre.png"
             }
           ].map((inspiration, index) => (
-            <Card key={index} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <div className="relative h-48 lg:h-56">
+            <div key={index} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg bg-white h-56 lg:h-64 flex flex-col">
+              <div className="relative flex-1">
                 {/* Image */}
                 <div 
                   className="absolute inset-0 bg-cover bg-center bg-no-repeat"
@@ -125,12 +129,12 @@ export default function PopularServices() {
               </div>
               
               {/* Titre aligné à gauche */}
-              <div className="p-4">
+              <div className="p-4 flex-shrink-0">
                 <h3 className="text-base lg:text-lg font-semibold text-gray-900 text-left">
                   {inspiration.title}
                 </h3>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       </div>

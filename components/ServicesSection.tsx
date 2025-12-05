@@ -10,19 +10,19 @@ export default function ServicesSection() {
       title: "Estimation de devis en ligne",
       buttonText: "Estimer mon projet",
       buttonLink: "/simulateur-devis",
-      backgroundImage: "/services/estimation.jpg"
+      backgroundImage: "/photos/accueil/servicesSection/estimation.png"
     },
     {
       title: "Trouver un artisan près de chez moi",
       buttonText: "Trouver un artisan",
       buttonLink: "/trouver-pro",
-      backgroundImage: "/services/artisan.jpg"
+      backgroundImage: "/photos/accueil/servicesSection/artisan.png"
     },
     {
       title: "Obtenir des conseils d'un professionnel",
       buttonText: "Demander conseil",
       buttonLink: "/conseils",
-      backgroundImage: "/services/conseils.jpg"
+      backgroundImage: "/photos/accueil/servicesSection/conseils.png"
     }
   ];
 
@@ -42,50 +42,54 @@ export default function ServicesSection() {
         {/* Grille des cartes */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {services.map((service, index) => (
-            <Card key={index} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-lg overflow-hidden h-80">
-              <div className="relative h-full">
-                {/* Image de fond */}
-                <div 
-                  className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-                  style={{ backgroundImage: `url('${service.backgroundImage}')` }}
-                />
+            <div key={index} className="group hover:shadow-xl transition-all duration-300 shadow-lg overflow-hidden h-80 rounded-lg relative">
+              {/* Image de fond */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+                style={{ backgroundImage: `url('${service.backgroundImage}')` }}
+              />
+              
+              {/* Overlay */}
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-all duration-300" />
+              
+              {/* Contenu */}
+              <div className="relative z-10 h-full flex flex-col justify-between p-6">
+                {/* Titre */}
+                <h3 className="text-xl lg:text-2xl font-bold text-white">
+                  {service.title}
+                </h3>
                 
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-all duration-300" />
-                
-                {/* Contenu */}
-                <div className="relative z-10 h-full flex flex-col justify-between p-6">
-                  {/* Titre */}
-                  <h3 className="text-xl lg:text-2xl font-bold text-white">
-                    {service.title}
-                  </h3>
-                  
-                  {/* Bouton en bas */}
-                  <Button 
-                    asChild 
-                    className="w-full bg-white text-gray-900 hover:bg-gray-100 font-semibold"
-                    size="lg"
-                  >
-                    <Link href={service.buttonLink}>
-                      {service.buttonText}
-                    </Link>
-                  </Button>
-                </div>
+                {/* Bouton en bas */}
+                <Button 
+                  asChild 
+                  className="w-full bg-white text-gray-900 hover:bg-gray-100 font-semibold"
+                  size="lg"
+                >
+                  <Link href={service.buttonLink}>
+                    {service.buttonText}
+                  </Link>
+                </Button>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
         
         {/* CTA section */}
-        <div className="text-left mt-12 lg:mt-16">
-          <p className="text-gray-600 mb-6">
-            Une question ? Besoin d'aide pour votre projet ?
-          </p>
-          <Button asChild variant="outline" size="lg" className="border-2">
-            <Link href="/contact">
-              Nous contacter
-            </Link>
-          </Button>
+        <div className="text-left mt-12 lg:mt-16 flex items-stretch gap-4">
+          {/* Barre verticale orange */}
+          <div className="w-1 bg-orange-600 rounded-full flex-shrink-0"></div>
+          
+          {/* Contenu */}
+          <div className="flex-1">
+            <p className="text-gray-600 mb-6">
+              Une question ? Besoin d'aide pour votre projet ?
+            </p>
+            <Button asChild variant="outline" size="lg" className="border-2">
+              <Link href="/contact">
+                Nous contacter
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </section>

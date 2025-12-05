@@ -273,13 +273,22 @@ export default function ArtisansSection() {
           ))}
         </div>
 
-        {/* Lien pour chercher un artisan */}
-        <div className="text-left mt-12">
-          <Button asChild variant="outline" size="lg">
-            <Link href="/trouver-pro">
-              Chercher un artisan
-            </Link>
-          </Button>
+        {/* CTA section avec trait orange */}
+        <div className="text-left mt-12 flex items-stretch gap-4">
+          {/* Barre verticale orange */}
+          <div className="w-1 bg-orange-600 rounded-full flex-shrink-0"></div>
+          
+          {/* Contenu */}
+          <div className="flex-1">
+            <p className="text-gray-600 mb-4">
+              Besoin d'un professionnel pour vos travaux ?
+            </p>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/trouver-pro">
+                Chercher un artisan
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </section>
