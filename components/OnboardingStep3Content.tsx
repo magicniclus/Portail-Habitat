@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { MapPin, CheckCircle, Lock, Shield, ArrowRight, CreditCard } from "lucide-react";
+import { MapPin, CheckCircle, Lock, Shield, ArrowRight, CreditCard, Smartphone, Bell } from "lucide-react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Footer from "@/components/Footer";
@@ -355,9 +355,87 @@ export default function OnboardingStep3Content() {
                   </div>
                   
                   {/* Garantie satisfaction */}
-                  <div>
+                  <div className="pb-4 border-b border-gray-100">
                     <h3 className="text-gray-600 text-sm font-medium mb-2">Garantie satisfaction :</h3>
                     <p className="font-semibold text-green-600 text-sm">Aucun risque : si vous ne recevez pas 1 demande ce mois-ci, nous vous offrons le mois suivant</p>
+                  </div>
+                  
+                  {/* Section Application Mobile */}
+                  <div className="bg-gray-50 p-4 rounded-xl">
+                    <div className="flex items-start gap-4">
+                      {/* Téléphone à gauche */}
+                      <div className="flex-shrink-0">
+                        <div className="relative">
+                          {/* Téléphone */}
+                          <div className="w-20 h-40 bg-gray-900 rounded-lg p-0.5 shadow-lg">
+                            <div className="w-full h-full bg-white rounded-md overflow-hidden relative">
+                              {/* Barre de statut */}
+                              <div className="bg-gray-50 h-3 flex items-center justify-between px-1.5 text-xs">
+                                <span className="font-medium text-xs">9:41</span>
+                                <div className="w-2 h-1 bg-green-500 rounded-sm"></div>
+                              </div>
+                              
+                              {/* Contenu de l'app - très simplifié */}
+                              <div className="p-1.5 bg-gradient-to-b from-green-50 to-white h-full flex flex-col">
+                                {/* Logo app minimaliste */}
+                                <div className="text-center mb-1.5">
+                                  <div className="w-3 h-3 bg-green-600 rounded-full mx-auto flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold">P</span>
+                                  </div>
+                                </div>
+                                
+                                {/* Notification très simple */}
+                                <div className="bg-white rounded p-1 shadow-sm border border-green-200 flex-1">
+                                  <div className="flex items-center space-x-1">
+                                    <Bell className="h-1.5 w-1.5 text-green-600 flex-shrink-0" />
+                                    <div className="flex-1">
+                                      <div className="w-full h-1 bg-gray-200 rounded mb-0.5"></div>
+                                      <div className="w-3/4 h-1 bg-gray-200 rounded mb-0.5"></div>
+                                      <div className="w-1/2 h-1 bg-green-200 rounded"></div>
+                                    </div>
+                                  </div>
+                                  <div className="w-full h-1.5 bg-green-600 rounded mt-1"></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Animation de notification */}
+                          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+                            <span className="text-white text-xs font-bold">1</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Textes à droite et en bas */}
+                      <div className="flex-1 flex flex-col justify-between h-40">
+                        <div>
+                          <h3 className="text-gray-900 text-sm font-semibold mb-1">
+                            Soyez le premier prévenu sur votre téléphone
+                          </h3>
+                          <p className="text-xs text-gray-600 leading-relaxed">
+                            + de 3200 artisans reçoivent déjà leurs chantiers via l’appli
+                          </p>
+                        </div>
+                        
+                        {/* Logos des stores en bas */}
+                        <div className="flex items-center gap-2 mt-2">
+                          <a href="#" className="transition-transform hover:scale-105">
+                            <img 
+                              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+                              alt="Télécharger sur l'App Store"
+                              className="h-6 w-auto"
+                            />
+                          </a>
+                          <a href="#" className="transition-transform hover:scale-105">
+                            <svg width="64" height="24" viewBox="0 0 64 24" className="h-6">
+                              <rect width="64" height="24" rx="3" fill="#000"/>
+                              <text x="32" y="15" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold" fontFamily="Arial">Google Play</text>
+                            </svg>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -527,17 +605,96 @@ export default function OnboardingStep3Content() {
                   </div>
                   
                   {/* Garantie satisfaction */}
-                  <div>
+                  <div className="pb-6 border-b border-gray-100">
                     <h3 className="text-gray-600 text-base font-medium mb-3">Garantie satisfaction :</h3>
                     <p className="font-semibold text-green-600 text-base">Aucun risque : si vous ne recevez pas 1 demande ce mois-ci, nous vous offrons le mois suivant</p>
+                  </div>
+                  
+                  {/* Section Application Mobile */}
+                  <div className="bg-gray-50 p-5 rounded-xl">
+                    <div className="flex items-start gap-5">
+                      {/* Téléphone à gauche */}
+                      <div className="flex-shrink-0">
+                        <div className="relative">
+                          {/* Téléphone */}
+                          <div className="w-24 h-48 bg-gray-900 rounded-xl p-1 shadow-lg">
+                            <div className="w-full h-full bg-white rounded-lg overflow-hidden relative">
+                              {/* Barre de statut */}
+                              <div className="bg-gray-50 h-4 flex items-center justify-between px-2 text-xs">
+                                <span className="font-medium">9:41</span>
+                                <div className="w-3 h-1.5 bg-green-500 rounded-sm"></div>
+                              </div>
+                              
+                              {/* Contenu de l'app - très simplifié */}
+                              <div className="p-2 bg-gradient-to-b from-green-50 to-white h-full flex flex-col">
+                                {/* Logo app minimaliste */}
+                                <div className="text-center mb-2">
+                                  <div className="w-4 h-4 bg-green-600 rounded-full mx-auto flex items-center justify-center">
+                                    <span className="text-white text-xs font-bold">P</span>
+                                  </div>
+                                </div>
+                                
+                                {/* Notification très simple */}
+                                <div className="bg-white rounded p-1.5 shadow-sm border border-green-200 flex-1">
+                                  <div className="flex items-center space-x-1">
+                                    <Bell className="h-2 w-2 text-green-600 flex-shrink-0" />
+                                    <div className="flex-1">
+                                      <div className="w-full h-1 bg-gray-200 rounded mb-1"></div>
+                                      <div className="w-3/4 h-1 bg-gray-200 rounded mb-1"></div>
+                                      <div className="w-1/2 h-1 bg-green-200 rounded"></div>
+                                    </div>
+                                  </div>
+                                  <div className="w-full h-2 bg-green-600 rounded mt-2"></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Animation de notification */}
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
+                            <span className="text-white text-xs font-bold">1</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Textes à droite et en bas */}
+                      <div className="flex-1 flex flex-col justify-between h-48">
+                        <div>
+                          <h3 className="text-gray-900 text-base font-semibold mb-2">
+                            Soyez le premier prévenu sur votre téléphone
+                          </h3>
+                          <p className="text-sm text-gray-600 leading-relaxed">
+                            Plus de 3200 artisans reçoivent déjà leurs chantiers via l’appli
+                          </p>
+                        </div>
+                        
+                        {/* Logos des stores en bas */}
+                        <div className="flex items-center gap-3 mt-4">
+                          <a href="#" className="transition-transform hover:scale-105">
+                            <img 
+                              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
+                              alt="Télécharger sur l'App Store"
+                              className="h-8 w-auto"
+                            />
+                          </a>
+                          <a href="#" className="transition-transform hover:scale-105">
+                            <svg width="85" height="32" viewBox="0 0 85 32" className="h-8">
+                              <rect width="85" height="32" rx="4" fill="#000"/>
+                              <text x="42.5" y="20" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold" fontFamily="Arial">Google Play</text>
+                            </svg>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Colonne droite - Paiement */}
-            <Card className="bg-white border border-gray-200">
-              <CardContent className="p-8">
+            <div className="sticky top-20 max-h-[calc(100vh-5rem)]">
+              <Card className="bg-white border border-gray-200">
+                <CardContent className="p-8">
                 <div className="flex items-center space-x-3 mb-8">
                   <Lock className="h-6 w-6 text-green-600" />
                   <h2 className="text-2xl font-bold text-gray-900">Paiement sécurisé</h2>
@@ -641,6 +798,7 @@ export default function OnboardingStep3Content() {
                 </form>
               </CardContent>
             </Card>
+            </div>
           </div>
         </div>
       </main>
