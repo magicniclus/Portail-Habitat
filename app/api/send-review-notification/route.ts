@@ -19,8 +19,24 @@ export async function POST(request: NextRequest) {
     } = requestData;
 
     if (!artisanEmail || !artisanName || !clientName || !rating) {
-      console.log('❌ Données manquantes:', { artisanEmail, artisanName, clientName, rating });
-      return NextResponse.json({ error: 'Données manquantes' }, { status: 400 });
+      const missingFields = [];
+      if (!artisanEmail) missingFields.push('artisanEmail');
+      if (!artisanName) missingFields.push('artisanName');
+      if (!clientName) missingFields.push('clientName');
+      if (!rating) missingFields.push('rating');
+      
+      console.log('❌ Données manquantes:', { 
+        artisanEmail: !!artisanEmail, 
+        artisanName: !!artisanName, 
+        clientName: !!clientName, 
+        rating: !!rating,
+        missingFields 
+      });
+      return NextResponse.json({ 
+        error: 'Données manquantes', 
+        missingFields,
+        received: { artisanEmail, artisanName, clientName, rating }
+      }, { status: 400 });
     }
 
     console.log('✅ Données trouvées pour notification avis:', { artisanEmail, artisanName, clientName, rating });

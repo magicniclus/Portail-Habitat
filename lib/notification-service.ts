@@ -90,6 +90,17 @@ export async function sendReviewNotificationIfAllowed(artisanId: string, reviewD
   reviewUrl?: string;
 }): Promise<boolean> {
   try {
+    // Valider les données avant envoi
+    if (!reviewData.artisanEmail || !reviewData.artisanName || !reviewData.clientName || !reviewData.rating) {
+      console.error('Données manquantes pour notification avis:', {
+        artisanEmail: !!reviewData.artisanEmail,
+        artisanName: !!reviewData.artisanName,
+        clientName: !!reviewData.clientName,
+        rating: !!reviewData.rating
+      });
+      return false;
+    }
+
     // Vérifier les préférences
     const shouldNotify = await checkArtisanNotificationPreferences(artisanId, 'emailReviews');
     
@@ -97,6 +108,13 @@ export async function sendReviewNotificationIfAllowed(artisanId: string, reviewD
       console.log(`Notification avis désactivée pour l'artisan ${artisanId}`);
       return false;
     }
+    
+    console.log('Envoi notification avis avec données:', {
+      artisanEmail: reviewData.artisanEmail,
+      artisanName: reviewData.artisanName,
+      clientName: reviewData.clientName,
+      rating: reviewData.rating
+    });
     
     // Envoyer la notification
     const response = await fetch('/api/send-review-notification', {
@@ -108,7 +126,9 @@ export async function sendReviewNotificationIfAllowed(artisanId: string, reviewD
     });
     
     if (!response.ok) {
-      throw new Error(`Erreur HTTP: ${response.status}`);
+      const errorText = await response.text();
+      console.error('Erreur API notification avis:', errorText);
+      throw new Error(`Erreur HTTP: ${response.status} - ${errorText}`);
     }
     
     console.log(`Notification avis envoyée pour l'artisan ${artisanId}`);
