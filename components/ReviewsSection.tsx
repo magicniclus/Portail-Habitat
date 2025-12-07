@@ -34,7 +34,7 @@ export default function ReviewsSection() {
   const platforms = [
     {
       name: "Trustpilot",
-      rating: 5.0,
+      rating: 4.3,
       logo: "/logo/logo_trustpilot.png",
       color: "text-green-500"
     },
@@ -46,7 +46,7 @@ export default function ReviewsSection() {
     },
     {
       name: "Jobber",
-      rating: 5.0,
+      rating: 4.8,
       logo: "/logo/logo_sitejabber.png",
       color: "text-purple-500"
     }

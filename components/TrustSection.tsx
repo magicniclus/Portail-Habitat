@@ -7,7 +7,7 @@ export default function TrustSection() {
   const platforms = [
     {
       name: "Trustpilot",
-      rating: 5.0,
+      rating: 4.3,
       logo: "/logo/logo_trustpilot.png",
       color: "text-yellow-400"
     },
@@ -19,7 +19,7 @@ export default function TrustSection() {
     },
     {
       name: "Sitejabber",
-      rating: 5.0,
+      rating: 4.8,
       logo: "/logo/logo_sitejabber.png",
       color: "text-yellow-400"
     }
