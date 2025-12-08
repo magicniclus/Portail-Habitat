@@ -172,3 +172,82 @@ subscriptions (collection - pour tracking des abonnements)
     ├── cancelReason (string | null)
     ├── createdAt
     └── updatedAt
+
+estimations (collection - toutes les estimations générées par le simulateur)
+└── {estimationId}
+    ├── sessionId                    ← identifiant unique de session pour regrouper les tentatives
+    ├── status ("draft" | "completed" | "sent")  ← statut de l'estimation
+    
+    // DONNÉES CLIENT
+    ├── clientInfo {
+    │   ├── firstName               ← prénom du client
+    │   ├── phone                   ← téléphone
+    │   ├── email                   ← email
+    │   └── acceptsCGV              ← acceptation des CGV (boolean)
+    │   }
+    
+    // LOCALISATION
+    ├── location {
+    │   ├── postalCode              ← code postal du projet
+    │   ├── city                    ← ville
+    │   ├── department              ← département (calculé automatiquement)
+    │   └── coordinates { lat, lng } ← coordonnées géographiques
+    │   }
+    
+    // PROJET
+    ├── project {
+    │   ├── propertyType            ← "Maison" | "Appartement" | "Local commercial"
+    │   ├── prestationType          ← type de prestation (ex: "Rénovation salle de bain")
+    │   ├── prestationSlug          ← slug de la prestation pour référence
+    │   ├── surface                 ← surface en m² (si applicable)
+    │   ├── prestationLevel         ← "low" | "mid" | "high" (économique/standard/premium)
+    │   ├── existingState           ← "creation" | "renovation" | "good_condition"
+    │   ├── timeline                ← "urgent" | "soon" | "later"
+    │   └── specificAnswers {}      ← réponses aux questions spécifiques du questionnaire
+    │   }
+    
+    // ESTIMATIONS CALCULÉES
+    ├── pricing {
+    │   ├── estimationLow           ← estimation basse (int, en euros)
+    │   ├── estimationMedium        ← estimation moyenne (int, en euros)
+    │   ├── estimationHigh          ← estimation haute (int, en euros)
+    │   ├── calculationMethod       ← "ai" | "statistical" | "manual"
+    │   ├── confidenceScore         ← score de confiance 0-100 (int)
+    │   └── priceFactors []         ← facteurs ayant influencé le prix
+    │   }
+    
+    // MÉTADONNÉES TECHNIQUES
+    ├── metadata {
+    │   ├── userAgent               ← navigateur utilisé
+    │   ├── referrer                ← source de trafic
+    │   ├── utm_source              ← source marketing
+    │   ├── utm_medium              ← medium marketing
+    │   ├── utm_campaign            ← campagne marketing
+    │   ├── deviceType              ← "mobile" | "tablet" | "desktop"
+    │   ├── ipAddress               ← adresse IP (pour géolocalisation)
+    │   └── completionTime          ← temps pour compléter le simulateur (en secondes)
+    │   }
+    
+    // SUIVI COMMERCIAL
+    ├── leads {
+    │   ├── artisansNotified []     ← liste des artisanIds notifiés
+    │   ├── artisansInterested []   ← artisans ayant manifesté un intérêt
+    │   ├── quotesReceived          ← nombre de devis reçus (int)
+    │   ├── leadConverted           ← si le lead a été converti (boolean)
+    │   └── conversionValue         ← valeur de la conversion (int, en euros)
+    │   }
+    
+    // HORODATAGE
+    ├── createdAt                   ← création de l'estimation
+    ├── completedAt                 ← finalisation du simulateur
+    ├── sentAt                      ← envoi par email
+    └── updatedAt                   ← dernière modification
+
+    // SOUS-COLLECTIONS
+    └── interactions (sous-collection - pour tracker les interactions)
+        └── {interactionId}
+            ├── type                ← "email_sent" | "artisan_notified" | "quote_received" | "client_contacted"
+            ├── artisanId           ← ID de l'artisan concerné (si applicable)
+            ├── details {}          ← détails spécifiques à l'interaction
+            ├── success             ← succès de l'action (boolean)
+            └── timestamp           ← moment de l'interaction

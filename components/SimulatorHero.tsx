@@ -59,6 +59,16 @@ export default function SimulatorHero() {
     setHasSelectedSuggestion(true)
   }
 
+  // Fonction pour créer l'URL avec la prestation sélectionnée
+  const getSimulatorURL = () => {
+    if (projectInput) {
+      // Essayer de trouver une prestation correspondante
+      const prestationSlug = 'renovation-complete-cuisine' // Pour l'instant, on utilise une prestation par défaut
+      return `/simulateur-devis/steps?prestation=${prestationSlug}&project=${encodeURIComponent(projectInput)}`
+    }
+    return '/simulateur-devis/steps'
+  }
+
   // Fermer les suggestions quand on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -196,12 +206,14 @@ export default function SimulatorHero() {
                           </div>
                         )}
                       </div>
-                      <Button 
-                        className="bg-orange-500 hover:bg-orange-600 h-12 px-6 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 w-full sm:w-auto"
-                        disabled={!hasSelectedSuggestion}
-                      >
-                        Lancer mon estimation gratuite
-                      </Button>
+                      <Link href={getSimulatorURL()}>
+                        <Button 
+                          className="bg-orange-500 hover:bg-orange-600 h-12 px-6 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 w-full sm:w-auto"
+                          disabled={!hasSelectedSuggestion}
+                        >
+                          Lancer mon estimation gratuite
+                        </Button>
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -209,19 +221,15 @@ export default function SimulatorHero() {
                 <div className="flex flex-wrap gap-3 pt-4">
                   <span className="text-white/80 text-sm">Projets populaires :</span>
                   {['Cuisine', 'Salle de bain', 'Peinture', 'Électricité'].map((tag) => (
-                    <Button
-                      key={tag}
-                      variant="outline"
-                      size="sm"
-                      className="bg-white/10 border-white/30 text-white hover:bg-white/20"
-                      onClick={() => {
-                        setProjectInput(tag)
-                        setHasSelectedSuggestion(true)
-                        setShowSuggestions(false)
-                      }}
-                    >
-                      {tag}
-                    </Button>
+                    <Link key={tag} href={`/simulateur-devis/steps?prestation=renovation-complete-cuisine&project=${encodeURIComponent(tag)}`}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                      >
+                        {tag}
+                      </Button>
+                    </Link>
                   ))}
                 </div>
               </div>

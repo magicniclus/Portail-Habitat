@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, Phone, Mail, MapPin, Star, Plus } from "lucide-react";
+import { Loader2, Search, Phone, Mail, MapPin, Star, Plus, Wrench } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { filterArtisansByDistance } from "@/lib/geo-utils";
+import { renovationPrestations } from "@/lib/renovation-suggestions";
 
 interface Artisan {
   id: string;
@@ -37,30 +38,247 @@ interface Artisan {
     showEmail: boolean;
     allowDirectContact: boolean;
   };
+  // Propriétés ajoutées pour corriger les erreurs TypeScript
+  isPromo?: boolean;
+  distance?: number;
 }
 
 export default function ArtisansClient() {
   const [artisans, setArtisans] = useState<Artisan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [secteurSearch, setSecteurSearch] = useState("");
+  const [prestationSearch, setPrestationSearch] = useState("");
+  const [selectedSecteur, setSelectedSecteur] = useState<{name: string, lat: number, lng: number, type?: string} | null>(null);
+  const [selectedPrestation, setSelectedPrestation] = useState<string>("");
+  const [secteurSuggestions, setSecteurSuggestions] = useState<{name: string, lat: number, lng: number, type?: string}[]>([]);
+  const [prestationSuggestions, setPrestationSuggestions] = useState<string[]>([]);
+  const [showSecteurSuggestions, setShowSecteurSuggestions] = useState(false);
+  const [showPrestationSuggestions, setShowPrestationSuggestions] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isArtisan, setIsArtisan] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 16;
+  const [hasUrlParams, setHasUrlParams] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+
+
+  // Fonction pour rechercher les secteurs avec Mapbox (comme dans MapboxMap.tsx)
+  const searchSecteurs = async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      return [];
+    }
+
+    try {
+      const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
+      if (!mapboxToken) {
+        console.error('NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN non configuré');
+        return [];
+      }
+
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxToken}&country=FR&types=place,region,district,postcode,locality,neighborhood&limit=5`
+      );
+      
+      if (!response.ok) {
+        console.error('Erreur API Mapbox:', response.status, response.statusText);
+        return [];
+      }
+
+      const data = await response.json();
+      
+      if (data.features) {
+        const suggestions = data.features.map((feature: any) => ({
+          name: feature.place_name,
+          lat: feature.center[1],
+          lng: feature.center[0],
+          type: feature.place_type[0]
+        }));
+        
+        return suggestions;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Erreur lors de la recherche Mapbox:', error);
+      return [];
+    }
+  };
+
+  // Fonction pour normaliser le texte (supprimer les accents)
+  const normalizeText = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, ""); // Supprime les accents
+  };
+
+  // Fonction pour rechercher les prestations
+  const searchPrestations = (query: string) => {
+    // Si pas de query, retourner toutes les prestations (pour affichage au clic)
+    if (!query.trim()) {
+      return renovationPrestations
+        .map(prestation => prestation.nom)
+        .slice(0, 10); // Afficher plus de prestations quand pas de filtre
+    }
+    
+    const queryNormalized = normalizeText(query);
+    return renovationPrestations
+      .filter(prestation => 
+        normalizeText(prestation.nom).includes(queryNormalized)
+      )
+      .map(prestation => prestation.nom)
+      .slice(0, 8);
+  };
+
+  // Gérer la saisie du secteur avec debounce
+  const handleSecteurChange = (value: string) => {
+    setSecteurSearch(value);
+    
+    // Annuler le timeout précédent
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    if (value.trim() && value.length >= 2) {
+      // Créer un nouveau timeout pour debounce
+      const timeout = setTimeout(async () => {
+        const suggestions = await searchSecteurs(value);
+        setSecteurSuggestions(suggestions);
+        setShowSecteurSuggestions(true);
+      }, 300); // Attendre 300ms après la dernière saisie
+      
+      setSearchTimeout(timeout);
+    } else {
+      setShowSecteurSuggestions(false);
+      setSelectedSecteur(null);
+      setSecteurSuggestions([]);
+    }
+  };
+
+  // Gérer la saisie de la prestation
+  const handlePrestationChange = (value: string) => {
+    setPrestationSearch(value);
+    const suggestions = searchPrestations(value);
+    setPrestationSuggestions(suggestions);
+    setShowPrestationSuggestions(suggestions.length > 0);
+    
+    if (!value.trim()) {
+      setSelectedPrestation("");
+    }
+  };
+
+  // Gérer le focus sur le champ prestation (afficher toutes les prestations)
+  const handlePrestationFocus = () => {
+    const suggestions = searchPrestations(prestationSearch);
+    setPrestationSuggestions(suggestions);
+    setShowPrestationSuggestions(suggestions.length > 0);
+  };
+
+  // Sélectionner un secteur
+  const selectSecteur = (secteur: {name: string, lat: number, lng: number, type?: string}) => {
+    setSecteurSearch(secteur.name);
+    setSelectedSecteur(secteur);
+    setShowSecteurSuggestions(false);
+  };
+
+  // Sélectionner une prestation
+  const selectPrestation = (prestation: string) => {
+    setPrestationSearch(prestation);
+    setSelectedPrestation(prestation);
+    setShowPrestationSuggestions(false);
+  };
   
   // Récupérer les paramètres de recherche depuis l'URL
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Anciens paramètres (compatibilité)
     const projet = urlParams.get('projet');
     const localisation = urlParams.get('localisation');
     
-    // Si on a au moins la localisation, construire la recherche
-    if (localisation) {
-      const searchQuery = projet ? `${projet} ${localisation}` : localisation;
-      setSearchTerm(searchQuery);
+    // Nouveaux paramètres du simulateur
+    const secteur = urlParams.get('secteur');
+    const ville = urlParams.get('ville');
+    const specialite = urlParams.get('specialite');
+    
+    // Priorité aux nouveaux paramètres du simulateur
+    if (secteur || ville || specialite) {
+      // Remplir les champs séparés
+      if (specialite) {
+        // Convertir le slug en texte lisible
+        const specialiteText = specialite
+          .replace(/-/g, ' ')
+          .replace(/renovation/g, 'rénovation')
+          .replace(/pose/g, 'pose')
+          .replace(/installation/g, 'installation')
+          .replace(/cuisine/g, 'cuisine')
+          .replace(/complete/g, 'complète')
+          .replace(/moderne/g, 'moderne')
+          .replace(/carrelage/g, 'carrelage')
+          .replace(/parquet/g, 'parquet')
+          .replace(/peinture/g, 'peinture')
+          .replace(/chauffage/g, 'chauffage')
+          .replace(/isolation/g, 'isolation')
+          .replace(/facade/g, 'façade')
+          .replace(/salle/g, 'salle')
+          .replace(/bain/g, 'bain')
+          .replace(/douche/g, 'douche')
+          .replace(/italienne/g, 'italienne')
+          .replace(/toiture/g, 'toiture')
+          .replace(/charpente/g, 'charpente')
+          .replace(/pompe/g, 'pompe')
+          .replace(/chaleur/g, 'chaleur')
+          .replace(/electricite/g, 'électricité')
+          .replace(/plomberie/g, 'plomberie');
+        setPrestationSearch(specialiteText);
+      }
+      
+      // Remplir le secteur et essayer de trouver les coordonnées via Mapbox
+      if (ville) {
+        setSecteurSearch(ville);
+        // Rechercher les coordonnées via Mapbox
+        searchSecteurs(ville).then(suggestions => {
+          if (suggestions.length > 0) {
+            setSelectedSecteur(suggestions[0]);
+          }
+        });
+      } else if (secteur) {
+        setSecteurSearch(secteur);
+        // Rechercher les coordonnées via Mapbox
+        searchSecteurs(secteur).then(suggestions => {
+          if (suggestions.length > 0) {
+            setSelectedSecteur(suggestions[0]);
+          }
+        });
+      }
+      
+      setHasUrlParams(true);
+    }
+    // Fallback sur les anciens paramètres
+    else if (localisation) {
+      if (projet) {
+        setPrestationSearch(projet);
+      }
+      setSecteurSearch(localisation);
+      // Rechercher les coordonnées via Mapbox
+      searchSecteurs(localisation).then(suggestions => {
+        if (suggestions.length > 0) {
+          setSelectedSecteur(suggestions[0]);
+        }
+      });
+      setHasUrlParams(true);
     }
   }, []);
+
+  // Nettoyer les timeouts au démontage
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
 
   // Composant étoile SVG personnalisé
   const StarIcon = ({ filled }: { filled: boolean }) => (
@@ -197,138 +415,103 @@ export default function ArtisansClient() {
     fetchArtisans();
   }, []);
 
-  // Filtrer les artisans selon le terme de recherche avec logique en cascade
+  // Filtrer les artisans selon les critères de recherche avec logique de fallback
   const filteredArtisans = useMemo(() => {
-    if (!searchTerm.trim()) {
+    // Si aucun critère de recherche, retourner tous les artisans
+    if (!secteurSearch.trim() && !prestationSearch.trim()) {
       return artisans;
     }
 
-    // Récupérer les paramètres de recherche depuis l'URL
-    const urlParams = new URLSearchParams(window.location.search);
-    const projet = urlParams.get('projet')?.toLowerCase();
-    const localisation = urlParams.get('localisation')?.toLowerCase();
+    // Nouveau système avec secteur et prestation séparés
+    const secteurLower = secteurSearch.toLowerCase().trim();
+    const prestationLower = prestationSearch.toLowerCase().trim();
 
-    // Si on a les paramètres URL, utiliser la logique en cascade avec géolocalisation
-    if (localisation) {
-      const lat = urlParams.get('lat');
-      const lng = urlParams.get('lng');
-      
-      // Si on a les coordonnées, utiliser la recherche géographique
-      if (lat && lng) {
-        const centerLat = parseFloat(lat);
-        const centerLng = parseFloat(lng);
-        
-        // Filtrer par distance (100km par défaut)
-        let geoFilteredArtisans = filterArtisansByDistance(artisans, centerLat, centerLng, 100);
-        
-        // Si on a aussi un projet, filtrer en plus par projet
-        if (projet) {
-          const projectMatch = geoFilteredArtisans.filter(artisan => {
-            return artisan.profession?.toLowerCase().includes(projet) ||
-                   artisan.professions?.some((prof: string) => prof.toLowerCase().includes(projet)) ||
-                   artisan.companyName?.toLowerCase().includes(projet);
-          });
-          
-          if (projectMatch.length > 0) {
-            return projectMatch;
-          }
-        }
-        
-        // Retourner les artisans dans la zone géographique
-        if (geoFilteredArtisans.length > 0) {
-          return geoFilteredArtisans;
-        }
-      }
-      
-      // Fallback sur la recherche textuelle si pas de coordonnées
-      if (projet) {
-        // 1. Essayer de filtrer par projet ET localisation
-        const fullMatch = artisans.filter(artisan => {
-          const matchesProject = artisan.profession?.toLowerCase().includes(projet) ||
-                                artisan.professions?.some(prof => prof.toLowerCase().includes(projet)) ||
-                                artisan.companyName?.toLowerCase().includes(projet);
-          const matchesLocation = artisan.city?.toLowerCase().includes(localisation);
-          return matchesProject && matchesLocation;
-        });
-
-        if (fullMatch.length > 0) {
-          return fullMatch;
-        }
-
-        // 2. Si pas de résultat, essayer seulement par localisation
-        const locationMatch = artisans.filter(artisan => 
-          artisan.city?.toLowerCase().includes(localisation)
-        );
-
-        if (locationMatch.length > 0) {
-          return locationMatch;
-        }
-
-        // 3. Si toujours pas de résultat, retourner tous les artisans
-        return artisans;
+    // Filtrer par secteur
+    let secteurFiltered = artisans;
+    if (secteurLower) {
+      if (selectedSecteur) {
+        // Si une ville spécifique est sélectionnée, utiliser la recherche géographique (70km)
+        secteurFiltered = filterArtisansByDistance(artisans, selectedSecteur.lat, selectedSecteur.lng, 70);
       } else {
-        // Si on a seulement la localisation
-        const locationMatch = artisans.filter(artisan => 
-          artisan.city?.toLowerCase().includes(localisation)
+        // Sinon, recherche textuelle classique
+        secteurFiltered = artisans.filter(artisan => 
+          artisan.city?.toLowerCase().includes(secteurLower)
         );
-
-        if (locationMatch.length > 0) {
-          return locationMatch;
-        }
-
-        // Si pas de résultat, retourner tous les artisans
-        return artisans;
       }
     }
 
-    // Logique de recherche normale (si pas de paramètres URL)
-    const searchLower = searchTerm.toLowerCase();
-    return artisans.filter(artisan => 
-      artisan.companyName?.toLowerCase().includes(searchLower) ||
-      artisan.firstName?.toLowerCase().includes(searchLower) ||
-      artisan.lastName?.toLowerCase().includes(searchLower) ||
-      artisan.phone?.includes(searchTerm) ||
-      artisan.profession?.toLowerCase().includes(searchLower) ||
-      artisan.professions?.some(prof => prof.toLowerCase().includes(searchLower)) ||
-      artisan.city?.toLowerCase().includes(searchLower)
-    );
-  }, [artisans, searchTerm]);
+    // Filtrer par prestation
+    let prestationFiltered = artisans;
+    if (prestationLower) {
+      prestationFiltered = artisans.filter(artisan => 
+        artisan.profession?.toLowerCase().includes(prestationLower) ||
+        artisan.professions?.some(prof => prof.toLowerCase().includes(prestationLower)) ||
+        artisan.companyName?.toLowerCase().includes(prestationLower)
+      );
+    }
+
+    // Logique de fallback selon les critères demandés
+    if (secteurLower && prestationLower) {
+      // 1. Essayer secteur + prestation
+      const bothMatch = secteurFiltered.filter(artisan => 
+        prestationFiltered.includes(artisan)
+      );
+      if (bothMatch.length > 0) {
+        return bothMatch;
+      }
+      
+      // 2. Si pas de résultat, prendre tous ceux du secteur
+      if (secteurFiltered.length > 0) {
+        return secteurFiltered;
+      }
+      
+      // 3. Si pas de secteur, prendre tous ceux de la prestation
+      if (prestationFiltered.length > 0) {
+        return prestationFiltered;
+      }
+      
+      // 4. Sinon retourner tous les artisans
+      return artisans;
+    }
+    
+    // Si seulement secteur
+    if (secteurLower && !prestationLower) {
+      return secteurFiltered.length > 0 ? secteurFiltered : artisans;
+    }
+    
+    // Si seulement prestation
+    if (!secteurLower && prestationLower) {
+      return prestationFiltered.length > 0 ? prestationFiltered : artisans;
+    }
+
+    return artisans;
+  }, [artisans, secteurSearch, prestationSearch]);
 
   // Pagination
   const totalPages = Math.ceil(filteredArtisans.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  
-  // Artisans pour la page actuelle
   const paginatedArtisans = filteredArtisans.slice(startIndex, endIndex);
-  
-  // Insérer la carte promotionnelle dans les artisans paginés
+
+  // Ajouter une carte promotionnelle si pas de recherche manuelle et pas artisan connecté
   const artisansWithPromo = useMemo(() => {
-    console.log('Debug promo - searchTerm:', searchTerm, 'user:', !!user, 'isArtisan:', isArtisan, 'paginatedArtisans:', paginatedArtisans.length);
-    
-    // Vérifier si c'est une vraie recherche manuelle (pas géographique)
-    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-    const hasManualSearch = urlParams.get('projet') && searchTerm.includes(urlParams.get('projet') || '');
+    const hasManualSearch = secteurSearch.trim() || prestationSearch.trim();
     
     if (hasManualSearch || (user && isArtisan)) {
-      console.log('Pas de promo - recherche manuelle ou artisan connecté');
-      return paginatedArtisans; // Pas de promo si recherche manuelle ou si artisan connecté
+      return paginatedArtisans;
     }
     
     const result = [...paginatedArtisans];
-    
-    // Insérer la carte promo en position 3 (index 2) minimum
-    const promoPosition = Math.min(2, result.length);
+    const promoPosition = Math.min(3, result.length);
     result.splice(promoPosition, 0, { isPromo: true } as any);
     
-    console.log('Promo ajoutée en position:', promoPosition, 'total items:', result.length);
     return result;
-  }, [paginatedArtisans, searchTerm, user, isArtisan]);
+  }, [paginatedArtisans, secteurSearch, prestationSearch, user, isArtisan]);
 
   // Reset page quand la recherche change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [secteurSearch, prestationSearch]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -346,17 +529,121 @@ export default function ArtisansClient() {
               Découvrez nos professionnels qualifiés près de chez vous
             </p>
             
-            {/* Barre de recherche */}
-            <div className="relative max-w-2xl mx-auto">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                type="text"
-                placeholder="Rechercher par nom, téléphone, ville ou métier..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-3 text-lg border-2 border-gray-200 focus:border-orange-500 rounded-lg"
-              />
+            {/* Barres de recherche séparées */}
+            <div className="max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Secteur avec autocomplétion */}
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 z-10" />
+                  <Input
+                    type="text"
+                    placeholder="Secteur (ville, code postal...)"
+                    value={secteurSearch}
+                    onChange={(e) => handleSecteurChange(e.target.value)}
+                    onFocus={() => secteurSearch.length >= 2 && secteurSuggestions.length > 0 && setShowSecteurSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSecteurSuggestions(false), 200)}
+                    className="pl-10 pr-4 py-3 text-lg border-2 border-gray-200 focus:border-blue-500 rounded-lg"
+                  />
+                  
+                  {/* Suggestions secteur */}
+                  {showSecteurSuggestions && secteurSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-20 mt-1">
+                      {secteurSuggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => selectSecteur(suggestion)}
+                          className="w-full text-left px-4 py-3 hover:bg-blue-50 first:rounded-t-lg last:rounded-b-lg border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                              <MapPin className="h-4 w-4 text-blue-500 mr-2" />
+                              <div>
+                                <span className="font-medium">{suggestion.name}</span>
+                                {suggestion.type && (
+                                  <span className="text-xs text-gray-400 ml-2">
+                                    ({suggestion.type === 'place' ? 'ville' : 
+                                      suggestion.type === 'locality' ? 'localité' : 
+                                      suggestion.type === 'neighborhood' ? 'quartier' : 
+                                      suggestion.type})
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-xs text-gray-500">70km</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Prestation avec autocomplétion */}
+                <div className="relative">
+                  <Wrench className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5 z-10" />
+                  <Input
+                    type="text"
+                    placeholder="Prestation (cuisine, plomberie...)"
+                    value={prestationSearch}
+                    onChange={(e) => handlePrestationChange(e.target.value)}
+                    onFocus={handlePrestationFocus}
+                    onBlur={() => setTimeout(() => setShowPrestationSuggestions(false), 200)}
+                    className="pl-10 pr-4 py-3 text-lg border-2 border-gray-200 focus:border-green-500 rounded-lg"
+                  />
+                  
+                  {/* Suggestions prestation */}
+                  {showPrestationSuggestions && prestationSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-20 mt-1">
+                      {prestationSuggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onClick={() => selectPrestation(suggestion)}
+                          className="w-full text-left px-4 py-3 hover:bg-green-50 first:rounded-t-lg last:rounded-b-lg border-b border-gray-100 last:border-b-0"
+                        >
+                          <div className="flex items-center">
+                            <Wrench className="h-4 w-4 text-green-500 mr-2" />
+                            <span className="font-medium">{suggestion}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+
+            {/* Indicateur de filtres appliqués depuis le simulateur */}
+            {hasUrlParams && (secteurSearch || prestationSearch) && (
+              <div className="mt-4 max-w-4xl mx-auto">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center">
+                  <div className="flex-shrink-0">
+                    <Search className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div className="ml-3 flex-1">
+                    <p className="text-sm text-blue-800">
+                      <span className="font-medium">Filtres appliqués depuis le simulateur :</span>
+                      {secteurSearch && <span className="ml-2 bg-blue-100 px-2 py-1 rounded">📍 {secteurSearch}</span>}
+                      {prestationSearch && <span className="ml-2 bg-blue-100 px-2 py-1 rounded">🔧 {prestationSearch}</span>}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSecteurSearch('');
+                        setPrestationSearch('');
+                        setHasUrlParams(false);
+                        // Nettoyer l'URL
+                        window.history.replaceState({}, '', '/artisans');
+                      }}
+                      className="text-blue-600 hover:text-blue-800 hover:bg-blue-100 p-1 h-auto"
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Résultats */}
@@ -371,7 +658,9 @@ export default function ArtisansClient() {
               <div className="mb-6">
                 <p className="text-gray-600">
                   {filteredArtisans.length} artisan{filteredArtisans.length > 1 ? 's' : ''} trouvé{filteredArtisans.length > 1 ? 's' : ''}
-                  {searchTerm && ` pour "${searchTerm}"`}
+                  {secteurSearch && prestationSearch && ` pour "${prestationSearch}" dans "${secteurSearch}"`}
+                  {secteurSearch && !prestationSearch && ` dans le secteur "${secteurSearch}"`}
+                  {!secteurSearch && prestationSearch && ` pour "${prestationSearch}"`}
                   {totalPages > 1 && ` - Page ${currentPage} sur ${totalPages}`}
                 </p>
               </div>
@@ -532,7 +821,7 @@ export default function ArtisansClient() {
               ) : (
                 <div className="text-center py-12">
                   <p className="text-gray-500 text-lg">Aucun artisan trouvé</p>
-                  {searchTerm && (
+                  {(secteurSearch || prestationSearch) && (
                     <p className="text-gray-400 text-sm mt-2">
                       Essayez de modifier votre recherche ou de supprimer certains filtres
                     </p>
