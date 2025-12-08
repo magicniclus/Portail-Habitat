@@ -275,8 +275,8 @@ export default function Hero() {
 
       {/* Section Artisans - 36% sur desktop, auto sur mobile */}
       <div 
-        className="bg-gray-800 text-white flex items-center justify-center min-h-[40vh] lg:min-h-auto"
-        style={{ flex: "0 0 36%" }}
+        className="text-white flex items-center justify-center min-h-[40vh] lg:min-h-auto"
+        style={{ flex: "0 0 36%", backgroundColor: "#0F172A" }}
       >
         <div className="p-6 sm:p-8 text-center max-w-sm mx-auto">
           <div className="mb-6">
