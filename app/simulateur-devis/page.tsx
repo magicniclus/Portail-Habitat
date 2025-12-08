@@ -4,6 +4,14 @@ import { useRouter } from 'next/navigation'
 import SimulatorHero from '@/components/SimulatorHero'
 import ReviewsSection from '@/components/ReviewsSection'
 import ResumeSimulatorModal from '@/components/ResumeSimulatorModal'
+import TrustSection from '@/components/TrustSection'
+import HowItWorksSection from '@/components/HowItWorksSection'
+import WhyPortailHabitat from '@/components/WhyPortailHabitat'
+import SimulateDevisSection from '@/components/SimulateDevisSection'
+import SimulatorProfessionsSection from '@/components/SimulatorProfessionsSection'
+import AppSection from '@/components/AppSection'
+import SimulatorTestimonialsSection from '@/components/SimulatorTestimonialsSection'
+import Footer from '@/components/Footer'
 
 export default function SimulateurDevisPage() {
   const router = useRouter()
@@ -87,7 +95,28 @@ export default function SimulateurDevisPage() {
       <SimulatorHero />
 
       {/* Section Avis Clients */}
-      <ReviewsSection />
+      <TrustSection />
+
+      {/* Section Comment ça fonctionne */}
+      <HowItWorksSection />
+
+      {/* Section Pourquoi Portail Habitat */}
+      <WhyPortailHabitat />
+
+      {/* Section Simuler Devis */}
+      <SimulateDevisSection />
+
+      {/* Section Professions Simulateur */}
+      <SimulatorProfessionsSection />
+
+      {/* Section Application Mobile */}
+      <AppSection />
+
+      {/* Section Témoignages Simulateur */}
+      <SimulatorTestimonialsSection />
+
+      {/* Footer */}
+      <Footer />
 
       {/* Modal de reprise */}
       {savedData && (
