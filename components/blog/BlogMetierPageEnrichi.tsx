@@ -231,24 +231,19 @@ export default function BlogMetierPageEnrichi({ metier }: BlogMetierPageProps) {
             </div>
           )}
 
-          {/* Images de la galerie */}
-          {articleComplet?.gallery && (
+          {/* Image principale */}
+          {articleComplet?.gallery && articleComplet.gallery[0] && (
             <div className="mb-12">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Exemples de chantiers {metier.name.toLowerCase()}
+                Exemple de chantier {metier.name.toLowerCase()}
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {articleComplet.gallery.map((image, index) => (
-                  <div key={index} className="relative h-48 rounded-lg overflow-hidden group">
-                    <Image
-                      src={image}
-                      alt={`Chantier ${metier.name} ${index + 1}`}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
-                  </div>
-                ))}
+              <div className="relative h-64 md:h-80 rounded-lg overflow-hidden">
+                <Image
+                  src={articleComplet.gallery[0]}
+                  alt={`Exemple chantier ${metier.name}`}
+                  fill
+                  className="object-cover"
+                />
               </div>
             </div>
           )}

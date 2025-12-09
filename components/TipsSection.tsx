@@ -11,7 +11,7 @@ export default function TipsSection() {
     title: "Comment bien choisir son artisan pour sa rénovation",
     excerpt: "Découvrez nos conseils d'experts pour sélectionner le bon professionnel et éviter les pièges courants lors de vos travaux de rénovation.",
     image: "/photos/accueil/TipsSection/renovation.png",
-    author: "Marie Dupont",
+    author: "Julia",
     readTime: "5 min",
     link: "/blog/choisir-artisan-renovation"
   };

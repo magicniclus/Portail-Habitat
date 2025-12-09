@@ -9,10 +9,10 @@
       "category": "renovation",
       "tags": ["salle de bain", "tendances", "rénovation", "2024"],
       "author": {
-        "name": "Marie Dubois",
-        "role": "Architecte d'intérieur",
-        "avatar": "/images/authors/marie-dubois.jpg",
-        "bio": "Architecte d'intérieur spécialisée dans la rénovation de salles de bain depuis 10 ans"
+        "name": "Julia",
+        "role": "Éditrice d'articles",
+        "avatar": "/images/authors/julia.jpg",
+        "bio": "Éditrice spécialisée dans les articles de rénovation et habitat depuis 10 ans"
       },
       "publishedAt": "2024-12-01T10:00:00Z",
       "updatedAt": "2024-12-01T10:00:00Z",
@@ -78,6 +78,162 @@
         "metaDescription": "Découvrez les tendances 2024 pour rénover votre salle de bain : matériaux naturels, couleurs apaisantes, douche italienne. Conseils d'architecte.",
         "keywords": ["rénovation salle de bain", "tendances 2024", "douche italienne", "carrelage", "architecte"],
         "canonicalUrl": "https://portail-habitat.fr/blog/renovation-salle-bain-tendances-2024"
+      }
+    },
+    {
+      "id": "choisir-artisan-renovation",
+      "title": "Comment bien choisir son artisan pour sa rénovation",
+      "slug": "choisir-artisan-renovation",
+      "excerpt": "Découvrez nos conseils d'experts pour sélectionner le bon professionnel et éviter les pièges courants lors de vos travaux de rénovation.",
+      "content": "# Comment bien choisir son artisan pour sa rénovation\n\nChoisir le bon artisan est crucial pour la réussite de vos travaux de rénovation. Voici nos conseils d'experts pour faire le bon choix et éviter les mauvaises surprises.\n\n## 1. Vérifiez les qualifications et assurances\n\n### Certifications obligatoires\n- **RGE (Reconnu Garant de l'Environnement)** : indispensable pour bénéficier des aides\n- **Qualibat** : gage de qualité pour les entreprises du bâtiment\n- **Assurance décennale** : protection obligatoire pour les gros œuvres\n\n### Documents à demander\n- Extrait Kbis de moins de 3 mois\n- Attestation d'assurance décennale en cours\n- Certificats de qualification professionnelle\n\n## 2. Analysez les devis en détail\n\n### Éléments indispensables\n- Détail des matériaux (marque, référence, quantité)\n- Main d'œuvre détaillée par poste\n- Délais d'exécution précis\n- Conditions de paiement (jamais plus de 30% d'acompte)\n\n### Points de vigilance\n- Méfiez-vous des devis trop bas (matériaux de mauvaise qualité)\n- Évitez les démarchages à domicile\n- Refusez les paiements intégraux avant travaux\n\n## 3. Vérifiez les références et avis\n\n### Sources fiables\n- **Avis Google** : vérifiez la régularité et la cohérence\n- **Bouche-à-oreille** : demandez à votre entourage\n- **Réalisations précédentes** : visitez si possible\n\n### Questions à poser\n- Depuis combien de temps exercez-vous ?\n- Combien de chantiers similaires avez-vous réalisés ?\n- Pouvez-vous me donner des références récentes ?\n\n## 4. Négociez les conditions du contrat\n\n### Clauses importantes\n- **Délais de livraison** avec pénalités de retard\n- **Garanties** : parfait achèvement (1 an), biennale (2 ans), décennale (10 ans)\n- **Modifications** : procédure pour les avenants\n- **Réception des travaux** : conditions et réserves\n\n### Conseils de négociation\n- Demandez plusieurs devis (3 minimum)\n- Ne négociez pas que le prix, mais aussi les délais\n- Privilégiez la qualité à l'économie\n\n## 5. Surveillez le déroulement des travaux\n\n### Bonnes pratiques\n- **Visite régulière** : au moins une fois par semaine\n- **Photos d'avancement** : documentez chaque étape\n- **Communication** : maintenez un dialogue constant\n\n### Signaux d'alarme\n- Retards non justifiés\n- Matériaux différents du devis\n- Demandes d'acomptes supplémentaires\n- Chantier mal organisé ou sale\n\n## 6. La réception des travaux\n\n### Étapes importantes\n1. **Visite contradictoire** avec l'artisan\n2. **Liste des réserves** : notez tous les défauts\n3. **Procès-verbal de réception** : document officiel\n4. **Levée des réserves** : vérification des corrections\n\n### Délais à respecter\n- **8 jours** pour signaler les malfaçons apparentes\n- **1 an** pour la garantie de parfait achèvement\n- **2 ans** pour les équipements (garantie biennale)\n- **10 ans** pour les gros œuvres (garantie décennale)",
+      "category": "conseils",
+      "tags": ["artisan", "rénovation", "conseils", "choisir", "travaux"],
+      "author": {
+        "name": "Julia",
+        "role": "Éditrice d'articles",
+        "avatar": "/images/authors/julia.jpg",
+        "bio": "Éditrice spécialisée dans les articles de rénovation et habitat depuis 12 ans"
+      },
+      "publishedAt": "2024-12-09T10:00:00Z",
+      "updatedAt": "2024-12-09T10:00:00Z",
+      "readingTime": 5,
+      "targetAudience": "Particuliers",
+      "difficulty": "Débutant",
+      "featured": true,
+      "featuredImage": "/photos/accueil/TipsSection/renovation.png",
+      "gallery": ["/photos/accueil/TipsSection/renovation.png"],
+      "tableOfContents": [
+        {"id": "qualifications", "title": "Vérifiez les qualifications et assurances", "level": 2},
+        {"id": "devis", "title": "Analysez les devis en détail", "level": 2},
+        {"id": "references", "title": "Vérifiez les références et avis", "level": 2},
+        {"id": "contrat", "title": "Négociez les conditions du contrat", "level": 2},
+        {"id": "surveillance", "title": "Surveillez le déroulement des travaux", "level": 2},
+        {"id": "reception", "title": "La réception des travaux", "level": 2}
+      ],
+      "relatedArticles": ["erreurs-plomberie", "budget-renovation"],
+      "faq": [
+        {
+          "question": "Comment vérifier qu'un artisan est fiable ?",
+          "answer": "Vérifiez son immatriculation, ses assurances, ses certifications (RGE, Qualibat) et consultez les avis clients. Demandez des références de chantiers récents."
+        },
+        {
+          "question": "Combien de devis faut-il demander ?",
+          "answer": "Demandez au minimum 3 devis pour comparer les prix, prestations et délais. Cela vous donne une vision du marché et un pouvoir de négociation."
+        },
+        {
+          "question": "Que faire si l'artisan demande un acompte important ?",
+          "answer": "Légalement, l'acompte ne peut dépasser 30% du montant total. Méfiez-vous des demandes d'acomptes plus élevés, c'est souvent un signe de problèmes financiers."
+        }
+      ],
+      "seo": {
+        "metaTitle": "Comment Choisir son Artisan : Guide Complet 2024",
+        "metaDescription": "Découvrez comment bien choisir votre artisan pour vos travaux de rénovation. Conseils d'experts, pièges à éviter, vérifications obligatoires.",
+        "keywords": ["choisir artisan", "rénovation", "travaux", "devis", "conseils"],
+        "canonicalUrl": "https://portail-habitat.fr/blog/choisir-artisan-renovation"
+      }
+    },
+    {
+      "id": "erreurs-plomberie",
+      "title": "Les 5 erreurs à éviter en plomberie",
+      "slug": "erreurs-plomberie",
+      "excerpt": "Évitez les problèmes courants qui peuvent coûter cher...",
+      "content": "# Les 5 erreurs à éviter en plomberie\n\nLa plomberie est un domaine technique où de petites erreurs peuvent avoir de lourdes conséquences. Voici les 5 erreurs les plus courantes à éviter absolument pour préserver votre installation et votre portefeuille.\n\n## 1. Négliger l'étanchéité des raccords\n\n### Le problème\nUne mauvaise étanchéité est la cause n°1 des fuites d'eau. Même une petite fuite peut causer des dégâts considérables : moisissures, pourriture du bois, factures d'eau astronomiques.\n\n### Solutions préventives\n- **Utilisez du téflon de qualité** : 3 à 4 tours dans le sens du vissage\n- **Serrez sans forcer** : un raccord trop serré peut fissurer\n- **Vérifiez systématiquement** : testez chaque raccord après installation\n- **Pâte d'étanchéité** : complément indispensable pour les gros diamètres\n\n### Coût des réparations\n- Fuite mineure : 150-300€\n- Dégât des eaux : 2 000-10 000€\n- Moisissures : 1 500-5 000€\n\n## 2. Mal dimensionner les canalisations\n\n### Erreurs fréquentes\n- **Diamètre trop petit** : pression insuffisante, débit réduit\n- **Pentes inadéquates** : stagnation, bouchons récurrents\n- **Longueurs excessives** : perte de charge importante\n\n### Règles de dimensionnement\n- **Alimentation principale** : Ø 20mm minimum\n- **Évacuation WC** : Ø 100mm obligatoire\n- **Pente évacuation** : 1-3% selon le diamètre\n- **Ventilation** : Ø 80-100mm pour éviter les siphonnages\n\n### Conséquences\n- Pression insuffisante\n- Bouchons fréquents\n- Remontées d'odeurs\n- Refonte complète nécessaire\n\n## 3. Ignorer la dilatation thermique\n\n### Le phénomène\nLes canalisations se dilatent avec la chaleur (eau chaude, chauffage). Sans compensation, elles se déforment, se fissurent ou se déboîtent.\n\n### Solutions techniques\n- **Colliers de dilatation** : tous les 2 mètres\n- **Coudes de compensation** : changements de direction\n- **Manchons souples** : raccordements flexibles\n- **Isolation thermique** : réduction des variations\n\n### Matériaux sensibles\n- **PER** : dilatation importante (2mm/m/10°C)\n- **Cuivre** : moins sensible mais vigilance requise\n- **Multicouche** : compromis intéressant\n\n## 4. Négliger la protection antigel\n\n### Zones à risque\n- **Combles non chauffés** : température négative\n- **Vides sanitaires** : exposition au froid\n- **Murs extérieurs** : ponts thermiques\n- **Canalisations enterrées** : profondeur insuffisante\n\n### Méthodes de protection\n- **Isolation renforcée** : laine de verre 100mm minimum\n- **Câble chauffant** : maintien hors gel automatique\n- **Vidange préventive** : résidences secondaires\n- **Profondeur d'enfouissement** : 80cm minimum\n\n### Coût des dégâts\n- Canalisation éclatée : 500-1 500€\n- Chaudière endommagée : 2 000-8 000€\n- Dégâts collatéraux : 3 000-15 000€\n\n## 5. Mélanger les matériaux incompatibles\n\n### Incompatibilités dangereuses\n- **Cuivre + Acier galvanisé** : corrosion galvanique\n- **PVC + Solvants** : dissolution du plastique\n- **Plomb + Cuivre** : contamination de l'eau\n\n### Règles de compatibilité\n- **Raccords diélectriques** : isolation galvanique\n- **Matériaux homogènes** : éviter les mélanges\n- **Normes sanitaires** : respect des DTU\n- **Raccords spécialisés** : adaptateurs certifiés\n\n### Conséquences\n- Corrosion accélérée\n- Pollution de l'eau\n- Fuites précoces\n- Non-conformité aux assurances\n\n## Conseils pour éviter ces erreurs\n\n### Préparation du chantier\n1. **Étude préalable** : plan détaillé obligatoire\n2. **Calculs de dimensionnement** : débit, pression, pentes\n3. **Choix des matériaux** : compatibilité et qualité\n4. **Respect des normes** : DTU 60.1, NF EN 806\n\n### Pendant les travaux\n- **Contrôles réguliers** : vérification étape par étape\n- **Tests de pression** : 1,5 fois la pression de service\n- **Documentation** : photos et plans de récolement\n- **Formation** : mise à jour des techniques\n\n### Maintenance préventive\n- **Inspection annuelle** : recherche de fuites\n- **Détartrage** : préservation des équipements\n- **Isolation** : vérification avant l'hiver\n- **Pièces de rechange** : stock minimum\n\n## Quand faire appel à un professionnel ?\n\n### Travaux complexes\n- Modification du réseau principal\n- Installation de chaudière\n- Raccordement au tout-à-l'égout\n- Mise en conformité\n\n### Signaux d'alarme\n- Pression insuffisante généralisée\n- Fuites récurrentes\n- Eau colorée ou malodorante\n- Factures d'eau anormales\n\nUn plombier qualifié vous évitera ces erreurs coûteuses et vous garantira une installation durable et conforme.",
+      "category": "conseils",
+      "tags": ["plomberie", "erreurs", "conseils", "fuites", "canalisations"],
+      "author": {
+        "name": "Jean-Pierre Dubois",
+        "role": "Plombier expert",
+        "avatar": "/images/authors/jean-pierre-dubois.jpg",
+        "bio": "Plombier avec 20 ans d'expérience, spécialisé dans les installations complexes"
+      },
+      "publishedAt": "2024-12-09T11:00:00Z",
+      "updatedAt": "2024-12-09T11:00:00Z",
+      "readingTime": 3,
+      "targetAudience": "Particuliers",
+      "difficulty": "Intermédiaire",
+      "featured": false,
+      "featuredImage": "/photos/accueil/TipsSection/erreur-plomberie.png",
+      "gallery": ["/photos/accueil/TipsSection/erreur-plomberie.png"],
+      "tableOfContents": [
+        {"id": "etancheite", "title": "Négliger l'étanchéité des raccords", "level": 2},
+        {"id": "dimensionnement", "title": "Mal dimensionner les canalisations", "level": 2},
+        {"id": "dilatation", "title": "Ignorer la dilatation thermique", "level": 2},
+        {"id": "antigel", "title": "Négliger la protection antigel", "level": 2},
+        {"id": "materiaux", "title": "Mélanger les matériaux incompatibles", "level": 2}
+      ],
+      "relatedArticles": ["choisir-artisan-renovation", "budget-renovation"],
+      "faq": [
+        {
+          "question": "Comment détecter une fuite cachée ?",
+          "answer": "Surveillez votre compteur d'eau : si il tourne alors que tous les robinets sont fermés, vous avez une fuite. Vérifiez aussi les traces d'humidité, moisissures ou factures anormalement élevées."
+        },
+        {
+          "question": "Peut-on mélanger cuivre et PER ?",
+          "answer": "Oui, mais avec des raccords adaptés. Utilisez des raccords à compression ou des raccords push-fit spécialement conçus pour cette transition. Évitez les raccords de fortune."
+        },
+        {
+          "question": "Quelle pression pour tester une installation ?",
+          "answer": "Testez à 1,5 fois la pression de service (soit environ 4,5 bars pour une installation domestique). Maintenez cette pression 30 minutes minimum sans chute."
+        }
+      ],
+      "seo": {
+        "metaTitle": "5 Erreurs Plomberie à Éviter : Guide Expert 2024",
+        "metaDescription": "Découvrez les 5 erreurs de plomberie les plus coûteuses et comment les éviter. Conseils d'expert pour protéger votre installation et votre budget.",
+        "keywords": ["erreurs plomberie", "fuites", "canalisations", "étanchéité", "conseils"],
+        "canonicalUrl": "https://portail-habitat.fr/blog/erreurs-plomberie"
+      }
+    },
+    {
+      "id": "budget-renovation",
+      "title": "Budget rénovation : comment bien l'estimer",
+      "slug": "budget-renovation",
+      "excerpt": "Nos astuces pour prévoir le coût de vos travaux...",
+      "content": "# Budget rénovation : comment bien l'estimer\n\nEstimer correctement le budget de sa rénovation est crucial pour éviter les mauvaises surprises. Voici notre guide complet pour prévoir et maîtriser les coûts de vos travaux.\n\n## 1. Les différents types de rénovation\n\n### Rénovation légère (rafraîchissement)\n**Budget : 200-500€/m²**\n- Peinture et papier peint\n- Revêtements de sol (stratifié, vinyle)\n- Petits équipements (robinetterie, luminaires)\n- Durée : 2-4 semaines\n\n### Rénovation standard\n**Budget : 500-1 200€/m²**\n- Cuisine et salle de bain complètes\n- Sols (carrelage, parquet)\n- Électricité et plomberie partielles\n- Cloisons non porteuses\n- Durée : 1-3 mois\n\n### Rénovation lourde\n**Budget : 1 200-2 500€/m²**\n- Modification de la structure\n- Réfection complète des réseaux\n- Isolation et étanchéité\n- Menuiseries extérieures\n- Durée : 3-8 mois\n\n### Rénovation de luxe\n**Budget : 2 500€/m² et plus**\n- Matériaux haut de gamme\n- Domotique intégrée\n- Équipements sur-mesure\n- Finitions exceptionnelles\n- Durée : 6-12 mois\n\n## 2. Répartition du budget par poste\n\n### Gros œuvre (25-30%)\n- **Maçonnerie** : 80-150€/m²\n- **Charpente** : 60-120€/m²\n- **Couverture** : 40-100€/m²\n- **Isolation** : 20-60€/m²\n\n### Second œuvre (40-50%)\n- **Électricité** : 80-120€/m²\n- **Plomberie** : 60-100€/m²\n- **Chauffage** : 60-150€/m²\n- **Cloisons** : 30-80€/m²\n\n### Finitions (20-25%)\n- **Peinture** : 20-40€/m²\n- **Carrelage** : 40-120€/m²\n- **Parquet** : 50-200€/m²\n- **Cuisine** : 5 000-25 000€\n- **Salle de bain** : 3 000-15 000€\n\n### Divers (5-10%)\n- Assurances et garanties\n- Frais d'architecte (10-15% du budget)\n- Imprévus obligatoires\n\n## 3. Méthode d'estimation détaillée\n\n### Étape 1 : État des lieux précis\n- **Surface exacte** : mesurage au m²\n- **État existant** : diagnostic complet\n- **Contraintes techniques** : accessibilité, réseaux\n- **Objectifs** : niveau de finition souhaité\n\n### Étape 2 : Cahier des charges\n- **Liste exhaustive** des travaux\n- **Matériaux choisis** avec références\n- **Équipements** et leur gamme\n- **Prestations** incluses/exclues\n\n### Étape 3 : Chiffrage par lot\n- **Démolition** : 15-40€/m²\n- **Évacuation** : 200-500€/benne\n- **Maçonnerie** : détail par m² ou ml\n- **Réseaux** : prix au point ou au ml\n- **Finitions** : prix au m² posé\n\n### Étape 4 : Marge d'imprévus\n- **Rénovation légère** : +10%\n- **Rénovation standard** : +15-20%\n- **Rénovation lourde** : +20-30%\n- **Bâtiment ancien** : +30-40%\n\n## 4. Outils d'estimation\n\n### Simulateurs en ligne\n- **Avantages** : estimation rapide, gratuite\n- **Limites** : approximative, sans spécificités\n- **Utilisation** : première approche uniquement\n\n### Devis professionnels\n- **3 devis minimum** : comparaison obligatoire\n- **Détail des postes** : transparence des coûts\n- **Délais** : impact sur le planning\n- **Garanties** : couverture des risques\n\n### Métrés détaillés\n- **Quantitatifs précis** : surfaces, longueurs, volumes\n- **Prix unitaires** : coût au m², ml, unité\n- **Ratios de référence** : validation des prix\n\n## 5. Optimisation du budget\n\n### Choix des matériaux\n- **Rapport qualité/prix** : éviter le bas de gamme\n- **Durabilité** : investissement long terme\n- **Facilité d'entretien** : coût global réduit\n- **Disponibilité** : éviter les ruptures de stock\n\n### Phasage des travaux\n- **Priorités** : sécurité et étanchéité d'abord\n- **Étalement** : répartition dans le temps\n- **Autoréalisation** : économies sur la main d'œuvre\n- **Groupage** : négociation des prix\n\n### Aides financières\n- **MaPrimeRénov'** : jusqu'à 20 000€\n- **Éco-PTZ** : prêt à taux zéro jusqu'à 50 000€\n- **TVA réduite** : 5,5% pour l'efficacité énergétique\n- **Aides locales** : région, département, commune\n\n## 6. Financement de la rénovation\n\n### Solutions de financement\n- **Épargne personnelle** : 20-30% minimum\n- **Prêt travaux** : 3-7% sur 2-10 ans\n- **Prêt immobilier** : intégration possible\n- **Crédit relais** : solution temporaire\n\n### Échelonnement des paiements\n- **Acompte** : 30% maximum à la commande\n- **Acomptes d'avancement** : selon planning\n- **Solde** : à la réception des travaux\n- **Retenue de garantie** : 5% pendant 1 an\n\n## 7. Suivi et contrôle du budget\n\n### Tableau de bord\n- **Budget prévisionnel** : poste par poste\n- **Dépenses réelles** : suivi en temps réel\n- **Écarts** : analyse des dépassements\n- **Prévisions** : ajustement du planning\n\n### Points de contrôle\n- **Validation des devis** : avant signature\n- **Réception des matériaux** : conformité et quantité\n- **Avancement des travaux** : respect du planning\n- **Facturation** : vérification des prestations\n\n### Gestion des imprévus\n- **Provision obligatoire** : 15-25% du budget\n- **Validation préalable** : accord écrit pour tout extra\n- **Impact planning** : répercussion sur les délais\n- **Solutions alternatives** : optimisation des coûts\n\n## Erreurs à éviter\n\n### Sous-estimation courante\n- **Oublier les finitions** : 20-25% du budget\n- **Négliger les réseaux** : coûts cachés importants\n- **Ignorer les normes** : mise en conformité obligatoire\n- **Minimiser les imprévus** : provision insuffisante\n\n### Pièges fréquents\n- **Devis trop bas** : qualité douteuse\n- **Extras non chiffrés** : dépassements garantis\n- **Délais irréalistes** : pénalités de retard\n- **Assurances insuffisantes** : risques non couverts\n\nUne estimation rigoureuse et un suivi strict sont les clés d'une rénovation réussie dans le budget prévu.",
+      "category": "budget",
+      "tags": ["budget", "rénovation", "estimation", "coûts", "financement"],
+      "author": {
+        "name": "Sophie Martin",
+        "role": "Experte en budgets travaux",
+        "avatar": "/images/authors/sophie-martin.jpg",
+        "bio": "Spécialiste en estimation de travaux avec 15 ans d'expérience en maîtrise d'œuvre"
+      },
+      "publishedAt": "2024-12-09T12:00:00Z",
+      "updatedAt": "2024-12-09T12:00:00Z",
+      "readingTime": 4,
+      "targetAudience": "Particuliers",
+      "difficulty": "Intermédiaire",
+      "featured": false,
+      "featuredImage": "/photos/accueil/TipsSection/budget-renovation.png",
+      "gallery": ["/photos/accueil/TipsSection/budget-renovation.png"],
+      "tableOfContents": [
+        {"id": "types", "title": "Les différents types de rénovation", "level": 2},
+        {"id": "repartition", "title": "Répartition du budget par poste", "level": 2},
+        {"id": "methode", "title": "Méthode d'estimation détaillée", "level": 2},
+        {"id": "outils", "title": "Outils d'estimation", "level": 2},
+        {"id": "optimisation", "title": "Optimisation du budget", "level": 2},
+        {"id": "financement", "title": "Financement de la rénovation", "level": 2},
+        {"id": "suivi", "title": "Suivi et contrôle du budget", "level": 2}
+      ],
+      "relatedArticles": ["choisir-artisan-renovation", "erreurs-plomberie"],
+      "faq": [
+        {
+          "question": "Quel budget prévoir pour rénover entièrement un appartement ?",
+          "answer": "Comptez 800-1500€/m² pour une rénovation complète d'appartement. Soit 80 000-150 000€ pour 100m². Cela inclut cuisine, salle de bain, sols, peintures et réseaux."
+        },
+        {
+          "question": "Comment financer des travaux de rénovation ?",
+          "answer": "Plusieurs solutions : épargne (30% minimum), prêt travaux (jusqu'à 75 000€), éco-PTZ (jusqu'à 50 000€), MaPrimeRénov' (jusqu'à 20 000€). Combinez les aides pour optimiser."
+        },
+        {
+          "question": "Quelle marge prévoir pour les imprévus ?",
+          "answer": "Prévoyez 15-20% pour une rénovation standard, 25-30% pour du lourd, et jusqu'à 40% pour un bâtiment ancien. Cette marge couvre les découvertes et modifications."
+        }
+      ],
+      "seo": {
+        "metaTitle": "Budget Rénovation 2024 : Guide Complet d'Estimation",
+        "metaDescription": "Découvrez comment estimer précisément votre budget rénovation. Prix au m², répartition des coûts, aides financières. Guide expert 2024.",
+        "keywords": ["budget rénovation", "estimation travaux", "coût rénovation", "prix m²", "financement"],
+        "canonicalUrl": "https://portail-habitat.fr/blog/budget-renovation"
       }
     },
     {
