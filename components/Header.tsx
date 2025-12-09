@@ -197,6 +197,9 @@ export default function Header() {
               <Button asChild>
                 <Link href="/connexion">Mon Espace</Link>
               </Button>
+              <Button asChild variant="outline">
+                <Link href="/connexion-admin">Admin</Link>
+              </Button>
             </div>
 
             {/* Menu Hamburger Mobile */}
@@ -320,6 +323,11 @@ export default function Header() {
                   <Button asChild className="w-full">
                     <Link href="/connexion" onClick={() => setIsMenuOpen(false)}>
                       Mon Espace
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" className="w-full">
+                    <Link href="/connexion-admin" onClick={() => setIsMenuOpen(false)}>
+                      Admin
                     </Link>
                   </Button>
                 </div>

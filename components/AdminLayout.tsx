@@ -69,6 +69,11 @@ const navigation = [
     title: "Gestion Utilisateurs",
     items: [
       {
+        title: "Utilisateurs",
+        url: "/admin/utilisateurs",
+        icon: Users,
+      },
+      {
         title: "Artisans",
         url: "/admin/artisans",
         icon: Users,
@@ -136,7 +141,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       if (user) {
         setUser(user);
       } else {
-        router.push("/connexion");
+        router.push("/connexion-admin");
       }
     });
 
