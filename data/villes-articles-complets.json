@@ -1,0 +1,460 @@
+{
+  "articles": [
+    {
+      "id": "trouver-chantiers-paris-guide-artisan-2024",
+      "title": "Trouver des Chantiers à Paris 2024 : Guide Complet pour Artisans",
+      "slug": "trouver-chantiers-paris-guide-artisan-2024",
+      "ville": "paris",
+      "villeNom": "Paris",
+      "codePostal": "75000",
+      "region": "Île-de-France",
+      "excerpt": "Comment trouver des chantiers à Paris 2024 : stratégies de prospection, réseaux locaux, villes périphériques (Boulogne, Neuilly, Vincennes). Guide complet pour artisans Île-de-France.",
+      "featuredImage": "/images/blog/villes/paris-chantiers-hero.jpg",
+      "gallery": [
+        "/images/blog/villes/paris-renovation-haussmannien.jpg",
+        "/images/blog/villes/paris-copropriete-travaux.jpg",
+        "/images/blog/villes/paris-bureaux-renovation.jpg",
+        "/images/blog/villes/paris-artisan-chantier.jpg"
+      ],
+      "tableOfContents": [
+        {
+          "id": "marche-paris-2024",
+          "title": "Marché du bâtiment à Paris 2024 : 8 milliards d'euros",
+          "level": 2
+        },
+        {
+          "id": "segments-porteurs-paris",
+          "title": "5 segments les plus porteurs à Paris",
+          "level": 2
+        },
+        {
+          "id": "renovation-haussmannienne",
+          "title": "Rénovation haussmannienne : 2000€/m² en moyenne",
+          "level": 3
+        },
+        {
+          "id": "coproprietes-syndics-paris",
+          "title": "Copropriétés et syndics : marché de 3 milliards€",
+          "level": 3
+        },
+        {
+          "id": "prospection-paris-locale",
+          "title": "Stratégies de prospection spécifiques à Paris",
+          "level": 2
+        },
+        {
+          "id": "reseaux-professionnels-paris",
+          "title": "Réseaux professionnels parisiens incontournables",
+          "level": 2
+        },
+        {
+          "id": "tarification-paris-premium",
+          "title": "Tarification Paris : +30% vs province justifiés",
+          "level": 2
+        },
+        {
+          "id": "reglementation-paris-specifique",
+          "title": "Réglementation parisienne : ABF, copropriétés, nuisances",
+          "level": 2
+        }
+      ],
+      "faq": [
+        {
+          "question": "Combien peut gagner un artisan à Paris en 2024 ?",
+          "answer": "Un artisan parisien gagne 30-50% de plus qu'en province. Plombier : 5 000-12 000€/mois, électricien : 5 500-13 000€/mois, peintre : 4 000-9 000€/mois. Les tarifs élevés compensent les coûts (transport, stationnement, logistique). Spécialisations haut de gamme indispensables."
+        },
+        {
+          "question": "Où trouver des chantiers en Île-de-France ?",
+          "answer": "Paris intra-muros : 16e, 7e, 8e (haussmannien), 11e, 20e (rénovation). Banlieue proche : Neuilly, Boulogne, Vincennes, Saint-Mandé. Hauts-de-Seine : Levallois, Issy-les-Moulineaux. Val-de-Marne : Créteil, Maisons-Alfort. Diversifiez votre zone d'intervention."
+        },
+        {
+          "question": "Comment travailler avec les syndics parisiens ?",
+          "answer": "Identifiez les gros syndics (Foncia, Nexity, Century 21), proposez des tarifs préférentiels pour volumes, respectez les délais stricts, maîtrisez les AG copropriété. Marché récurrent de 3 milliards€. Certification Qualibat recommandée."
+        },
+        {
+          "question": "Quelles sont les contraintes spécifiques à Paris ?",
+          "answer": "Stationnement (forfait 50-100€/jour), horaires stricts (8h-18h), nuisances sonores réglementées, ABF pour monuments historiques, ascenseurs étroits, déchets (bennes payantes). Intégrez ces coûts dans vos devis (+20-30%)."
+        },
+        {
+          "question": "Comment se démarquer dans la concurrence parisienne ?",
+          "answer": "Spécialisez-vous (haussmannien, patrimoine, éco-rénovation), obtenez les certifications (RGE, Qualibat), développez un réseau local, proposez des services premium (nettoyage, gardiennage), et misez sur la réactivité (intervention sous 2h)."
+        },
+        {
+          "question": "Quels réseaux professionnels rejoindre à Paris ?",
+          "answer": "CAPEB Paris, FFB Île-de-France, réseaux d'architectes (UNSFA), clubs d'entrepreneurs (CJD), syndics professionnels. Participez aux salons (Batimat, Artibat), événements networking. Le relationnel est crucial à Paris."
+        }
+      ],
+      "stats": {
+        "population": "2 165 000",
+        "chantiers": "50 000+",
+        "budgetMoyen": "25 000€",
+        "croissance": "+12%"
+      },
+      "seo": {
+        "title": "Comment Trouver des Chantiers à Paris 2024 : Guide Artisan Complet",
+        "description": "Apprenez à trouver des chantiers à Paris et en Île-de-France ! Stratégies de prospection, réseaux locaux, villes périphériques. Guide expert pour artisans.",
+        "keywords": ["trouver chantiers Paris", "comment trouver chantiers Paris", "prospection Paris", "artisan Paris", "chantiers Île-de-France", "réseaux artisans Paris", "syndics Paris"],
+        "canonicalUrl": "https://portail-habitat.fr/villes/paris"
+      }
+    },
+    {
+      "id": "trouver-chantiers-lyon-guide-artisan-2024",
+      "title": "Trouver des Chantiers à Lyon 2024 : Guide Artisan Rhône-Alpes",
+      "slug": "trouver-chantiers-lyon-guide-artisan-2024",
+      "ville": "lyon",
+      "villeNom": "Lyon",
+      "codePostal": "69000",
+      "region": "Auvergne-Rhône-Alpes",
+      "excerpt": "Comment trouver des chantiers à Lyon 2024 : stratégies prospection métropole, villes périphériques (Villeurbanne, Vénissieux, Bron). Guide complet artisans Rhône-Alpes.",
+      "featuredImage": "/images/blog/villes/lyon-chantiers-hero.jpg",
+      "gallery": [
+        "/images/blog/villes/lyon-renovation-soie.jpg",
+        "/images/blog/villes/lyon-ecoquartier-confluence.jpg",
+        "/images/blog/villes/lyon-part-dieu-bureaux.jpg",
+        "/images/blog/villes/lyon-traboules-patrimoine.jpg"
+      ],
+      "tableOfContents": [
+        {
+          "id": "marche-lyon-2024",
+          "title": "Marché BTP Lyon 2024 : 3,2 milliards d'euros",
+          "level": 2
+        },
+        {
+          "id": "segments-lyon-porteurs",
+          "title": "4 segments porteurs à Lyon",
+          "level": 2
+        },
+        {
+          "id": "renovation-soie-patrimoine",
+          "title": "Rénovation quartier Soie : patrimoine industriel",
+          "level": 3
+        },
+        {
+          "id": "ecoquartiers-lyon-confluence",
+          "title": "Écoquartiers : Confluence, Part-Dieu, Gerland",
+          "level": 3
+        },
+        {
+          "id": "prospection-lyon-strategies",
+          "title": "Stratégies prospection Lyon et métropole",
+          "level": 2
+        },
+        {
+          "id": "partenariats-lyon-locaux",
+          "title": "Partenariats locaux : Grand Lyon, promoteurs",
+          "level": 2
+        },
+        {
+          "id": "tarification-lyon-competitive",
+          "title": "Tarification Lyon : équilibre qualité-prix",
+          "level": 2
+        },
+        {
+          "id": "reglementation-lyon-metropole",
+          "title": "Réglementation métropole : PLU, environnement",
+          "level": 2
+        }
+      ],
+      "faq": [
+        {
+          "question": "Quel est le potentiel du marché lyonnais pour les artisans ?",
+          "answer": "Lyon représente 3,2 milliards€ de marché BTP avec +15% de croissance. 25 000+ chantiers/an, forte demande en rénovation énergétique et écoquartiers. Tarifs 15-20% supérieurs à la moyenne nationale. Métropole dynamique avec 1,4M d'habitants."
+        },
+        {
+          "question": "Où trouver des chantiers dans la métropole lyonnaise ?",
+          "answer": "Lyon centre : Confluence, Part-Dieu, Presqu'île, Gerland. Métropole : Villeurbanne (université), Vénissieux (rénovation urbaine), Bron (aéroport), Caluire, Écully. Périphérie : Givors, Meyzieu, Décines. Diversifiez sur 69 communes de la métropole."
+        },
+        {
+          "question": "Comment travailler avec la Métropole de Lyon ?",
+          "answer": "Inscrivez-vous aux marchés publics (BOAMP), obtenez les certifications (Qualibat, RGE), respectez les clauses environnementales strictes. Budget annuel 500M€ en travaux. Privilégiez les groupements d'entreprises pour gros marchés."
+        },
+        {
+          "question": "Quelles spécificités techniques à Lyon ?",
+          "answer": "Patrimoine industriel (Soie), normes HQE strictes (écoquartiers), rénovation énergétique (aides métropole), sols argileux (fondations), climat continental (isolation renforcée). Formation continue indispensable."
+        },
+        {
+          "question": "Comment se positionner face à la concurrence lyonnaise ?",
+          "answer": "Spécialisez-vous (éco-construction, patrimoine industriel), développez un réseau local fort, proposez des solutions innovantes (domotique, énergies renouvelables), et misez sur la proximité géographique (intervention rapide)."
+        },
+        {
+          "question": "Quels événements professionnels à Lyon ?",
+          "answer": "Salon Habitat Déco Lyon (mars), BTP Rhône-Alpes (septembre), réunions CAPEB 69, networking CCI Lyon. Participez aux événements Grand Lyon, forums emploi BTP. Le réseau local est essentiel pour décrocher des chantiers."
+        }
+      ],
+      "stats": {
+        "population": "1 400 000",
+        "chantiers": "25 000+",
+        "budgetMoyen": "18 000€",
+        "croissance": "+15%"
+      },
+      "seo": {
+        "title": "Comment Trouver des Chantiers à Lyon 2024 : Guide Métropole Rhône",
+        "description": "Apprenez à trouver des chantiers à Lyon et sa métropole ! Stratégies prospection, Villeurbanne, Vénissieux, réseaux locaux. Guide artisans Rhône-Alpes.",
+        "keywords": ["trouver chantiers Lyon", "comment trouver chantiers Lyon", "prospection Lyon", "métropole Lyon", "chantiers Villeurbanne", "artisan Rhône", "réseaux Lyon"],
+        "canonicalUrl": "https://portail-habitat.fr/villes/lyon"
+      }
+    },
+    {
+      "id": "trouver-chantiers-marseille-guide-artisan-2024",
+      "title": "Trouver des Chantiers à Marseille 2024 : Guide Artisan PACA",
+      "slug": "trouver-chantiers-marseille-guide-artisan-2024",
+      "ville": "marseille",
+      "villeNom": "Marseille",
+      "codePostal": "13000",
+      "region": "Provence-Alpes-Côte d'Azur",
+      "excerpt": "Comment trouver des chantiers à Marseille 2024 : stratégies PACA, villes périphériques (Aix-en-Provence, Aubagne, Cassis). Guide prospection artisans Bouches-du-Rhône.",
+      "featuredImage": "/images/blog/villes/marseille-chantiers-hero.jpg",
+      "gallery": [
+        "/images/blog/villes/marseille-euromediterranee.jpg",
+        "/images/blog/villes/marseille-vieux-port-renovation.jpg",
+        "/images/blog/villes/marseille-calanques-villas.jpg",
+        "/images/blog/villes/marseille-quartiers-nord.jpg"
+      ],
+      "tableOfContents": [
+        {
+          "id": "marche-marseille-2024",
+          "title": "Marché BTP Marseille 2024 : 2,1 milliards d'euros",
+          "level": 2
+        },
+        {
+          "id": "segments-marseille-specifiques",
+          "title": "4 segments spécifiques à Marseille",
+          "level": 2
+        },
+        {
+          "id": "euromediterranee-chantiers",
+          "title": "Euroméditerranée : 1er projet urbain d'Europe",
+          "level": 3
+        },
+        {
+          "id": "renovation-urbaine-quartiers-nord",
+          "title": "Rénovation urbaine : quartiers Nord, ANRU",
+          "level": 3
+        },
+        {
+          "id": "prospection-marseille-paca",
+          "title": "Prospection Marseille et région PACA",
+          "level": 2
+        },
+        {
+          "id": "partenariats-marseille-metropole",
+          "title": "Partenariats : Métropole, bailleurs sociaux",
+          "level": 2
+        },
+        {
+          "id": "tarification-marseille-ajustee",
+          "title": "Tarification Marseille : adaptation au marché local",
+          "level": 2
+        },
+        {
+          "id": "contraintes-marseille-climat",
+          "title": "Contraintes : climat méditerranéen, sismique",
+          "level": 2
+        }
+      ],
+      "faq": [
+        {
+          "question": "Quel est le potentiel du marché marseillais ?",
+          "answer": "Marseille : 2,1 milliards€ de marché BTP, 20 000+ chantiers/an. Forte demande en rénovation urbaine (quartiers Nord), Euroméditerranée (bureaux haut de gamme), littoral (villas). Tarifs 10-15% inférieurs à Paris mais volumes importants."
+        },
+        {
+          "question": "Où trouver des chantiers dans les Bouches-du-Rhône ?",
+          "answer": "Marseille : Euroméditerranée, quartiers Nord (ANRU), Vieux-Port. Métropole : Aix-en-Provence (centre historique), Aubagne (technopôle), Cassis (villas), La Ciotat (port). Périphérie : Salon-de-Provence, Martigues, Istres. Zone d'intervention élargie recommandée."
+        },
+        {
+          "question": "Comment travailler sur les projets ANRU ?",
+          "answer": "Inscrivez-vous aux appels d'offres ANRU, respectez les clauses d'insertion sociale, travaillez avec les bailleurs (13 Habitat, Logirem), maîtrisez les normes BBC. Budget 2 milliards€ sur 10 ans pour la rénovation urbaine."
+        },
+        {
+          "question": "Quelles contraintes techniques à Marseille ?",
+          "answer": "Climat méditerranéen (isolation adaptée), zone sismique (normes parasismiques), mistral (étanchéité renforcée), patrimoine historique (ABF), sols calcaires. Matériaux résistants aux UV et embruns obligatoires sur le littoral."
+        },
+        {
+          "question": "Comment se différencier sur le marché marseillais ?",
+          "answer": "Spécialisez-vous (rénovation urbaine, littoral, patrimoine), maîtrisez les contraintes climatiques, développez un réseau PACA, proposez des solutions durables (isolation, énergies renouvelables), et adaptez vos tarifs au marché local."
+        },
+        {
+          "question": "Quels réseaux professionnels à Marseille ?",
+          "answer": "CAPEB 13, FFB PACA, CCI Marseille-Provence, Club des entrepreneurs PACA, réseaux bailleurs sociaux. Participez au salon Habitat Marseille, forums BTP. Le réseau méditerranéen privilégie les relations humaines."
+        }
+      ],
+      "stats": {
+        "population": "870 000",
+        "chantiers": "20 000+",
+        "budgetMoyen": "15 000€",
+        "croissance": "+8%"
+      },
+      "seo": {
+        "title": "Comment Trouver des Chantiers à Marseille 2024 : Guide PACA Complet",
+        "description": "Apprenez à trouver des chantiers à Marseille et PACA ! Aix-en-Provence, Aubagne, stratégies prospection, réseaux locaux. Guide artisans Bouches-du-Rhône.",
+        "keywords": ["trouver chantiers Marseille", "comment trouver chantiers Marseille", "prospection PACA", "chantiers Aix-en-Provence", "artisan Bouches-du-Rhône", "réseaux Marseille"],
+        "canonicalUrl": "https://portail-habitat.fr/villes/marseille"
+      }
+    },
+    {
+      "id": "trouver-chantiers-toulouse-guide-artisan-2024",
+      "title": "Trouver des Chantiers à Toulouse 2024 : Guide Artisan Ville Rose",
+      "slug": "trouver-chantiers-toulouse-guide-artisan-2024",
+      "ville": "toulouse",
+      "villeNom": "Toulouse",
+      "codePostal": "31000",
+      "region": "Occitanie",
+      "excerpt": "Comment trouver des chantiers à Toulouse 2024 : stratégies Occitanie, villes périphériques (Blagnac, Colomiers, Muret). Guide prospection artisans Haute-Garonne.",
+      "featuredImage": "/images/blog/villes/toulouse-chantiers-hero.jpg",
+      "gallery": [
+        "/images/blog/villes/toulouse-aeronautique-bureaux.jpg",
+        "/images/blog/villes/toulouse-universite-campus.jpg",
+        "/images/blog/villes/toulouse-ville-rose-renovation.jpg",
+        "/images/blog/villes/toulouse-ecoquartier-cartoucherie.jpg"
+      ],
+      "faq": [
+        {
+          "question": "Quel est le potentiel du marché toulousain ?",
+          "answer": "Toulouse : 1,8 milliards€ de marché BTP, 18 000+ chantiers/an. Forte croissance liée à l'aéronautique (+20% emplois), université (140 000 étudiants), démographie (+1,5%/an). Tarifs 10-15% supérieurs à la moyenne régionale."
+        },
+        {
+          "question": "Où trouver des chantiers dans l'agglomération toulousaine ?",
+          "answer": "Toulouse centre : Capitole, Carmes, Saint-Cyprien. Métropole : Blagnac (aéronautique), Colomiers (résidentiel), Muret (expansion), Tournefeuille. Périphérie : Montauban, Auch, Albi. Diversifiez sur 37 communes de la métropole."
+        },
+        {
+          "question": "Comment travailler avec l'écosystème aéronautique ?",
+          "answer": "Ciblez les sous-traitants Airbus/Thales, respectez les normes sécuritaires strictes, proposez des interventions hors heures (24h/24), maîtrisez les habilitations (zones sensibles). Marché B2B de 800M€/an."
+        },
+        {
+          "question": "Quelles spécificités de la ville rose ?",
+          "answer": "Patrimoine brique rose (ABF strict), réglementation couleurs façades, matériaux locaux privilégiés, climat continental (isolation adaptée), croissance démographique (+15 000 hab/an). Respectez l'identité architecturale."
+        },
+        {
+          "question": "Comment se positionner sur le marché étudiant ?",
+          "answer": "Ciblez les résidences étudiantes, proposez des tarifs adaptés (budgets serrés), travaillez avec les bailleurs spécialisés (CROUS, privés), planifiez sur les vacances scolaires. Marché récurrent de 200M€."
+        },
+        {
+          "question": "Quels réseaux professionnels à Toulouse ?",
+          "answer": "CAPEB 31, FFB Occitanie, CCI Toulouse, Club des entrepreneurs toulousains, réseaux aéronautique (GIFAS). Participez au salon Batimat Sud, événements Aerospace Valley. Réseau local très actif."
+        }
+      ],
+      "stats": {
+        "population": "750 000",
+        "chantiers": "18 000+",
+        "budgetMoyen": "16 500€",
+        "croissance": "+20%"
+      },
+      "seo": {
+        "title": "Comment Trouver des Chantiers à Toulouse 2024 : Guide Occitanie",
+        "description": "Apprenez à trouver des chantiers à Toulouse et sa métropole ! Blagnac, Colomiers, stratégies prospection, réseaux locaux. Guide artisans Haute-Garonne.",
+        "keywords": ["trouver chantiers Toulouse", "comment trouver chantiers Toulouse", "prospection Toulouse", "chantiers Blagnac", "métropole Toulouse", "artisan Haute-Garonne"],
+        "canonicalUrl": "https://portail-habitat.fr/villes/toulouse"
+      }
+    },
+    {
+      "id": "trouver-chantiers-nice-guide-artisan-2024", 
+      "title": "Trouver des Chantiers à Nice 2024 : Guide Artisan Côte d'Azur",
+      "slug": "trouver-chantiers-nice-guide-artisan-2024",
+      "ville": "nice",
+      "villeNom": "Nice",
+      "codePostal": "06000",
+      "region": "Provence-Alpes-Côte d'Azur",
+      "excerpt": "Comment trouver des chantiers à Nice 2024 : stratégies Côte d'Azur, villes périphériques (Cannes, Antibes, Monaco). Guide prospection artisans Alpes-Maritimes.",
+      "featuredImage": "/images/blog/villes/nice-chantiers-hero.jpg",
+      "gallery": [
+        "/images/blog/villes/nice-villas-luxe-collines.jpg",
+        "/images/blog/villes/nice-promenade-anglais-hotels.jpg",
+        "/images/blog/villes/nice-port-residences.jpg",
+        "/images/blog/villes/nice-arriere-pays-maisons.jpg"
+      ],
+      "faq": [
+        {
+          "question": "Quel est le potentiel du marché niçois ?",
+          "answer": "Nice : 900M€ de marché BTP, 12 000+ chantiers/an. Marché premium avec clientèle internationale (30% étrangers), villas de luxe, résidences haut de gamme. Tarifs 25-40% supérieurs à la moyenne nationale."
+        },
+        {
+          "question": "Où trouver des chantiers sur la Côte d'Azur ?",
+          "answer": "Nice centre : Vieux-Nice, Cimiez, Mont-Boron. Métropole : Cannes (palaces), Antibes (villas), Grasse (arrière-pays). Monaco (haut de gamme). Périphérie : Menton, Cagnes-sur-Mer, Saint-Laurent-du-Var. Marché premium étendu."
+        },
+        {
+          "question": "Comment travailler avec la clientèle internationale ?",
+          "answer": "Maîtrisez l'anglais (minimum), proposez des finitions haut de gamme, respectez les délais stricts, travaillez avec des architectes renommés, facturez en conséquence. Clientèle exigeante mais budgets élevés."
+        },
+        {
+          "question": "Quelles contraintes spécifiques à Nice ?",
+          "answer": "Climat méditerranéen (matériaux résistants UV/sel), réglementation ABF (centre historique), accès difficiles (collines), stationnement complexe, saison touristique (juillet-août à éviter). Coûts logistiques majorés."
+        },
+        {
+          "question": "Comment se démarquer sur ce marché premium ?",
+          "answer": "Spécialisez-vous haut de gamme, obtenez les certifications qualité, développez un book photo professionnel, proposez des matériaux nobles, et cultivez la discrétion (clientèle VIP). Réseau et bouche-à-oreille essentiels."
+        },
+        {
+          "question": "Quels partenariats développer à Nice ?",
+          "answer": "Architectes d'intérieur haut de gamme, décorateurs, agents immobiliers de prestige, concierges d'hôtels, gestionnaires de patrimoine. Participez aux événements MIPIM Cannes, salons luxe Monaco."
+        }
+      ],
+      "stats": {
+        "population": "340 000",
+        "chantiers": "12 000+", 
+        "budgetMoyen": "35 000€",
+        "croissance": "+10%"
+      },
+      "seo": {
+        "title": "Comment Trouver des Chantiers à Nice 2024 : Guide Côte d'Azur",
+        "description": "Apprenez à trouver des chantiers à Nice et Côte d'Azur ! Cannes, Antibes, Monaco, stratégies prospection haut de gamme. Guide artisans Alpes-Maritimes.",
+        "keywords": ["trouver chantiers Nice", "comment trouver chantiers Nice", "prospection Côte d'Azur", "chantiers Cannes", "artisan Alpes-Maritimes", "réseaux Nice"],
+        "canonicalUrl": "https://portail-habitat.fr/villes/nice"
+      }
+    },
+    {
+      "id": "trouver-chantiers-nantes-guide-artisan-2024",
+      "title": "Trouver des Chantiers à Nantes 2024 : Guide Artisan Loire-Atlantique", 
+      "slug": "trouver-chantiers-nantes-guide-artisan-2024",
+      "ville": "nantes",
+      "villeNom": "Nantes",
+      "codePostal": "44000",
+      "region": "Pays de la Loire",
+      "excerpt": "Comment trouver des chantiers à Nantes 2024 : stratégies Pays de Loire, villes périphériques (Saint-Nazaire, Rezé, Saint-Herblain). Guide prospection artisans Loire-Atlantique.",
+      "featuredImage": "/images/blog/villes/nantes-chantiers-hero.jpg",
+      "gallery": [
+        "/images/blog/villes/nantes-ile-quartier-creation.jpg",
+        "/images/blog/villes/nantes-ecoquartier-bottiere.jpg", 
+        "/images/blog/villes/nantes-centre-historique.jpg",
+        "/images/blog/villes/nantes-peripherie-maisons.jpg"
+      ],
+      "faq": [
+        {
+          "question": "Quel est le dynamisme du marché nantais ?",
+          "answer": "Nantes : 1,4 milliards€ de marché BTP, 15 000+ chantiers/an. Métropole en forte croissance (+1,2%/an), innovation urbaine, écoquartiers. Tarifs équilibrés, 5-10% supérieurs à la moyenne régionale."
+        },
+        {
+          "question": "Où trouver des chantiers dans la métropole nantaise ?",
+          "answer": "Nantes centre : Île de Nantes, Malakoff, Bottière. Métropole : Saint-Nazaire (port), Rezé (résidentiel), Saint-Herblain (zones d'activités), Orvault. Périphérie : Ancenis, Châteaubriant, Pornic. Diversifiez sur 24 communes de la métropole."
+        },
+        {
+          "question": "Comment travailler avec Nantes Métropole ?",
+          "answer": "Inscrivez-vous aux marchés publics (budget 400M€/an), respectez les clauses développement durable, privilégiez les matériaux biosourcés, travaillez en groupements. Métropole pionnière en éco-construction."
+        },
+        {
+          "question": "Quelles spécificités techniques à Nantes ?",
+          "answer": "Climat océanique (étanchéité renforcée), sols parfois instables (études géotechniques), normes HQE strictes, matériaux locaux privilégiés (pierre de tuffeau), réglementation PLU exigeante."
+        },
+        {
+          "question": "Comment se positionner sur l'éco-construction ?",
+          "answer": "Formez-vous aux matériaux biosourcés, obtenez les certifications (RGE, Eco-Artisan), maîtrisez les labels (BBC, BEPOS), proposez des solutions innovantes. Marché en forte croissance (+30%/an)."
+        },
+        {
+          "question": "Quels réseaux professionnels nantais ?",
+          "answer": "CAPEB 44, FFB Pays de Loire, CCI Nantes St-Nazaire, Cluster Eco-construction, Nantes Métropole Gestion Équipements. Participez aux événements Novabuild, salons éco-construction."
+        }
+      ],
+      "stats": {
+        "population": "650 000",
+        "chantiers": "15 000+",
+        "budgetMoyen": "17 000€", 
+        "croissance": "+12%"
+      },
+      "seo": {
+        "title": "Comment Trouver des Chantiers à Nantes 2024 : Guide Loire-Atlantique",
+        "description": "Apprenez à trouver des chantiers à Nantes et sa métropole ! Saint-Nazaire, Rezé, stratégies prospection, réseaux locaux. Guide artisans Pays de Loire.",
+        "keywords": ["trouver chantiers Nantes", "comment trouver chantiers Nantes", "prospection Nantes", "chantiers Saint-Nazaire", "métropole Nantes", "artisan Loire-Atlantique"],
+        "canonicalUrl": "https://portail-habitat.fr/villes/nantes"
+      }
+    }
+  ]
+}

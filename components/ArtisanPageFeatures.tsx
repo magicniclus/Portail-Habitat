@@ -1,46 +1,41 @@
 "use client";
 
-import { Star, MapPin, Camera, TrendingUp, Users, Award } from "lucide-react";
+import { Star, MapPin, TrendingUp, Users, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ArtisanPageFeatures() {
   const scrollToForm = () => {
-    const heroSection = document.querySelector('section');
-    if (heroSection) {
-      heroSection.scrollIntoView({ behavior: 'smooth' });
+    const onboardingSection = document.getElementById('onboarding');
+    if (onboardingSection) {
+      onboardingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
   const features = [
     {
-      icon: Star,
-      title: "Système de notation",
-      description: "Collectez et affichez les avis clients pour renforcer votre crédibilité"
-    },
-    {
       icon: MapPin,
-      title: "Visibilité par secteur",
-      description: "Apparaissez en priorité dans votre zone d'intervention géographique"
-    },
-    {
-      icon: Camera,
-      title: "Portfolio de chantiers",
-      description: "Présentez vos réalisations avec photos avant/après"
-    },
-    {
-      icon: TrendingUp,
-      title: "4 à 6 demandes/mois",
-      description: "En moyenne, nos artisans reçoivent entre 4 et 6 demandes qualifiées"
+      title: "Demandes clients GRATUITES depuis votre fiche",
+      description: "Les particuliers vous contactent directement, sans aucun frais"
     },
     {
       icon: Users,
-      title: "Profil personnalisable",
-      description: "Mettez en avant vos spécialités, certifications et expérience"
+      title: "Vous êtes libre d'accepter ou refuser chaque demande",
+      description: "Vous choisissez uniquement les chantiers qui vous intéressent"
+    },
+    {
+      icon: TrendingUp,
+      title: "Visibilité prioritaire par métier et par ville",
+      description: "Vous apparaissez en premier dans votre zone"
     },
     {
       icon: Award,
-      title: "Badge de qualité",
-      description: "Obtenez des certifications qui rassurent vos futurs clients"
+      title: "Sans engagement",
+      description: "Aucun contrat, résiliable à tout moment"
+    },
+    {
+      icon: Star,
+      title: "Activation immédiate",
+      description: "Votre fiche est visible dès l'inscription"
     }
   ];
 
@@ -58,16 +53,16 @@ export default function ArtisanPageFeatures() {
                 SOYEZ VISIBLE
               </div>
               <h2 className="text-4xl font-bold text-gray-900 mb-6">
-                Intégré le plus grand annuaire d'artisan
+                Votre visibilité locale, sans démarchage
               </h2>
               <p className="text-xl text-gray-600 mb-6">
-                Une vitrine digitale complète pour développer votre activité et rassurer vos clients
+                Vous apparaissez dans votre zone auprès de particuliers qui recherchent activement un artisan. Ce sont eux qui vous contactent.
               </p>
               <div className="w-20 h-1 bg-orange-600 rounded"></div>
             </div>
 
             {/* Grille des fonctionnalités */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               {features.map((feature, index) => {
                 const IconComponent = feature.icon;
                 return (
@@ -97,16 +92,16 @@ export default function ArtisanPageFeatures() {
               
               {/* Contenu */}
               <div className="flex-1">
-                <p className="text-gray-600 mb-6">
-                  Rejoignez plus de 3 200 artisans qui nous font déjà confiance !
-                </p>
                 <Button 
                   size="lg" 
-                  className="w-full sm:w-auto px-8 py-4 text-lg font-semibold bg-orange-600 hover:bg-orange-700"
+                  className="w-full sm:w-auto px-8 py-4 text-lg font-semibold bg-orange-600 hover:bg-orange-700 mb-3"
                   onClick={scrollToForm}
                 >
-                  Je m'inscris
+                  Voir les demandes gratuites dans ma zone
                 </Button>
+                <p className="text-sm text-gray-500">
+                  Les demandes reçues depuis votre fiche sont gratuites
+                </p>
               </div>
             </div>
           </div>

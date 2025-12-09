@@ -5,20 +5,20 @@ export default function HowItWorks() {
   const steps = [
     {
       icon: UserPlus,
-      title: "Vous créez votre page artisan",
-      description: "En seulement 2 minutes",
+      title: "Vous créez votre fiche artisan",
+      description: "En 2 minutes, vous indiquez votre métier et votre zone d'intervention.",
       color: "#ea580c"
     },
     {
       icon: Search,
       title: "Les particuliers vous trouvent",
-      description: "Sur Google et sur notre annuaire",
+      description: "Ils consultent votre profil et vous contactent directement depuis le portail.",
       color: "#ea580c"
     },
     {
       icon: PhoneCall,
-      title: "Vous recevez les demandes",
-      description: "Directement sur votre téléphone",
+      title: "Vous recevez des demandes",
+      description: "Par téléphone ou par message, sans intermédiaire.",
       color: "#ea580c"
     }
   ];
@@ -30,10 +30,10 @@ export default function HowItWorks() {
         {/* En-tête de section */}
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Comment ça marche ?
+            Recevez des demandes de chantiers dans votre zone
           </h2>
           <p className="text-xl text-gray-600">
-            En 3 étapes simples
+            Des particuliers vous contactent directement. Vous êtes libre de répondre ou non.
           </p>
         </div>
 

@@ -108,19 +108,19 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem>
-                    <Link href="/metiers/plomberie">Plomberie</Link>
+                    <Link href="/blog/metiers/plomberie">Plomberie</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <Link href="/metiers/electricite">Électricité</Link>
+                    <Link href="/blog/metiers/electricite">Électricité</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <Link href="/metiers/peinture">Peinture</Link>
+                    <Link href="/blog/metiers/peinture">Peinture</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <Link href="/metiers/maconnerie">Maçonnerie</Link>
+                    <Link href="/blog/metiers/maconnerie">Maçonnerie</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem>
-                    <Link href="/metiers/menuiserie">Menuiserie</Link>
+                    <Link href="/blog/metiers/menuiserie">Menuiserie</Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -300,35 +300,35 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
                       <div className="font-semibold text-gray-900 text-lg">Métiers</div>
                       <div className="pl-4 space-y-4">
                         <Link 
-                          href="/metiers/plomberie" 
+                          href="/blog/metiers/plomberie" 
                           className="block text-gray-600 hover:text-gray-900 py-1"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           Plomberie
                         </Link>
                         <Link 
-                          href="/metiers/electricite" 
+                          href="/blog/metiers/electricite" 
                           className="block text-gray-600 hover:text-gray-900 py-1"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           Électricité
                         </Link>
                         <Link 
-                          href="/metiers/peinture" 
+                          href="/blog/metiers/peinture" 
                           className="block text-gray-600 hover:text-gray-900 py-1"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           Peinture
                         </Link>
                         <Link 
-                          href="/metiers/maconnerie" 
+                          href="/blog/metiers/maconnerie" 
                           className="block text-gray-600 hover:text-gray-900 py-1"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           Maçonnerie
                         </Link>
                         <Link 
-                          href="/metiers/menuiserie" 
+                          href="/blog/metiers/menuiserie" 
                           className="block text-gray-600 hover:text-gray-900 py-1"
                           onClick={() => setIsMenuOpen(false)}
                         >

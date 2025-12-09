@@ -668,10 +668,7 @@ export default function OnboardingStep3Content() {
                   </div>
                   
                   {/* Témoignages */}
-                  <section className="mt-8 pb-6">
-                    <h3 className="text-gray-600 text-base font-medium mb-4">
-                      Ce que disent nos artisans
-                    </h3>
+                  <section className="mt-8">
 
                     <AutoplayCarousel 
                       className="w-full max-w-md"

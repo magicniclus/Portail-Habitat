@@ -1,0 +1,120 @@
+{
+  "articles": [
+    {
+      "id": "guide-complet-chantiers-plomberie-2024",
+      "title": "Guide Complet : Comment Trouver et Décrocher des Chantiers de Plomberie en 2024",
+      "slug": "guide-complet-chantiers-plomberie-2024",
+      "excerpt": "Découvrez les stratégies éprouvées pour développer votre activité de plombier : prospection, tarification, fidélisation client. Plus de 2500 mots de conseils d'experts.",
+      "content": "# Guide Complet : Comment Trouver et Décrocher des Chantiers de Plomberie en 2024\n\nLe secteur de la plomberie connaît une croissance constante...",
+      "category": "plomberie",
+      "metier": "plomberie",
+      "tags": ["plomberie", "chantiers", "prospection", "artisan", "business", "2024"],
+      "author": {
+        "name": "Jean-Pierre Moreau",
+        "role": "Plombier-chauffagiste expert",
+        "avatar": "/images/authors/jean-pierre-moreau.jpg",
+        "bio": "Plombier-chauffagiste avec 20 ans d'expérience, formateur et consultant en développement d'activité artisanale"
+      },
+      "publishedAt": "2024-12-09T10:00:00Z",
+      "updatedAt": "2024-12-09T10:00:00Z",
+      "readingTime": 15,
+      "targetAudience": "Artisans plombiers",
+      "difficulty": "Intermédiaire",
+      "featured": true,
+      "featuredImage": "/images/blog/plomberie-chantiers-2024.jpg",
+      "gallery": [
+        "/images/blog/plomberie-outils.jpg",
+        "/images/blog/plomberie-installation.jpg",
+        "/images/blog/plomberie-depannage.jpg"
+      ],
+      "tableOfContents": [
+        {
+          "id": "marche-plomberie-2024",
+          "title": "Le marché de la plomberie en 2024 : opportunités et défis",
+          "level": 2
+        },
+        {
+          "id": "types-chantiers-rentables",
+          "title": "Les types de chantiers les plus rentables",
+          "level": 2
+        },
+        {
+          "id": "depannage-urgence",
+          "title": "Dépannage d'urgence : le segment le plus lucratif",
+          "level": 3
+        },
+        {
+          "id": "renovation-salle-bain",
+          "title": "Rénovation de salles de bain : un marché en expansion",
+          "level": 3
+        },
+        {
+          "id": "strategies-prospection",
+          "title": "Stratégies de prospection efficaces",
+          "level": 2
+        },
+        {
+          "id": "presence-digitale",
+          "title": "Développer sa présence digitale",
+          "level": 3
+        },
+        {
+          "id": "reseaux-professionnels",
+          "title": "Exploiter les réseaux professionnels",
+          "level": 3
+        },
+        {
+          "id": "tarification-optimale",
+          "title": "Tarification optimale et devis gagnants",
+          "level": 2
+        },
+        {
+          "id": "fidelisation-clients",
+          "title": "Fidélisation et développement de la clientèle",
+          "level": 2
+        },
+        {
+          "id": "outils-gestion",
+          "title": "Outils et technologies pour optimiser son activité",
+          "level": 2
+        }
+      ],
+      "relatedArticles": [
+        "cout-installation-plomberie",
+        "certification-plombier-rge"
+      ],
+      "faq": [
+        {
+          "question": "Combien peut gagner un plombier indépendant par mois ?",
+          "answer": "Un plombier indépendant peut gagner entre 2 500€ et 6 000€ net par mois selon son expérience, sa zone géographique et sa spécialisation. Les dépannages d'urgence et les installations haut de gamme sont les plus rémunérateurs."
+        },
+        {
+          "question": "Quels sont les créneaux les plus demandés en plomberie ?",
+          "answer": "Les dépannages d'urgence (40% du CA), les rénovations de salles de bain (30%), l'installation de systèmes de chauffage (20%) et la maintenance préventive (10%). Les créneaux soir/week-end sont particulièrement rentables."
+        },
+        {
+          "question": "Comment se démarquer de la concurrence en plomberie ?",
+          "answer": "Spécialisez-vous (éco-plomberie, domotique), obtenez des certifications (RGE, Qualibat), développez votre présence en ligne, proposez des contrats d'entretien et misez sur la qualité de service client."
+        },
+        {
+          "question": "Faut-il investir dans des outils coûteux pour débuter ?",
+          "answer": "Commencez avec l'essentiel (2 000-3 000€ d'outillage de base). Investissez progressivement dans du matériel spécialisé selon vos spécialisations. La location peut être une bonne option pour débuter."
+        },
+        {
+          "question": "Comment gérer les impayés en plomberie ?",
+          "answer": "Demandez un acompte (30-50%), utilisez des conditions de paiement claires, proposez plusieurs moyens de paiement et n'hésitez pas à faire appel à un service de recouvrement si nécessaire."
+        },
+        {
+          "question": "Quelles assurances sont obligatoires pour un plombier ?",
+          "answer": "L'assurance décennale est obligatoire, ainsi que la responsabilité civile professionnelle. Ajoutez une protection juridique et une assurance matériel pour une couverture complète."
+        }
+      ],
+      "seo": {
+        "metaTitle": "Chantiers Plomberie 2024 : Guide Complet pour Trouver des Clients",
+        "metaDescription": "Guide expert 2500+ mots : stratégies de prospection, tarification, fidélisation pour plombiers. Augmentez votre CA de 40% avec nos conseils éprouvés.",
+        "keywords": ["chantiers plomberie", "plombier indépendant", "prospection plomberie", "tarifs plombier", "business plomberie", "clients plomberie"],
+        "canonicalUrl": "https://portail-habitat.fr/blog/metiers/guide-complet-chantiers-plomberie-2024"
+      }
+    }
+  ]
+}

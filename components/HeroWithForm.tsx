@@ -139,7 +139,7 @@ export default function HeroWithForm() {
   };
 
   return (
-    <section className="relative py-20 overflow-hidden">
+    <section id="onboarding" className="relative py-20 overflow-hidden">
       {/* Vidéo en arrière-plan */}
       <video 
         autoPlay 

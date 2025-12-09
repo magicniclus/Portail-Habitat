@@ -81,7 +81,7 @@ export default function Header() {
                         {metiers.slice(0, 10).map((metier) => (
                           <Link 
                             key={metier}
-                            href={`/metiers/${metier.toLowerCase().replace(/é/g, 'e')}`} 
+                            href={`/blog/metiers/${metier.toLowerCase().replace(/é/g, 'e')}`} 
                             className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded text-sm text-gray-700 hover:text-gray-900"
                           >
                             <span className="text-gray-400">→</span>
@@ -91,7 +91,7 @@ export default function Header() {
                       </div>
                       <div className="mt-4 pt-3 border-t">
                         <Link 
-                          href="/metiers" 
+                          href="/blog/metiers" 
                           className="text-sm text-gray-600 hover:text-gray-900 font-medium flex items-center gap-1"
                         >
                           Voir tous les métiers 
@@ -175,6 +175,11 @@ export default function Header() {
                 Artisans
               </Link>
 
+              {/* Blog */}
+              <Link href="/blog" className="text-gray-600 hover:text-gray-900">
+                Blog
+              </Link>
+
               {/* Simuler mon devis */}
               <Button asChild variant="ghost" className="text-orange-600 hover:text-orange-700 font-semibold">
                 <Link href="/simulateur-devis">SIMULER MON DEVIS</Link>
@@ -233,7 +238,7 @@ export default function Header() {
                       {metiers.map((metier) => (
                         <Link 
                           key={metier}
-                          href={`/metiers/${metier.toLowerCase().replace(/é/g, 'e')}`}
+                          href={`/blog/metiers/${metier.toLowerCase().replace(/é/g, 'e')}`}
                           className="block text-gray-600 hover:text-gray-900 py-1 text-sm"
                           onClick={() => setIsMenuOpen(false)}
                         >
@@ -281,6 +286,14 @@ export default function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Artisans
+                  </Link>
+
+                  <Link 
+                    href="/blog" 
+                    className="block text-gray-600 hover:text-gray-900 font-semibold text-lg py-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    Blog
                   </Link>
 
                   <Button asChild variant="ghost" className="w-full text-orange-600 hover:text-orange-700 font-semibold text-lg">

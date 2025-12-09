@@ -1,0 +1,217 @@
+{
+  "articles": [
+    {
+      "id": "renovation-salle-bain-tendances-2024",
+      "title": "Rénovation salle de bain : les tendances 2024 à connaître",
+      "slug": "renovation-salle-bain-tendances-2024",
+      "excerpt": "Découvrez les dernières tendances en matière de rénovation de salle de bain pour 2024 : matériaux, couleurs, aménagements...",
+      "content": "# Rénovation salle de bain : les tendances 2024 à connaître\n\nLa salle de bain est devenue une pièce centrale de nos intérieurs...",
+      "category": "renovation",
+      "tags": ["salle de bain", "tendances", "rénovation", "2024"],
+      "author": {
+        "name": "Marie Dubois",
+        "role": "Architecte d'intérieur",
+        "avatar": "/images/authors/marie-dubois.jpg",
+        "bio": "Architecte d'intérieur spécialisée dans la rénovation de salles de bain depuis 10 ans"
+      },
+      "publishedAt": "2024-12-01T10:00:00Z",
+      "updatedAt": "2024-12-01T10:00:00Z",
+      "readingTime": 8,
+      "targetAudience": "Particuliers",
+      "difficulty": "Intermédiaire",
+      "featured": true,
+      "featuredImage": "/images/blog/renovation-salle-bain-2024.jpg",
+      "gallery": [
+        "/images/blog/sdb-tendance-1.jpg",
+        "/images/blog/sdb-tendance-2.jpg"
+      ],
+      "tableOfContents": [
+        {
+          "id": "materiaux-naturels",
+          "title": "Les matériaux naturels en vedette",
+          "level": 2
+        },
+        {
+          "id": "couleurs-apaisantes",
+          "title": "Des couleurs apaisantes",
+          "level": 2
+        },
+        {
+          "id": "douche-italienne",
+          "title": "La douche à l'italienne revisitée",
+          "level": 2
+        },
+        {
+          "id": "eclairage-led",
+          "title": "L'éclairage LED intelligent",
+          "level": 3
+        }
+      ],
+      "relatedArticles": [
+        "cout-renovation-salle-bain",
+        "choisir-carrelage-salle-bain"
+      ],
+      "faq": [
+        {
+          "question": "Quel est le budget moyen pour rénover une salle de bain en 2024 ?",
+          "answer": "Le budget varie entre 3 000€ et 15 000€ selon la surface et les finitions. Comptez 500€/m² pour une rénovation standard et jusqu'à 1 500€/m² pour du haut de gamme avec des matériaux naturels."
+        },
+        {
+          "question": "Combien de temps durent les travaux de rénovation ?",
+          "answer": "Une rénovation complète prend généralement 2 à 4 semaines. Cela dépend de la complexité : simple rafraîchissement (1 semaine), rénovation standard (2-3 semaines), rénovation complète avec modification de plomberie (3-4 semaines)."
+        },
+        {
+          "question": "Quels sont les matériaux tendance en 2024 ?",
+          "answer": "Les matériaux naturels dominent : pierre naturelle, bois traité, terrazzo, et céramique effet marbre. Les couleurs terre et les finitions mates sont très prisées pour créer une ambiance spa."
+        },
+        {
+          "question": "Faut-il un permis pour rénover sa salle de bain ?",
+          "answer": "Non, sauf si vous modifiez la structure (cloisons porteurs) ou créez une nouvelle ouverture. Une déclaration préalable peut être nécessaire pour les copropriétés. Vérifiez toujours avec votre syndic."
+        },
+        {
+          "question": "Comment choisir entre douche et baignoire ?",
+          "answer": "Privilégiez la douche si vous manquez d'espace (gain de 30% d'espace) ou pour l'accessibilité. Gardez la baignoire si vous avez des enfants ou pour la revente (valorisation de 5-10% du bien)."
+        }
+      ],
+      "seo": {
+        "metaTitle": "Rénovation Salle de Bain 2024 : Tendances & Conseils d'Expert",
+        "metaDescription": "Découvrez les tendances 2024 pour rénover votre salle de bain : matériaux naturels, couleurs apaisantes, douche italienne. Conseils d'architecte.",
+        "keywords": ["rénovation salle de bain", "tendances 2024", "douche italienne", "carrelage", "architecte"],
+        "canonicalUrl": "https://portail-habitat.fr/blog/renovation-salle-bain-tendances-2024"
+      }
+    },
+    {
+      "id": "cout-renovation-salle-bain",
+      "title": "Quel budget prévoir pour rénover sa salle de bain ?",
+      "slug": "cout-renovation-salle-bain",
+      "excerpt": "Guide complet des coûts de rénovation d'une salle de bain selon la surface, les matériaux et le niveau de finition.",
+      "content": "# Quel budget prévoir pour rénover sa salle de bain ?\n\nRénover une salle de bain représente un investissement important...",
+      "category": "budget",
+      "tags": ["budget", "coût", "rénovation", "salle de bain", "prix"],
+      "author": {
+        "name": "Pierre Martin",
+        "role": "Expert en rénovation",
+        "avatar": "/images/authors/pierre-martin.jpg",
+        "bio": "Expert en rénovation avec 15 ans d'expérience dans l'estimation de projets"
+      },
+      "publishedAt": "2024-11-28T14:30:00Z",
+      "updatedAt": "2024-11-28T14:30:00Z",
+      "readingTime": 12,
+      "targetAudience": "Particuliers",
+      "difficulty": "Débutant",
+      "featured": false,
+      "featuredImage": "/images/blog/budget-renovation-sdb.jpg",
+      "tableOfContents": [
+        {
+          "id": "facteurs-prix",
+          "title": "Les facteurs qui influencent le prix",
+          "level": 2
+        },
+        {
+          "id": "budget-surface",
+          "title": "Budget selon la surface",
+          "level": 2
+        },
+        {
+          "id": "economies-possibles",
+          "title": "Comment faire des économies",
+          "level": 2
+        }
+      ],
+      "relatedArticles": [
+        "renovation-salle-bain-tendances-2024",
+        "choisir-artisan-salle-bain"
+      ],
+      "seo": {
+        "metaTitle": "Budget Rénovation Salle de Bain 2024 : Prix & Devis Détaillés",
+        "metaDescription": "Découvrez le budget nécessaire pour rénover votre salle de bain : prix au m², coûts par poste, conseils pour économiser. Devis gratuit.",
+        "keywords": ["budget rénovation salle de bain", "prix rénovation", "coût salle de bain", "devis"],
+        "canonicalUrl": "https://portail-habitat.fr/blog/cout-renovation-salle-bain"
+      }
+    },
+    {
+      "id": "isolation-combles-guide-complet",
+      "title": "Isolation des combles : guide complet 2024",
+      "slug": "isolation-combles-guide-complet",
+      "excerpt": "Tout savoir sur l'isolation des combles : techniques, matériaux, aides financières et conseils d'expert pour réduire vos factures.",
+      "content": "# Isolation des combles : guide complet 2024\n\nL'isolation des combles est l'un des travaux les plus rentables...",
+      "category": "isolation",
+      "tags": ["isolation", "combles", "économies énergie", "aides financières"],
+      "author": {
+        "name": "Sophie Leroy",
+        "role": "Conseillère en rénovation énergétique",
+        "avatar": "/images/authors/sophie-leroy.jpg",
+        "bio": "Conseillère en rénovation énergétique certifiée RGE depuis 8 ans"
+      },
+      "publishedAt": "2024-11-25T09:15:00Z",
+      "updatedAt": "2024-11-25T09:15:00Z",
+      "readingTime": 15,
+      "targetAudience": "Particuliers",
+      "difficulty": "Intermédiaire",
+      "featured": true,
+      "featuredImage": "/images/blog/isolation-combles.jpg",
+      "tableOfContents": [
+        {
+          "id": "pourquoi-isoler",
+          "title": "Pourquoi isoler ses combles ?",
+          "level": 2
+        },
+        {
+          "id": "types-isolation",
+          "title": "Les différents types d'isolation",
+          "level": 2
+        },
+        {
+          "id": "materiaux-isolants",
+          "title": "Choisir ses matériaux isolants",
+          "level": 2
+        },
+        {
+          "id": "aides-financieres",
+          "title": "Aides financières disponibles",
+          "level": 2
+        }
+      ],
+      "relatedArticles": [
+        "aides-renovation-energetique",
+        "choisir-artisan-isolation"
+      ],
+      "seo": {
+        "metaTitle": "Isolation Combles 2024 : Guide Complet, Prix & Aides Financières",
+        "metaDescription": "Guide complet isolation des combles : techniques, matériaux, prix au m², aides MaPrimeRénov'. Conseils d'expert pour économiser jusqu'à 30% sur vos factures.",
+        "keywords": ["isolation combles", "isolation thermique", "MaPrimeRénov", "économies énergie"],
+        "canonicalUrl": "https://portail-habitat.fr/blog/isolation-combles-guide-complet"
+      }
+    }
+  ],
+  "categories": [
+    {
+      "id": "renovation",
+      "name": "Rénovation",
+      "slug": "renovation",
+      "description": "Conseils et guides pour tous vos projets de rénovation",
+      "color": "#ea580c"
+    },
+    {
+      "id": "budget",
+      "name": "Budget & Prix",
+      "slug": "budget",
+      "description": "Tout savoir sur les coûts et budgets de vos travaux",
+      "color": "#16a34a"
+    },
+    {
+      "id": "isolation",
+      "name": "Isolation",
+      "slug": "isolation",
+      "description": "Guides sur l'isolation thermique et phonique",
+      "color": "#2563eb"
+    },
+    {
+      "id": "conseils",
+      "name": "Conseils",
+      "slug": "conseils",
+      "description": "Conseils d'experts pour réussir vos travaux",
+      "color": "#7c3aed"
+    }
+  ]
+}

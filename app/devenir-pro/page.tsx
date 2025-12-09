@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import HeroWithForm from "@/components/HeroWithForm";
 import TrustSection from "@/components/TrustSection";
 import HowItWorks from "@/components/HowItWorks";
+import ProjectsFeedPreview from "@/components/ProjectsFeedPreview";
 import ProfessionsSection from "@/components/ProfessionsSection";
 import ArtisanPageFeatures from "@/components/ArtisanPageFeatures";
 import MobileAppSection from "@/components/MobileAppSection";
@@ -41,6 +42,7 @@ export default function DevenirPro() {
         <TrustSection />
         <HowItWorks />
         <ArtisanPageFeatures />
+        <ProjectsFeedPreview />
         <ProfessionsSection />
         <RevenueSection />
         <TestimonialsSection />
