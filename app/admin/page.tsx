@@ -6,11 +6,9 @@ import {
   Users, 
   FileText, 
   Star, 
-  TrendingUp, 
   AlertCircle,
   CheckCircle,
-  Clock,
-  Mail
+  Clock
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -23,40 +21,6 @@ export const metadata: Metadata = {
 };
 
 export default function AdminDashboard() {
-  const stats = [
-    {
-      title: "Artisans inscrits",
-      value: "1,247",
-      change: "+12%",
-      trend: "up",
-      icon: Users,
-      color: "text-blue-600"
-    },
-    {
-      title: "Demandes actives",
-      value: "89",
-      change: "+5%",
-      trend: "up",
-      icon: Mail,
-      color: "text-green-600"
-    },
-    {
-      title: "Articles publiés",
-      value: "156",
-      change: "+8%",
-      trend: "up",
-      icon: FileText,
-      color: "text-purple-600"
-    },
-    {
-      title: "Avis en attente",
-      value: "23",
-      change: "-15%",
-      trend: "down",
-      icon: Star,
-      color: "text-orange-600"
-    }
-  ];
 
   const recentActivities = [
     {
@@ -127,28 +91,6 @@ export default function AdminDashboard() {
         </Badge>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-600">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className={`h-4 w-4 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="flex items-center text-xs text-gray-600">
-                <TrendingUp className={`h-3 w-3 mr-1 ${
-                  stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                }`} />
-                {stat.change} par rapport au mois dernier
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Activities */}
@@ -218,29 +160,23 @@ export default function AdminDashboard() {
           <CardTitle>Actions rapides</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Button variant="outline" className="h-20 flex-col gap-2" asChild>
-              <a href="/admin/artisans">
+              <a href="/admin/utilisateurs">
                 <Users className="h-6 w-6" />
                 Gérer artisans
               </a>
             </Button>
             <Button variant="outline" className="h-20 flex-col gap-2" asChild>
-              <a href="/admin/articles">
+              <a href="/admin/demandes">
                 <FileText className="h-6 w-6" />
-                Créer article
+                Voir demandes
               </a>
             </Button>
             <Button variant="outline" className="h-20 flex-col gap-2" asChild>
-              <a href="/admin/avis">
+              <a href="/admin/projets">
                 <Star className="h-6 w-6" />
-                Modérer avis
-              </a>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2" asChild>
-              <a href="/admin/stats">
-                <TrendingUp className="h-6 w-6" />
-                Voir stats
+                Voir projets
               </a>
             </Button>
           </div>

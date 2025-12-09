@@ -23,20 +23,23 @@ export default function MentionsLegales() {
         1. Éditeur du site
       </h2>
       <p className="text-gray-700 mb-6">
-        <strong>Portail Habitat</strong><br />
-        Société par actions simplifiée<br />
-        Capital social : 50 000 €<br />
-        Siège social : 123 Avenue de la République, 75011 Paris<br />
-        RCS Paris : 123 456 789<br />
-        SIRET : 123 456 789 00012<br />
-        TVA intracommunautaire : FR12 123456789
+        <strong>MONSIEUR NICOLAS CASTERA</strong><br />
+        Entrepreneur individuel<br />
+        SIRET : 832 414 650 00024<br />
+        Activité : Édition de logiciels applicatifs - 5829C<br />
+        Adresse : 22 RUE DE LIBOURNE, 33100 BORDEAUX<br />
+        Date de création : 03 octobre 2017<br />
+        Forme juridique : Entrepreneur individuel<br />
+        Inscrit au RNE
       </p>
 
       <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">
         2. Directeur de la publication
       </h2>
       <p className="text-gray-700 mb-6">
-        Le directeur de la publication est le représentant légal de la société Portail Habitat.
+        <strong>Nicolas CASTERA</strong><br />
+        Entrepreneur individuel<br />
+        Email : casteranicolas.contact@gmail.com
       </p>
 
       <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">
@@ -54,9 +57,9 @@ export default function MentionsLegales() {
         4. Contact
       </h2>
       <p className="text-gray-700 mb-6">
-        Email : contact@portail-habitat.fr<br />
-        Téléphone : +33 1 23 45 67 89<br />
-        Adresse postale : 123 Avenue de la République, 75011 Paris
+        Email : casteranicolas.contact@gmail.com<br />
+        Site web : https://portail-habitat.fr<br />
+        Adresse postale : 22 RUE DE LIBOURNE, 33100 BORDEAUX
       </p>
 
       <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">
@@ -77,7 +80,7 @@ export default function MentionsLegales() {
         suppression et d'opposition concernant vos données personnelles.
       </p>
       <p className="text-gray-700 mb-6">
-        Pour exercer ces droits, contactez-nous à : dpo@portail-habitat.fr
+        Pour exercer ces droits, contactez-nous à : casteranicolas.contact@gmail.com
       </p>
 
       <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">
@@ -112,7 +115,7 @@ export default function MentionsLegales() {
       <p className="text-gray-700 mb-6">
         En cas de litige, vous pouvez recourir à la médiation en contactant :<br />
         <strong>Médiateur de la consommation</strong><br />
-        Email : mediation@portail-habitat.fr
+        Email : casteranicolas.contact@gmail.com
       </p>
     </LegalPage>
   );

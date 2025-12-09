@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { doc, getDoc, collection, query, where, getDocs, orderBy, limit, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getCurrentAdmin, hasPermission, ADMIN_PERMISSIONS } from "@/lib/admin-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EditableField from "@/components/admin/EditableField";
+import EditableSelect from "@/components/admin/EditableSelect";
 import { 
   ArrowLeft,
   Building2, 
@@ -22,7 +22,6 @@ import {
   Star,
   Users,
   MessageSquare,
-  TrendingUp,
   Loader2,
   Globe,
   Shield,
@@ -85,6 +84,11 @@ interface UserDetail {
     showEmail?: boolean;
     allowDirectContact?: boolean;
   };
+  assignedLeads?: Array<{
+    estimationId: string;
+    assignedAt: any;
+    price?: number;
+  }>;
   
   // Données prospect
   funnelStep?: string;
@@ -134,16 +138,18 @@ interface Project {
 export default function UserDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const userId = params.id as string;
+  const defaultTab = searchParams.get('tab') || 'profile';
   
   const [user, setUser] = useState<UserDetail | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [assignedEstimations, setAssignedEstimations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editing, setEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState<UserDetail | null>(null);
   const [canEdit, setCanEdit] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   useEffect(() => {
     if (userId) {
@@ -165,7 +171,6 @@ export default function UserDetailPage() {
       if (artisanDoc.exists()) {
         const artisanData = { id: artisanDoc.id, type: 'artisan' as const, ...artisanDoc.data() } as UserDetail;
         setUser(artisanData);
-        setEditedUser(artisanData);
         
         // Charger les leads de l'artisan
         const leadsQuery = query(
@@ -205,6 +210,29 @@ export default function UserDetailPage() {
           ...doc.data()
         })) as Project[];
         setProjects(projectsData);
+
+        // Charger les estimations assignées
+        if (artisanData.assignedLeads && artisanData.assignedLeads.length > 0) {
+          const estimationIds = artisanData.assignedLeads.map((lead: any) => lead.estimationId);
+          const estimationsData = [];
+          
+          // Charger chaque estimation individuellement (Firestore ne supporte pas les requêtes IN avec plus de 10 éléments)
+          for (const estimationId of estimationIds.slice(0, 20)) { // Limiter à 20 pour les performances
+            try {
+              const estimationDoc = await getDoc(doc(db, "estimations", estimationId));
+              if (estimationDoc.exists()) {
+                estimationsData.push({
+                  id: estimationDoc.id,
+                  ...estimationDoc.data()
+                });
+              }
+            } catch (error) {
+              console.error(`Erreur lors du chargement de l'estimation ${estimationId}:`, error);
+            }
+          }
+          
+          setAssignedEstimations(estimationsData);
+        }
       } else {
         // Essayer de charger depuis prospects
         const prospectDoc = await getDoc(doc(db, "prospects", userId));
@@ -212,7 +240,6 @@ export default function UserDetailPage() {
         if (prospectDoc.exists()) {
           const prospectData = { id: prospectDoc.id, type: 'prospect' as const, ...prospectDoc.data() } as UserDetail;
           setUser(prospectData);
-          setEditedUser(prospectData);
         } else {
           console.error("Utilisateur non trouvé");
         }
@@ -224,36 +251,26 @@ export default function UserDetailPage() {
     }
   };
 
-  const handleSave = async () => {
-    if (!editedUser || !canEdit) return;
+  const updateField = async (field: string, value: string | number) => {
+    if (!user || !canEdit) return;
 
     try {
-      const collection_name = editedUser.type === 'artisan' ? 'artisans' : 'prospects';
+      const collection_name = user.type === 'artisan' ? 'artisans' : 'prospects';
       await updateDoc(doc(db, collection_name, userId), {
-        ...editedUser,
+        [field]: value,
         updatedAt: new Date()
       });
       
-      setUser(editedUser);
-      setEditing(false);
-      console.log('Utilisateur mis à jour avec succès');
+      // Mettre à jour l'état local
+      setUser({
+        ...user,
+        [field]: value,
+        updatedAt: new Date()
+      });
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
+      throw error;
     }
-  };
-
-  const handleCancel = () => {
-    setEditedUser(user);
-    setEditing(false);
-  };
-
-  const handleInputChange = (field: string, value: any) => {
-    if (!editedUser) return;
-    
-    setEditedUser({
-      ...editedUser,
-      [field]: value
-    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -330,37 +347,17 @@ export default function UserDetailPage() {
           </div>
         </div>
         
-        {canEdit && (
-          <div className="flex items-center gap-2">
-            {editing ? (
-              <>
-                <Button onClick={handleSave} size="sm">
-                  <Save className="h-4 w-4 mr-2" />
-                  Sauvegarder
-                </Button>
-                <Button onClick={handleCancel} variant="outline" size="sm">
-                  <X className="h-4 w-4 mr-2" />
-                  Annuler
-                </Button>
-              </>
-            ) : (
-              <Button onClick={() => setEditing(true)} variant="outline" size="sm">
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier
-              </Button>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Informations principales */}
-      <Tabs defaultValue="profile" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5">
+      <Tabs defaultValue={defaultTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="profile">Profil</TabsTrigger>
           <TabsTrigger value="business">Entreprise</TabsTrigger>
           {user.type === 'artisan' && (
             <>
               <TabsTrigger value="leads">Leads ({leads.length})</TabsTrigger>
+              <TabsTrigger value="estimations">Estimations ({assignedEstimations.length})</TabsTrigger>
               <TabsTrigger value="reviews">Avis ({reviews.length})</TabsTrigger>
               <TabsTrigger value="projects">Projets ({projects.length})</TabsTrigger>
             </>
@@ -380,64 +377,39 @@ export default function UserDetailPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="firstName">Prénom</Label>
-                    {editing ? (
-                      <Input
-                        id="firstName"
-                        value={editedUser?.firstName || ''}
-                        onChange={(e) => handleInputChange('firstName', e.target.value)}
-                      />
-                    ) : (
-                      <div className="mt-1 text-sm">{user.firstName || 'Non renseigné'}</div>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="lastName">Nom</Label>
-                    {editing ? (
-                      <Input
-                        id="lastName"
-                        value={editedUser?.lastName || ''}
-                        onChange={(e) => handleInputChange('lastName', e.target.value)}
-                      />
-                    ) : (
-                      <div className="mt-1 text-sm">{user.lastName || 'Non renseigné'}</div>
-                    )}
-                  </div>
+                  <EditableField
+                    label="Prénom"
+                    value={user.firstName || ''}
+                    onSave={(value) => updateField('firstName', value)}
+                    placeholder="Prénom"
+                    disabled={!canEdit}
+                  />
+                  
+                  <EditableField
+                    label="Nom"
+                    value={user.lastName || ''}
+                    onSave={(value) => updateField('lastName', value)}
+                    placeholder="Nom de famille"
+                    disabled={!canEdit}
+                  />
                 </div>
                 
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  {editing ? (
-                    <Input
-                      id="email"
-                      type="email"
-                      value={editedUser?.email || ''}
-                      onChange={(e) => handleInputChange('email', e.target.value)}
-                    />
-                  ) : (
-                    <div className="mt-1 text-sm flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-gray-500" />
-                      {user.email}
-                    </div>
-                  )}
-                </div>
+                <EditableField
+                  label="Email"
+                  value={user.email || ''}
+                  onSave={(value) => updateField('email', value)}
+                  type="email"
+                  placeholder="Adresse email"
+                  disabled={!canEdit}
+                />
 
-                <div>
-                  <Label htmlFor="phone">Téléphone</Label>
-                  {editing ? (
-                    <Input
-                      id="phone"
-                      value={editedUser?.phone || ''}
-                      onChange={(e) => handleInputChange('phone', e.target.value)}
-                    />
-                  ) : (
-                    <div className="mt-1 text-sm flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-gray-500" />
-                      {user.phone || 'Non renseigné'}
-                    </div>
-                  )}
-                </div>
+                <EditableField
+                  label="Téléphone"
+                  value={user.phone || ''}
+                  onSave={(value) => updateField('phone', value)}
+                  placeholder="Numéro de téléphone"
+                  disabled={!canEdit}
+                />
               </CardContent>
             </Card>
 
@@ -450,45 +422,32 @@ export default function UserDetailPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="city">Ville</Label>
-                  {editing ? (
-                    <Input
-                      id="city"
-                      value={editedUser?.city || ''}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
-                    />
-                  ) : (
-                    <div className="mt-1 text-sm">{user.city || 'Non renseigné'}</div>
-                  )}
-                </div>
+                <EditableField
+                  label="Ville"
+                  value={user.city || ''}
+                  onSave={(value) => updateField('city', value)}
+                  placeholder="Ville"
+                  disabled={!canEdit}
+                />
 
-                <div>
-                  <Label htmlFor="postalCode">Code postal</Label>
-                  {editing ? (
-                    <Input
-                      id="postalCode"
-                      value={editedUser?.postalCode || ''}
-                      onChange={(e) => handleInputChange('postalCode', e.target.value)}
-                    />
-                  ) : (
-                    <div className="mt-1 text-sm">{user.postalCode || 'Non renseigné'}</div>
-                  )}
-                </div>
+                <EditableField
+                  label="Code postal"
+                  value={user.postalCode || ''}
+                  onSave={(value) => updateField('postalCode', value)}
+                  placeholder="Code postal"
+                  disabled={!canEdit}
+                />
 
                 {user.type === 'artisan' && (
-                  <div>
-                    <Label htmlFor="fullAddress">Adresse complète</Label>
-                    {editing ? (
-                      <Textarea
-                        id="fullAddress"
-                        value={editedUser?.fullAddress || ''}
-                        onChange={(e) => handleInputChange('fullAddress', e.target.value)}
-                      />
-                    ) : (
-                      <div className="mt-1 text-sm">{user.fullAddress || 'Non renseigné'}</div>
-                    )}
-                  </div>
+                  <EditableField
+                    label="Adresse complète"
+                    value={user.fullAddress || ''}
+                    onSave={(value) => updateField('fullAddress', value)}
+                    type="textarea"
+                    placeholder="Adresse complète"
+                    disabled={!canEdit}
+                    rows={3}
+                  />
                 )}
 
                 <div className="pt-2 border-t text-xs text-gray-500">
@@ -507,112 +466,389 @@ export default function UserDetailPage() {
             </Card>
           </div>
 
-          {/* Statistiques pour artisans */}
+        </TabsContent>
+
+        {/* Onglet Entreprise */}
+        <TabsContent value="business" className="space-y-6">
           {user.type === 'artisan' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Statistiques
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">{user.totalLeads || 0}</div>
-                    <div className="text-sm text-gray-600">Leads totaux</div>
-                  </div>
-                  <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                    <div className="text-2xl font-bold text-yellow-600">
-                      {user.averageRating?.toFixed(1) || '0.0'}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Informations entreprise */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    Entreprise
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <EditableField
+                    label="Nom de l'entreprise"
+                    value={user.companyName || ''}
+                    onSave={(value) => updateField('companyName', value)}
+                    placeholder="Nom de l'entreprise"
+                    disabled={!canEdit}
+                  />
+
+                  <EditableField
+                    label="SIRET"
+                    value={user.siret || ''}
+                    onSave={(value) => updateField('siret', value)}
+                    placeholder="Numéro SIRET"
+                    disabled={!canEdit}
+                  />
+
+                  <EditableField
+                    label="Profession"
+                    value={user.profession || ''}
+                    onSave={(value) => updateField('profession', value)}
+                    placeholder="Profession/Métier"
+                    disabled={!canEdit}
+                  />
+
+                  <EditableField
+                    label="Description"
+                    value={user.description || ''}
+                    onSave={(value) => updateField('description', value)}
+                    type="textarea"
+                    placeholder="Description de l'entreprise"
+                    disabled={!canEdit}
+                    rows={3}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Abonnement et statut */}
+              <div className="space-y-4">
+                {/* Statut principal */}
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <CreditCard className="h-5 w-5 text-blue-600" />
+                      Abonnement
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                      <div>
+                        <label className="text-sm font-medium text-gray-600">Statut</label>
+                        <div className="mt-1">
+                          {getStatusBadge(user.subscriptionStatus || 'inactive')}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-blue-600">
+                          {user.monthlySubscriptionPrice || 0}€
+                        </div>
+                        <div className="text-xs text-gray-500">par mois</div>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600">Note moyenne</div>
+                  </CardContent>
+                </Card>
+
+
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Onglet Leads */}
+        <TabsContent value="leads" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Leads attribués</h3>
+            <Badge variant="outline">{leads.length} leads</Badge>
+          </div>
+          
+          {leads.map((lead) => (
+            <Card key={lead.id}>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{lead.clientName}</h3>
+                    <p className="text-sm text-gray-600">{lead.projectType}</p>
+                    <div className="flex items-center gap-6 mt-2 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        {lead.clientEmail}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {lead.city}
+                      </span>
+                      <span>{lead.budget}</span>
+                    </div>
                   </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">{user.reviewCount || 0}</div>
-                    <div className="text-sm text-gray-600">Avis reçus</div>
-                  </div>
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">{user.publishedPostsCount || 0}</div>
-                    <div className="text-sm text-gray-600">Projets publiés</div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant={lead.status === 'converted' ? 'default' : 'secondary'}>
+                      {lead.status}
+                    </Badge>
+                    <div className="text-xs text-gray-500">
+                      {lead.createdAt?.toDate?.()?.toLocaleDateString('fr-FR')}
+                    </div>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href={`/admin/leads/${userId}-${lead.id}?returnTo=/admin/utilisateurs/${userId}&tab=leads`}>
+                        <Eye className="h-4 w-4 mr-1" />
+                        Voir
+                      </Link>
+                    </Button>
                   </div>
                 </div>
               </CardContent>
             </Card>
+          ))}
+        </TabsContent>
+
+        {/* Onglet Estimations assignées */}
+        <TabsContent value="estimations" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Estimations assignées</h3>
+            <Badge variant="outline">{assignedEstimations.length} estimations</Badge>
+          </div>
+          
+          {assignedEstimations.map((estimation: any) => (
+            <Card key={estimation.id}>
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <h4 className="font-semibold">
+                        {estimation.clientInfo?.firstName} - {estimation.project?.prestationType}
+                      </h4>
+                      <Badge variant="outline">
+                        {estimation.status === 'completed' ? 'Terminé' : 
+                         estimation.status === 'sent' ? 'Envoyé' : 
+                         estimation.status === 'draft' ? 'Brouillon' : estimation.status}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <div>📧 {estimation.clientInfo?.email}</div>
+                      <div>📞 {estimation.clientInfo?.phone}</div>
+                      <div>📍 {estimation.location?.city}</div>
+                      {estimation.pricing?.estimatedPrice && (
+                        <div>💰 {new Intl.NumberFormat('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR'
+                        }).format(estimation.pricing.estimatedPrice)}</div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-xs text-gray-500">
+                      {estimation.createdAt?.toDate?.()?.toLocaleDateString('fr-FR')}
+                    </div>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href={`/admin/projets/${estimation.id}?returnTo=/admin/utilisateurs/${userId}&tab=estimations`}>
+                        <Eye className="h-4 w-4 mr-1" />
+                        Voir détail
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {assignedEstimations.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              Aucune estimation assignée à cet artisan
+            </div>
           )}
         </TabsContent>
 
-      {/* Données détaillées pour artisans */}
-      {user.type === 'artisan' && (
-        <Tabs defaultValue="leads" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="leads">Leads ({leads.length})</TabsTrigger>
-            <TabsTrigger value="reviews">Avis ({reviews.length})</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="leads" className="space-y-4">
-            {leads.map((lead) => (
-              <Card key={lead.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">{lead.clientName}</h3>
-                      <p className="text-sm text-gray-600">{lead.projectType}</p>
-                      <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
-                        <span>{lead.clientEmail}</span>
-                        <span>{lead.city}</span>
-                        <span>{lead.budget}</span>
-                      </div>
+        {/* Onglet Avis */}
+        <TabsContent value="reviews" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Avis clients</h3>
+            <Badge variant="outline">{reviews.length} avis</Badge>
+          </div>
+          
+          {reviews.map((review) => (
+            <Card key={review.id}>
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="text-sm font-medium">Note: {review.rating}/5</div>
+                      <span className="font-medium">{review.clientName}</span>
                     </div>
-                    <div className="text-right">
-                      <Badge variant={lead.status === 'converted' ? 'default' : 'secondary'}>
-                        {lead.status}
-                      </Badge>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {lead.createdAt?.toDate?.()?.toLocaleDateString('fr-FR')}
-                      </div>
+                    <p className="text-gray-700">{review.comment}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge variant={review.displayed ? 'default' : 'secondary'}>
+                      {review.displayed ? 'Affiché' : 'Masqué'}
+                    </Badge>
+                    <div className="text-xs text-gray-500">
+                      {review.createdAt?.toDate?.()?.toLocaleDateString('fr-FR')}
+                    </div>
+                    {canEdit && (
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href={`/admin/avis/${userId}-${review.id}?returnTo=/admin/utilisateurs/${userId}&tab=reviews`}>
+                          <Eye className="h-4 w-4 mr-1" />
+                          Modérer
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+
+        {/* Onglet Projets */}
+        <TabsContent value="projects" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Projets publiés</h3>
+            <div className="flex items-center gap-3">
+              <Badge variant="outline">{projects.length} projets</Badge>
+              <Button size="sm" variant="outline" asChild>
+                <Link href={`/admin/utilisateurs/${userId}/projets?returnTo=/admin/utilisateurs/${userId}&tab=projects`}>
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  Voir tous les projets
+                </Link>
+              </Button>
+            </div>
+          </div>
+          
+          {projects.map((project) => (
+            <Card key={project.id}>
+              <CardContent className="pt-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-semibold">{project.title}</h4>
+                    <p className="text-sm text-gray-600 mt-1">{project.description}</p>
+                    <div className="flex items-center gap-6 mt-2 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {project.city}
+                      </span>
+                      <span>{project.projectType}</span>
+                      <span className="flex items-center gap-1">
+                        <ImageIcon className="h-3 w-3" />
+                        {project.photos?.length || 0} photos
+                      </span>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="reviews" className="space-y-4">
-            {reviews.map((review) => (
-              <Card key={review.id}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`h-4 w-4 ${
-                                i < review.rating ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                              }`} 
-                            />
-                          ))}
-                        </div>
-                        <span className="font-medium">{review.clientName}</span>
-                      </div>
-                      <p className="text-gray-700">{review.comment}</p>
+                  <div className="flex items-center gap-3">
+                    <Badge variant={project.isPublished ? 'default' : 'secondary'}>
+                      {project.isPublished ? 'Publié' : 'Brouillon'}
+                    </Badge>
+                    <div className="text-xs text-gray-500">
+                      {project.createdAt?.toDate?.()?.toLocaleDateString('fr-FR')}
                     </div>
-                    <div className="text-right ml-4">
-                      <Badge variant={review.displayed ? 'default' : 'secondary'}>
-                        {review.displayed ? 'Affiché' : 'Masqué'}
-                      </Badge>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {review.createdAt?.toDate?.()?.toLocaleDateString('fr-FR')}
-                      </div>
-                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => setSelectedProject(project)}
+                    >
+                      <Eye className="h-4 w-4 mr-1" />
+                      Voir le projet
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-        </Tabs>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+      </Tabs>
+
+      {/* Modal de détail du projet */}
+      {selectedProject && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">{selectedProject.title}</h2>
+                <div className="flex items-center gap-2">
+                  {canEdit && (
+                    <Button 
+                      variant={selectedProject.isPubliclyVisible ? "default" : "outline"}
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          const [artisanId, actualProjectId] = [userId, selectedProject.id];
+                          await updateDoc(doc(db, "artisans", artisanId, "posts", actualProjectId), {
+                            isPubliclyVisible: !selectedProject.isPubliclyVisible,
+                            updatedAt: new Date()
+                          });
+                          
+                          // Mettre à jour l'état local
+                          const updatedProject = { ...selectedProject, isPubliclyVisible: !selectedProject.isPubliclyVisible };
+                          setSelectedProject(updatedProject);
+                          
+                          // Mettre à jour aussi dans la liste des projets
+                          setProjects(projects.map(p => 
+                            p.id === selectedProject.id ? updatedProject : p
+                          ));
+                        } catch (error) {
+                          console.error('Erreur lors de la mise à jour:', error);
+                        }
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      {selectedProject.isPubliclyVisible ? 'Masquer' : 'Rendre visible'}
+                    </Button>
+                  )}
+                  <Button variant="outline" onClick={() => setSelectedProject(null)}>
+                    <X className="h-4 w-4 mr-2" />
+                    Fermer
+                  </Button>
+                </div>
+              </div>
+
+              {/* Photos du projet */}
+              {selectedProject.photos && selectedProject.photos.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  {selectedProject.photos.map((photo, index) => (
+                    <div key={index} className="relative h-64 w-full">
+                      <img
+                        src={photo}
+                        alt={`${selectedProject.title} - Photo ${index + 1}`}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Détails */}
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold mb-2">Description</h3>
+                  <p className="text-gray-700">{selectedProject.description}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium">Localisation</h4>
+                    <p className="text-sm text-gray-600">{selectedProject.city}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Type de projet</h4>
+                    <p className="text-sm text-gray-600">{selectedProject.projectType}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Statut</h4>
+                    <Badge variant={selectedProject.isPublished ? 'default' : 'secondary'}>
+                      {selectedProject.isPublished ? 'Publié' : 'Brouillon'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <h4 className="font-medium">Visibilité</h4>
+                    <Badge variant={selectedProject.isPubliclyVisible ? 'default' : 'secondary'}>
+                      {selectedProject.isPubliclyVisible ? 'Public' : 'Privé'}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-6 text-sm text-gray-500">
+                  <span>👍 {selectedProject.likesCount || 0} j'aime</span>
+                  <span>💬 {selectedProject.commentsCount || 0} commentaires</span>
+                  <span>📅 {selectedProject.createdAt?.toDate?.()?.toLocaleDateString('fr-FR')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

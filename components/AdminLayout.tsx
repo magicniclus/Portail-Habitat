@@ -32,96 +32,41 @@ import {
   Home,
   Users,
   FileText,
-  Calendar,
-  Settings,
   User,
   LogOut,
   ChevronUp,
-  MessageSquare,
-  Mail,
-  Globe,
-  HelpCircle,
-  IdCard,
-  Star,
   Shield,
-  Database,
-  BarChart3,
   UserCheck,
 } from "lucide-react";
 
 const navigation = [
   {
-    title: "Vue d'ensemble",
+    title: "Tableau de bord",
     items: [
       {
-        title: "Dashboard Admin",
+        title: "Vue d'ensemble",
         url: "/admin",
         icon: Home,
-      },
-      {
-        title: "Statistiques",
-        url: "/admin/stats",
-        icon: BarChart3,
       },
     ],
   },
   {
-    title: "Gestion Utilisateurs",
+    title: "Gestion",
     items: [
       {
-        title: "Utilisateurs",
+        title: "Artisans",
         url: "/admin/utilisateurs",
         icon: Users,
       },
       {
-        title: "Artisans",
-        url: "/admin/artisans",
-        icon: Users,
-      },
-      {
-        title: "Particuliers",
-        url: "/admin/particuliers",
+        title: "Demandes",
+        url: "/admin/demandes",
         icon: UserCheck,
       },
       {
-        title: "Modération",
-        url: "/admin/moderation",
-        icon: Shield,
-      },
-    ],
-  },
-  {
-    title: "Contenu",
-    items: [
-      {
-        title: "Articles",
-        url: "/admin/articles",
+        title: "Projets",
+        url: "/admin/projets",
         icon: FileText,
-      },
-      {
-        title: "Demandes",
-        url: "/admin/demandes",
-        icon: Mail,
-      },
-      {
-        title: "Avis",
-        url: "/admin/avis",
-        icon: Star,
-      },
-    ],
-  },
-  {
-    title: "Système",
-    items: [
-      {
-        title: "Base de données",
-        url: "/admin/database",
-        icon: Database,
-      },
-      {
-        title: "Paramètres",
-        url: "/admin/settings",
-        icon: Settings,
       },
     ],
   },
@@ -247,12 +192,6 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                       <Link href="/admin/profile">
                         <User />
                         Mon profil
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin/settings">
-                        <Settings />
-                        Paramètres
                       </Link>
                     </DropdownMenuItem>
                     <Separator />

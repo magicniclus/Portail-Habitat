@@ -76,9 +76,15 @@ artisans
     │   ├── showEmail: false     ← afficher l'email publiquement
     │   └── allowDirectContact: true ← autoriser contact direct sans formulaire
     │   }
+    ├── assignedLeads []          ← leads/estimations assignés à cet artisan
+    │   └── {
+    │       ├── estimationId     ← ID de l'estimation assignée
+    │       ├── assignedAt       ← date d'attribution
+    │       └── price            ← prix payé pour ce lead (optionnel)
+    │       }
+    ├── isPriority (true/false)
     ├── createdAt
-    ├── updatedAt
-    └── isPriority (true/false)
+    └── updatedAt
 
     └── leads (sous-collection)
         └── {leadId}
@@ -240,11 +246,23 @@ estimations (collection - toutes les estimations générées par le simulateur)
     │   └── conversionValue         ← valeur de la conversion (int, en euros)
     │   }
     
-    // HORODATAGE
+    // ATTRIBUTION ARTISANS
+    ├── assignments []              ← artisans assignés à cette estimation
+    │   └── {
+    │       ├── artisanId           ← ID de l'artisan assigné
+    │       ├── artisanName         ← nom complet de l'artisan
+    │       ├── artisanCompany      ← nom de l'entreprise (optionnel)
+    │       ├── assignedAt          ← date d'attribution
+    │       └── price               ← prix payé par l'artisan (optionnel)
+    │       }
+    
+    // HORODATAGE ET STATUT
     ├── createdAt                   ← création de l'estimation
     ├── completedAt                 ← finalisation du simulateur
     ├── sentAt                      ← envoi par email
-    └── updatedAt                   ← dernière modification
+    ├── updatedAt                   ← dernière modification
+    ├── isPublished                 ← projet publié sur le site (boolean, défaut: false)
+    └── publishedAt                 ← date de publication (timestamp, optionnel)
 
     // SOUS-COLLECTIONS
     └── interactions (sous-collection - pour tracker les interactions)

@@ -277,20 +277,17 @@ export default function AdminUtilisateurs() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right space-y-2">
-                    {getStatusBadge(artisan.subscriptionStatus)}
-                    <div className="text-xs text-gray-500">
-                      ⭐ {artisan.averageRating || 0} ({artisan.reviewCount || 0} avis)
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex items-center gap-3">
+                      {getStatusBadge(artisan.subscriptionStatus)}
+                      <div className="text-sm font-medium">{artisan.totalLeads || 0} leads</div>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href={`/admin/utilisateurs/${artisan.id}`}>
+                          <Eye className="h-4 w-4 mr-1" />
+                          Voir
+                        </Link>
+                      </Button>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {artisan.totalLeads || 0} leads
-                    </div>
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href={`/admin/utilisateurs/${artisan.id}`}>
-                        <Eye className="h-4 w-4 mr-1" />
-                        Voir
-                      </Link>
-                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -328,20 +325,17 @@ export default function AdminUtilisateurs() {
                       </div>
                     </div>
                   </div>
-                  <div className="text-right space-y-2">
-                    {getFunnelBadge(prospect.funnelStep)}
-                    <div className="text-xs text-gray-500">
-                      {prospect.searchesLast24h || 0} recherches 24h
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="flex items-center gap-3">
+                      {getFunnelBadge(prospect.funnelStep)}
+                      <div className="text-sm font-medium">{prospect.searchesLast24h || 0} recherches</div>
+                      <Button size="sm" variant="outline" asChild>
+                        <Link href={`/admin/utilisateurs/${prospect.id}`}>
+                          <Eye className="h-4 w-4 mr-1" />
+                          Voir
+                        </Link>
+                      </Button>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {prospect.demandsLast30d || 0} demandes 30j
-                    </div>
-                    <Button size="sm" variant="outline" asChild>
-                      <Link href={`/admin/utilisateurs/${prospect.id}`}>
-                        <Eye className="h-4 w-4 mr-1" />
-                        Voir
-                      </Link>
-                    </Button>
                   </div>
                 </div>
               </CardContent>
