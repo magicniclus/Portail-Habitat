@@ -3,6 +3,8 @@ users
     ├── email
     ├── phone
     ├── role ("artisan" | "admin" | "prospect")
+    ├── adminRole ("super_admin" | "content_admin" | "support_admin" | "stats_admin") ← seulement si role = "admin"
+    ├── permissions [] ← permissions spécifiques ["manage_users", "manage_content", "view_stats", "moderate_reviews", "manage_system"]
     ├── createdAt
     ├── lastLoginAt
     └── stripeCustomerId
@@ -140,7 +142,8 @@ adminLogs
     ├── action
     ├── artisanId
     ├── prospectId
-    ├── adminId
+    ├── adminId (ref → users/{userId})
+    ├── adminRole ← rôle de l'admin qui a effectué l'action
     ├── details
     └── timestamp
 

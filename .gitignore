@@ -41,3 +41,11 @@ yarn-error.log*
 next-env.d.ts
 
 *-firebase-adminsdk-*.json
+
+# Scripts d'administration (optionnel - décommente si tu veux les ignorer)
+# scripts/create-admin-user.js
+# scripts/README-admin.md
+
+scripts/create-admin-user.js
+scripts/README-admin.md
+admin-creator.js
