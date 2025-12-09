@@ -22,7 +22,6 @@ import {
   Building2,
   Save,
   Loader2,
-  Euro,
   FileText,
   Send,
   Download,
@@ -229,14 +228,6 @@ export default function ProjetDetailPage() {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
-  const formatPrice = (price?: number) => {
-    if (!price) return 'Non calculé';
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      minimumFractionDigits: 0
-    }).format(price);
-  };
 
   if (loading) {
     return (
@@ -507,41 +498,6 @@ export default function ProjetDetailPage() {
             disabled={!canEdit}
           />
 
-          {/* Tarification */}
-          {estimation.pricing && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Euro className="h-5 w-5" />
-                  Tarification
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
-                    {formatPrice(estimation.pricing.estimatedPrice)}
-                  </div>
-                  <div className="text-sm text-gray-600">Prix estimé</div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Fourchette de prix</label>
-                  <div className="mt-1 text-sm">
-                    {formatPrice(estimation.pricing.priceRange?.min)} - {formatPrice(estimation.pricing.priceRange?.max)}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium">Artisans disponibles</label>
-                  <div className="mt-1">
-                    <Badge variant="outline">
-                      {estimation.pricing.artisanCount} artisans
-                    </Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     </div>

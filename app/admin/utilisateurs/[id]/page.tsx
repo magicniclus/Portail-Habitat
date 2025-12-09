@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EditableField from "@/components/admin/EditableField";
 import EditableSelect from "@/components/admin/EditableSelect";
+import PrestationsModal from "@/components/admin/PrestationsModal";
 import { 
   ArrowLeft,
   Building2, 
@@ -31,7 +32,8 @@ import {
   Image as ImageIcon,
   Eye,
   CreditCard,
-  Settings
+  Settings,
+  Plus
 } from "lucide-react";
 
 interface UserDetail {
@@ -150,6 +152,8 @@ export default function UserDetailPage() {
   const [loading, setLoading] = useState(true);
   const [canEdit, setCanEdit] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [isPrestationsModalOpen, setIsPrestationsModalOpen] = useState(false);
+  const [isUpdatingPrestations, setIsUpdatingPrestations] = useState(false);
 
   useEffect(() => {
     if (userId) {
@@ -255,13 +259,12 @@ export default function UserDetailPage() {
     if (!user || !canEdit) return;
 
     try {
-      const collection_name = user.type === 'artisan' ? 'artisans' : 'prospects';
-      await updateDoc(doc(db, collection_name, userId), {
+      const collectionName = user.type === 'artisan' ? 'artisans' : 'prospects';
+      await updateDoc(doc(db, collectionName, userId), {
         [field]: value,
         updatedAt: new Date()
       });
       
-      // Mettre à jour l'état local
       setUser({
         ...user,
         [field]: value,
@@ -270,6 +273,29 @@ export default function UserDetailPage() {
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       throw error;
+    }
+  };
+
+  const handleSavePrestations = async (selectedPrestations: string[]) => {
+    if (!user || !canEdit) return;
+
+    setIsUpdatingPrestations(true);
+    try {
+      await updateDoc(doc(db, "artisans", userId), {
+        professions: selectedPrestations,
+        updatedAt: new Date()
+      });
+      
+      setUser({
+        ...user,
+        professions: selectedPrestations,
+        updatedAt: new Date()
+      });
+    } catch (error) {
+      console.error('Erreur lors de la sauvegarde des prestations:', error);
+      throw error;
+    } finally {
+      setIsUpdatingPrestations(false);
     }
   };
 
@@ -514,6 +540,65 @@ export default function UserDetailPage() {
                     disabled={!canEdit}
                     rows={3}
                   />
+                </CardContent>
+              </Card>
+
+              {/* Prestations */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Prestations
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">
+                        {user.professions?.length || 0} prestation(s)
+                      </Badge>
+                      {canEdit && (
+                        <Button
+                          size="sm"
+                          onClick={() => setIsPrestationsModalOpen(true)}
+                          disabled={isUpdatingPrestations}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Gérer
+                        </Button>
+                      )}
+                    </div>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {user.professions && user.professions.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {user.professions.slice(0, 10).map((profession) => (
+                        <Badge key={profession} variant="secondary" className="text-xs">
+                          {profession.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                        </Badge>
+                      ))}
+                      {user.professions.length > 10 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{user.professions.length - 10} autres
+                        </Badge>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      <Settings className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                      <p>Aucune prestation configurée</p>
+                      {canEdit && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="mt-2"
+                          onClick={() => setIsPrestationsModalOpen(true)}
+                        >
+                          <Plus className="h-4 w-4 mr-2" />
+                          Ajouter des prestations
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -850,6 +935,15 @@ export default function UserDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Modal des prestations */}
+      <PrestationsModal
+        isOpen={isPrestationsModalOpen}
+        onClose={() => setIsPrestationsModalOpen(false)}
+        currentProfessions={user?.professions || []}
+        onSave={handleSavePrestations}
+        disabled={!canEdit || isUpdatingPrestations}
+      />
     </div>
   );
 }
