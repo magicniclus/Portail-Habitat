@@ -72,7 +72,7 @@ export default function TrustSection() {
               <span className="text-2xl text-gray-600">/5</span>
             </div>
             <p className="text-xl text-gray-600 mb-6">
-              Notre moyenne basée sur plus de <span className="font-bold">1 000 avis clients</span>
+              Notre moyenne basée sur plus de <span className="font-bold">2 000 avis clients</span>
             </p>
             <p className="text-gray-600">
               Rejoignez des milliers d'artisans satisfaits qui développent leur activité 

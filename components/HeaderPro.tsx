@@ -18,6 +18,12 @@ interface HeaderProProps {
 
 export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Gérer l'hydratation
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Bloquer le scroll quand le menu est ouvert
   useEffect(() => {
@@ -70,7 +76,8 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
           ) : (
             <nav className="hidden xl:flex items-center space-x-6">
               {/* Fonctionnalités Dropdown */}
-              <DropdownMenu>
+              {isMounted && (
+                <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center text-gray-600 hover:text-gray-900">
                   Fonctionnalités
                   <ChevronDown className="ml-1 h-4 w-4" />
@@ -90,9 +97,11 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
 
               {/* Métiers Dropdown */}
-              <DropdownMenu>
+              {isMounted && (
+                <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center text-gray-600 hover:text-gray-900">
                   Métiers
                   <ChevronDown className="ml-1 h-4 w-4" />
@@ -115,9 +124,11 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
 
               {/* Ressources Dropdown */}
-              <DropdownMenu>
+              {isMounted && (
+                <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center text-gray-600 hover:text-gray-900">
                   Ressources
                   <ChevronDown className="ml-1 h-4 w-4" />
@@ -137,6 +148,7 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
 
               {/* Lien FAQ */}
               <Link href="/faq" className="text-gray-600 hover:text-gray-900">

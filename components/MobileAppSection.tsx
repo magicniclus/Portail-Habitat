@@ -111,9 +111,9 @@ export default function MobileAppSection() {
                   <div className="bg-gray-50 px-6 py-4 flex justify-between items-center text-sm">
                     <span className="font-semibold">9:41</span>
                     <div className="flex items-center space-x-1">
-                      <div className="w-4 h-2 bg-green-500 rounded-sm"></div>
+                      <div className="w-4 h-2 bg-orange-500 rounded-sm"></div>
                       <div className="w-6 h-3 border border-gray-400 rounded-sm">
-                        <div className="w-4 h-full bg-green-500 rounded-sm"></div>
+                        <div className="w-4 h-full bg-orange-500 rounded-sm"></div>
                       </div>
                     </div>
                   </div>
@@ -148,9 +148,9 @@ export default function MobileAppSection() {
 
                     {/* Stats cards */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
-                        <div className="text-lg font-bold text-green-700">12</div>
-                        <div className="text-xs text-green-600">Demandes ce mois</div>
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
+                        <div className="text-lg font-bold text-orange-700">12</div>
+                        <div className="text-xs text-orange-600">Demandes ce mois</div>
                       </div>
                       <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-center">
                         <div className="text-lg font-bold text-orange-700">€2,450</div>
@@ -182,7 +182,7 @@ export default function MobileAppSection() {
 
               {/* Éléments décoratifs */}
               <div className="absolute -top-4 -right-4 w-20 h-20 bg-blue-500/20 rounded-full blur-xl"></div>
-              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-green-500/20 rounded-full blur-xl"></div>
+              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-orange-500/20 rounded-full blur-xl"></div>
             </div>
           </div>
         </div>

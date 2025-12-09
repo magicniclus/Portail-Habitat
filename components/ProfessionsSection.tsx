@@ -114,7 +114,7 @@ export default function ProfessionsSection() {
             {/* Liste des avantages par métier */}
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-3"></div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full mt-3"></div>
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1">
                     Demandes ciblées par spécialité
@@ -126,7 +126,7 @@ export default function ProfessionsSection() {
               </div>
 
               <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-3"></div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full mt-3"></div>
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1">
                     Tarifs adaptés à votre secteur
@@ -138,7 +138,7 @@ export default function ProfessionsSection() {
               </div>
 
               <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-3"></div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full mt-3"></div>
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1">
                     Outils métier spécialisés
@@ -150,7 +150,7 @@ export default function ProfessionsSection() {
               </div>
 
               <div className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-3"></div>
+                <div className="w-2 h-2 bg-orange-500 rounded-full mt-3"></div>
                 <div>
                   <h4 className="font-semibold text-gray-900 mb-1">
                     Réseau professionnel
@@ -190,7 +190,7 @@ export default function ProfessionsSection() {
             {/* CTA section avec trait vert */}
             <div className="text-left mt-8 flex items-stretch gap-4">
               {/* Barre verticale verte */}
-              <div className="w-1 bg-green-600 rounded-full flex-shrink-0"></div>
+              <div className="w-1 bg-orange-600 rounded-full flex-shrink-0"></div>
               
               {/* Contenu */}
               <div className="flex-1">
@@ -199,7 +199,7 @@ export default function ProfessionsSection() {
                 </p>
                 <Button 
                   size="lg" 
-                  className="w-full sm:w-auto px-8 py-4 text-lg font-semibold bg-green-600 hover:bg-green-700"
+                  className="w-full sm:w-auto px-8 py-4 text-lg font-semibold bg-orange-600 hover:bg-orange-700"
                   onClick={scrollToForm}
                 >
                   Je m'inscris

@@ -7,19 +7,19 @@ export default function HowItWorks() {
       icon: UserPlus,
       title: "Vous créez votre page artisan",
       description: "En seulement 2 minutes",
-      color: "#16a34a"
+      color: "#ea580c"
     },
     {
       icon: Search,
       title: "Les particuliers vous trouvent",
       description: "Sur Google et sur notre annuaire",
-      color: "#16a34a"
+      color: "#ea580c"
     },
     {
       icon: PhoneCall,
       title: "Vous recevez les demandes",
       description: "Directement sur votre téléphone",
-      color: "#16a34a"
+      color: "#ea580c"
     }
   ];
 

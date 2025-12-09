@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
     // Créer le prix
     const price = await stripe.prices.create({
       currency: 'eur',
-      unit_amount: 8900, // 89€ en centimes
+      unit_amount: 4900, // 49€ en centimes
       recurring: {
         interval: 'month'
       },
@@ -289,7 +289,7 @@ export async function POST(request: NextRequest) {
       photos: [], // À compléter par l'artisan
       hasPremiumSite: false,
       sitePricePaid: 0, // À l'inscription, gratuit (0 | 69 | 299)
-      monthlySubscriptionPrice: 89, // Prix abonnement mensuel en €
+      monthlySubscriptionPrice: 49, // Prix abonnement mensuel en €
       subscriptionStatus: 'active',
       stripeSubscriptionId: subscription.id,
       currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 jours
@@ -309,7 +309,7 @@ export async function POST(request: NextRequest) {
     await db.collection('subscriptions').doc(subscription.id).set({
       artisanId: userRecord.uid,
       userId: userRecord.uid,
-      monthlyPrice: 89,
+      monthlyPrice: 49,
       status: 'active',
       stripeSubscriptionId: subscription.id,
       stripePriceId: price.id,

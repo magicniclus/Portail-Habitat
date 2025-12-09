@@ -63,7 +63,7 @@ export default function ArtisanPageFeatures() {
               <p className="text-xl text-gray-600 mb-6">
                 Une vitrine digitale complète pour développer votre activité et rassurer vos clients
               </p>
-              <div className="w-20 h-1 bg-green-600 rounded"></div>
+              <div className="w-20 h-1 bg-orange-600 rounded"></div>
             </div>
 
             {/* Grille des fonctionnalités */}
@@ -73,8 +73,8 @@ export default function ArtisanPageFeatures() {
                 return (
                   <div key={index} className="flex items-start space-x-4">
                     <div className="flex-shrink-0">
-                      <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                        <IconComponent className="w-6 h-6 text-green-600" />
+                      <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <IconComponent className="w-6 h-6 text-orange-600" />
                       </div>
                     </div>
                     <div>
@@ -93,7 +93,7 @@ export default function ArtisanPageFeatures() {
             {/* CTA section avec trait vert */}
             <div className="text-left mt-8 flex items-stretch gap-4">
               {/* Barre verticale verte */}
-              <div className="w-1 bg-green-600 rounded-full flex-shrink-0"></div>
+              <div className="w-1 bg-orange-600 rounded-full flex-shrink-0"></div>
               
               {/* Contenu */}
               <div className="flex-1">
@@ -102,10 +102,7 @@ export default function ArtisanPageFeatures() {
                 </p>
                 <Button 
                   size="lg" 
-                  className="w-full sm:w-auto px-8 py-4 text-lg font-semibold"
-                  style={{backgroundColor: '#16a34a'}} 
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803d'} 
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
+                  className="w-full sm:w-auto px-8 py-4 text-lg font-semibold bg-orange-600 hover:bg-orange-700"
                   onClick={scrollToForm}
                 >
                   Je m'inscris
@@ -142,7 +139,7 @@ export default function ArtisanPageFeatures() {
 
               {/* Badge "DEMO" */}
               <div className="absolute top-4 right-4">
-                <span className="bg-green-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+                <span className="bg-orange-600 text-white px-3 py-1 rounded-full text-xs font-medium">
                   DÉMO
                 </span>
               </div>

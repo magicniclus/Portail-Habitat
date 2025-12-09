@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useState, useEffect } from "react";
 import {
   Home,
   Users,
@@ -94,6 +95,12 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Gérer l'hydratation
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -150,7 +157,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <SidebarFooter>
             <SidebarMenu>
               <SidebarMenuItem>
-                <DropdownMenu>
+                {isMounted && (
+                  <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <SidebarMenuButton
                       size="lg"
@@ -189,6 +197,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
+                )}
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarFooter>

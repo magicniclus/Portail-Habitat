@@ -114,10 +114,7 @@ function ConfirmationContent() {
               <div className="space-y-4">
                 <Button 
                   asChild
-                  className="w-full text-lg py-3 font-semibold"
-                  style={{backgroundColor: '#16a34a'}} 
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803d'} 
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
+                  className="w-full text-lg py-3 font-semibold bg-green-600 hover:bg-green-700 text-white"
                 >
                   <Link href="/dashboard">
                     Accéder à mon tableau de bord
@@ -135,11 +132,11 @@ function ConfirmationContent() {
               <div className="mt-8 pt-6 border-t">
                 <p className="text-sm text-gray-600">
                   Une question ? Contactez-nous au{" "}
-                  <a href="tel:0123456789" className="font-semibold text-green-600 hover:text-green-700">
+                  <a href="tel:0123456789" className="font-semibold text-orange-600 hover:text-orange-700">
                     01 23 45 67 89
                   </a>
                   {" "}ou par email à{" "}
-                  <a href="mailto:support@portail-habitat.fr" className="font-semibold text-green-600 hover:text-green-700">
+                  <a href="mailto:support@portail-habitat.fr" className="font-semibold text-orange-600 hover:text-orange-700">
                     support@portail-habitat.fr
                   </a>
                 </p>

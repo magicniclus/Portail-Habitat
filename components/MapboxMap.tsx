@@ -122,7 +122,7 @@ export default function MapboxMap({ onLocationSelect, selectedCity, selectedRadi
         if (marker.current) {
           marker.current.remove();
         }
-        marker.current = new mapboxgl.Marker({ color: '#16a34a' })
+        marker.current = new mapboxgl.Marker({ color: '#ea580c' })
           .setLngLat(suggestion.center)
           .addTo(map.current);
 
@@ -187,7 +187,7 @@ export default function MapboxMap({ onLocationSelect, selectedCity, selectedRadi
       type: 'fill',
       source: 'radius-circle',
       paint: {
-        'fill-color': '#16a34a',
+        'fill-color': '#ea580c',
         'fill-opacity': 0.2
       }
     });
@@ -197,7 +197,7 @@ export default function MapboxMap({ onLocationSelect, selectedCity, selectedRadi
       type: 'line',
       source: 'radius-circle',
       paint: {
-        'line-color': '#16a34a',
+        'line-color': '#ea580c',
         'line-width': 2
       }
     });
@@ -232,7 +232,7 @@ export default function MapboxMap({ onLocationSelect, selectedCity, selectedRadi
         <div className="relative">
           <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 transition-colors duration-300 ${
             !hasInteracted && !searchQuery
-              ? 'text-green-500'
+              ? 'text-orange-500'
               : 'text-gray-400'
           }`} />
           <Input
@@ -252,7 +252,7 @@ export default function MapboxMap({ onLocationSelect, selectedCity, selectedRadi
             }}
             className={`pl-10 bg-white shadow-lg transition-all duration-300 ${
               !hasInteracted && !searchQuery
-                ? 'border-2 border-green-400 ring-2 ring-green-300 ring-opacity-75'
+                ? 'border-2 border-orange-400 ring-2 ring-orange-300 ring-opacity-75'
                 : 'border-0'
             }`}
           />

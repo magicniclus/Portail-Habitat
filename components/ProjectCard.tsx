@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -62,6 +62,12 @@ export default function ProjectCard({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Gérer l'hydratation
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const handleVisibilityToggle = async (checked: boolean) => {
     if (!onVisibilityToggle) return;
@@ -116,7 +122,8 @@ export default function ProjectCard({
               )}
               
               {/* Menu 3 petits points */}
-              <DropdownMenu>
+              {isMounted && (
+                <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="secondary" size="sm" className="h-8 w-8 p-0">
                     <MoreHorizontal className="h-4 w-4" />
@@ -136,6 +143,7 @@ export default function ProjectCard({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
             </div>
           )}
         </div>

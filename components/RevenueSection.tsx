@@ -46,7 +46,7 @@ export default function RevenueSection() {
           {/* Contenu gauche */}
           <div>
             <div className="mb-8">
-              <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800 mb-6">
+              <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-orange-100 text-orange-800 mb-6">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 POTENTIEL DE REVENUS
               </div>
@@ -93,7 +93,7 @@ export default function RevenueSection() {
                         <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
                           {row.panier}
                         </td>
-                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                        <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-orange-600">
                           {row.potentiel}
                         </td>
                       </tr>
@@ -104,7 +104,7 @@ export default function RevenueSection() {
             </div>
 
             <div className="flex items-center space-x-3 text-gray-700 mb-8">
-              <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+              <CheckCircle className="h-5 w-5 text-orange-500 flex-shrink-0" />
               <span className="text-lg">
                 <strong>Chez nous, un seul client signé peut transformer votre activité durablement.</strong>
               </span>
@@ -113,7 +113,7 @@ export default function RevenueSection() {
             {/* CTA section avec trait vert */}
             <div className="text-left flex items-stretch gap-4">
               {/* Barre verticale verte */}
-              <div className="w-1 bg-green-600 rounded-full flex-shrink-0"></div>
+              <div className="w-1 bg-orange-600 rounded-full flex-shrink-0"></div>
               
               {/* Contenu */}
               <div className="flex-1">
@@ -121,10 +121,7 @@ export default function RevenueSection() {
                   Transformez votre activité et multipliez vos revenus dès maintenant !
                 </p>
                 <Button 
-                  className="w-full sm:w-auto text-lg py-3 px-8 font-semibold"
-                  style={{backgroundColor: '#16a34a'}} 
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803d'} 
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
+                  className="w-full sm:w-auto text-lg py-3 px-8 font-semibold bg-orange-600 hover:bg-orange-700"
                   onClick={() => {
                     const formulaire = document.querySelector('form');
                     if (formulaire) {

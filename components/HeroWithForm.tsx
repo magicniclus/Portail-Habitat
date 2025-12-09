@@ -48,11 +48,11 @@ export default function HeroWithForm() {
   }, []);
 
   const advantages = [
-    "Votre **page artisan dédiée**, optimisée **Google local**",
-    "**Priorité** sur « **plombier + ville** », « **peintre + ville** », etc.",
-    "**3 à 6 demandes par mois** pour la plupart des artisans",
-    "**1 demande garantie** ou le mois est **gratuit**",
-    "**Inclus** : une **application mobile dédiée** pour recevoir vos demandes en temps réel"
+    "Demandes clients GRATUITES depuis votre fiche",
+    "Vous choisissez quels chantiers accepter",
+    "Aucun engagement — résiliable à tout moment",
+    "Activation immédiate",
+    "Application mobile pour répondre instantanément"
   ];
 
   // Fonction de soumission du formulaire
@@ -160,7 +160,7 @@ export default function HeroWithForm() {
           <div>
             {/* Badge de confiance */}
             <div className="mb-6">
-              <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-800">
+              <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
@@ -170,16 +170,11 @@ export default function HeroWithForm() {
 
 
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Portail Habitat
+            Des particuliers vous contactent directement dans votre zone
             </h1>
             
-            <h2 className="text-2xl md:text-3xl font-semibold text-white mb-6">
-              L'annuaire n°1 des artisans du bâtiment en France
-            </h2>
-            
             <p className="text-xl text-gray-100 mb-8">
-              Soyez visible par des <strong className="text-white">milliers de particuliers</strong> qui cherchent un <strong className="text-white">artisan qualifié</strong> près de chez eux. 
-              <strong className="text-white">1 demande de travaux garantie</strong> chaque mois sinon le mois suivant est <strong className="text-white">offert</strong>.
+             Vous êtes visible localement - Les clients peuvent vous contacter gratuitement depuis votre fiche - Prenez des projets partagés par des particuliers
             </p>
 
             <div className="space-y-4">
@@ -189,7 +184,7 @@ export default function HeroWithForm() {
               {advantages.map((advantage, index) => (
                 <div key={index} className="flex items-center space-x-3">
                   <div className="flex-shrink-0">
-                    <Check className="h-5 w-5 text-green-400" />
+                    <Check className="h-5 w-5 text-orange-400" />
                   </div>
                   <span className="text-gray-100">{renderTextWithBold(advantage)}</span>
                 </div>
@@ -348,13 +343,19 @@ export default function HeroWithForm() {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full text-lg py-3" style={{backgroundColor: '#16a34a'}} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803d'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}>
-                    M'inscrire maintenant
+                  <Button type="submit" className="w-full text-lg py-3 bg-orange-600 hover:bg-orange-700">
+                    Voir les demandes dans ma zone
                   </Button>
 
-                  <p className="text-xs text-gray-500 text-center">
-                    <b>+ 3200</b> artisans • <b>+ 64000</b> projets/mois • Activation immédiate
-                  </p>
+                  <div className="text-center space-y-1">
+                    <div className="flex items-center justify-center gap-1 text-xs text-gray-600 flex-wrap">
+                      <span>Sans engagement</span>
+                      <span>•</span>
+                      <span>Résiliable à tout moment</span>
+                      <span>•</span>
+                      <span>Activation immédiate</span>
+                    </div>
+                  </div>
                 </form>
               </CardContent>
             </Card>

@@ -14,6 +14,12 @@ import { useState, useEffect } from "react";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Gérer l'hydratation
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Bloquer le scroll quand le menu est ouvert
   useEffect(() => {
@@ -60,7 +66,8 @@ export default function Header() {
             {/* Navigation Desktop */}
             <nav className="hidden xl:flex items-center space-x-6">
               {/* Métiers Dropdown */}
-              <DropdownMenu>
+              {isMounted && (
+                <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center text-gray-600 hover:text-gray-900">
                   Métiers
                   <ChevronDown className="ml-1 h-4 w-4" />
@@ -106,9 +113,11 @@ export default function Header() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
+              )}
 
               {/* Villes Dropdown */}
-              <DropdownMenu>
+              {isMounted && (
+                <DropdownMenu>
                 <DropdownMenuTrigger className="flex items-center text-gray-600 hover:text-gray-900">
                   Villes
                   <ChevronDown className="ml-1 h-4 w-4" />
@@ -154,11 +163,7 @@ export default function Header() {
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Trouver Pro */}
-              <Link href="/trouver-pro" className="text-gray-600 hover:text-gray-900">
-                Trouver Pro
-              </Link>
+              )}
 
               {/* Avis Pro */}
               <Link href="/avis" className="text-gray-600 hover:text-gray-900">
@@ -178,9 +183,6 @@ export default function Header() {
 
             {/* Boutons Desktop */}
             <div className="hidden xl:flex items-center space-x-6">
-              <Link href="/devenir-pro" className="text-gray-600 hover:text-gray-900">
-                Devenir partenaire
-              </Link>
               <Button asChild>
                 <Link href="/connexion">Mon Espace</Link>
               </Button>
@@ -289,13 +291,6 @@ export default function Header() {
                 </div>
                 
                 <div className="border-t pt-6 space-y-4">
-                  <Link 
-                    href="/devenir-pro" 
-                    className="block text-center text-gray-600 hover:text-gray-900 py-5"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Devenir partenaire
-                  </Link>
                   <Button asChild className="w-full">
                     <Link href="/connexion" onClick={() => setIsMenuOpen(false)}>
                       Mon Espace

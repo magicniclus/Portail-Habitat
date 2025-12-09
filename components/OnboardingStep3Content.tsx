@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { MapPin, CheckCircle, Lock, Shield, ArrowRight, CreditCard, Smartphone, Bell } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { MapPin, CheckCircle, Lock, Shield, ArrowRight, CreditCard, Smartphone, Bell, Star } from "lucide-react";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Footer from "@/components/Footer";
@@ -58,6 +65,31 @@ export default function OnboardingStep3Content() {
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Composant Carousel avec autoplay
+  const AutoplayCarousel = ({ children, className, opts }: any) => {
+    const [api, setApi] = useState<any>();
+    
+    useEffect(() => {
+      if (!api) return;
+      
+      const interval = setInterval(() => {
+        if (api.canScrollNext()) {
+          api.scrollNext();
+        } else {
+          api.scrollTo(0);
+        }
+      }, 4000);
+      
+      return () => clearInterval(interval);
+    }, [api]);
+    
+    return (
+      <Carousel className={className} opts={opts} setApi={setApi}>
+        {children}
+      </Carousel>
+    );
+  };
 
   // Charger les données depuis les paramètres URL
   useEffect(() => {
@@ -151,11 +183,11 @@ export default function OnboardingStep3Content() {
     <div className="flex flex-col items-center space-y-3 mt-6">
       <div className="flex items-center justify-center space-x-6">
         <div className="flex items-center space-x-2">
-          <Shield className="h-4 w-4 text-green-600" />
+          <Shield className="h-4 w-4 text-orange-600" />
           <span className="text-xs text-gray-600 font-medium">SSL 256-bit</span>
         </div>
         <div className="flex items-center space-x-2">
-          <Lock className="h-4 w-4 text-green-600" />
+          <Lock className="h-4 w-4 text-orange-600" />
           <span className="text-xs text-gray-600 font-medium">PCI DSS</span>
         </div>
       </div>
@@ -305,137 +337,155 @@ export default function OnboardingStep3Content() {
             {/* Récapitulatif mobile */}
             <Card className="bg-white border border-gray-200">
               <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-gray-900 ">Récapitulatif de votre inscription</h2>
-                <p className="text-sm text-gray-600 mb-6 italic">Vous devenez l'artisan référent dans votre secteur sur Portail Habitat.</p>
+                <h2 className="text-xl font-bold text-gray-900 ">Vous êtes à 30 secondes de recevoir vos premières demandes</h2>
+                <p className="text-sm text-gray-600 mb-6">Votre fiche est prête. Dès l'activation, vous apparaissez dans votre zone et recevez gratuitement les demandes des particuliers qui vous contactent directement. L'accès aux demandes ciblées à 35 € est entièrement facultatif.</p>
                 
                 <div className="space-y-6">
                   {/* Zone couverte */}
-                  <div className="pb-4 border-b border-gray-100">
+                  <div className="pb-4 border-b border-gray-100 border-l-4 border-l-orange-500 pl-3">
                     <h3 className="text-gray-600 text-sm font-medium mb-2">Zone couverte :</h3>
                     <p className="font-semibold text-sm">{prospectData.selectedCity} + {prospectData.selectedZoneRadius} km — {getProfessionLabel(prospectData.profession)}</p>
                   </div>
                   
                   {/* Demandes estimées */}
-                  <div className="pb-4 border-b border-gray-100">
+                  <div className="pb-4 border-b border-gray-100 border-l-4 border-l-orange-500 pl-3">
                     <h3 className="text-gray-600 text-sm font-medium mb-2">Demandes estimées dans votre secteur :</h3>
-                    <p className="font-semibold text-sm">4 à 12 demandes qualifiées / mois</p>
+                    <p className="font-semibold text-sm">jusqu'à 150 demandes de devis chaque mois sur le portail</p>
                   </div>
                   
                   {/* Vos avantages inclus */}
-                  <div className="pb-4 border-b border-gray-100">
+                  <div className="pb-4 border-b border-gray-100 border-l-4 border-l-orange-500 pl-3">
                     <h3 className="text-gray-600 text-sm font-medium mb-3">Vos avantages inclus :</h3>
                     <div className="space-y-2">
                       <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Page professionnelle dédiée, visible par les particuliers de votre secteur</span>
+                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs text-gray-700">Visibilité prioritaire sur votre métier et votre ville</span>
                       </div>
                       <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Accès au portail (64 000+ demandes nationales / mois)</span>
+                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs text-gray-700">Demandes clients GRATUITES quand on vous contacte depuis votre fiche</span>
                       </div>
                       <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Mise en avant automatique dans votre zone auprès des clients proches</span>
+                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs text-gray-700">Accès aux chantiers ciblés uniquement si vous le souhaitez</span>
                       </div>
                       <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Application mobile pour recevoir et gérer vos demandes</span>
+                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs text-gray-700">Vous ne payez que les demandes que vous acceptez</span>
                       </div>
                       <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Demandes envoyées directement dans votre boîte mail</span>
+                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs text-gray-700">Sans engagement, résiliable à tout moment</span>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs text-gray-700">Application mobile pour recevoir les demandes en temps réel</span>
                       </div>
                     </div>
                   </div>
                   
+                  {/* Témoignages */}
+                  <section className="mt-6 pb-4 border-b border-gray-100">
+                    <h3 className="text-gray-600 text-sm font-medium mb-3">
+                      Ce que disent nos artisans
+                    </h3>
+
+                    <AutoplayCarousel 
+                      className="w-full"
+                      opts={{
+                        align: "start",
+                        loop: true,
+                      }}
+                    >
+                      <CarouselContent>
+                        <CarouselItem>
+                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
+                            <CardContent className="p-3">
+                              <div className="flex items-start gap-2 mb-2">
+                                <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white text-xs font-bold">J</span>
+                                </div>
+                                <div className="flex gap-0.5">
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-800">
+                                "Premier chantier signé en 12 jours, abonnement déjà rentabilisé."
+                              </p>
+                              <p className="mt-2 text-xs text-gray-500">
+                                Julien — Plombier à Toulouse
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </CarouselItem>
+
+                        <CarouselItem>
+                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
+                            <CardContent className="p-3">
+                              <div className="flex items-start gap-2 mb-2">
+                                <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white text-xs font-bold">S</span>
+                                </div>
+                                <div className="flex gap-0.5">
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-800">
+                                "Je choisis uniquement les demandes qui m'intéressent, je ne subis plus les prospects."
+                              </p>
+                              <p className="mt-2 text-xs text-gray-500">
+                                Sarah — Électricienne à Bordeaux
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </CarouselItem>
+
+                        <CarouselItem>
+                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
+                            <CardContent className="p-3">
+                              <div className="flex items-start gap-2 mb-2">
+                                <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white text-xs font-bold">O</span>
+                                </div>
+                                <div className="flex gap-0.5">
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-800">
+                                "J'ai testé un mois sans risque, maintenant je garde l'abonnement en continu."
+                              </p>
+                              <p className="mt-2 text-xs text-gray-500">
+                                Omar — Peintre à Lille
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </CarouselItem>
+                      </CarouselContent>
+                    </AutoplayCarousel>
+                  </section>
+                  
                   {/* Abonnement */}
                   <div className="pb-4 border-b border-gray-100">
                     <h3 className="text-gray-600 text-sm font-medium mb-2">Abonnement :</h3>
-                    <p className="font-semibold text-green-600 text-sm">89 € / mois</p>
+                    <p className="font-semibold text-orange-600 text-sm">Activation immédiate – 49 €/mois, sans engagement</p>
                   </div>
                   
                   {/* Garantie satisfaction */}
                   <div className="pb-4 border-b border-gray-100">
                     <h3 className="text-gray-600 text-sm font-medium mb-2">Garantie satisfaction :</h3>
-                    <p className="font-semibold text-green-600 text-sm">Aucun risque : si vous ne recevez pas 1 demande ce mois-ci, nous vous offrons le mois suivant</p>
-                  </div>
-                  
-                  {/* Section Application Mobile */}
-                  <div className="bg-gray-50 p-4 rounded-xl">
-                    <div className="flex items-start gap-4">
-                      {/* Téléphone à gauche */}
-                      <div className="flex-shrink-0">
-                        <div className="relative">
-                          {/* Téléphone */}
-                          <div className="w-20 h-40 bg-gray-900 rounded-lg p-0.5 shadow-lg">
-                            <div className="w-full h-full bg-white rounded-md overflow-hidden relative">
-                              {/* Barre de statut */}
-                              <div className="bg-gray-50 h-3 flex items-center justify-between px-1.5 text-xs">
-                                <span className="font-medium text-xs">9:41</span>
-                                <div className="w-2 h-1 bg-green-500 rounded-sm"></div>
-                              </div>
-                              
-                              {/* Contenu de l'app - très simplifié */}
-                              <div className="p-1.5 bg-gradient-to-b from-green-50 to-white h-full flex flex-col">
-                                {/* Logo app minimaliste */}
-                                <div className="text-center mb-1.5">
-                                  <div className="w-3 h-3 bg-green-600 rounded-full mx-auto flex items-center justify-center">
-                                    <span className="text-white text-xs font-bold">P</span>
-                                  </div>
-                                </div>
-                                
-                                {/* Notification très simple */}
-                                <div className="bg-white rounded p-1 shadow-sm border border-green-200 flex-1">
-                                  <div className="flex items-center space-x-1">
-                                    <Bell className="h-1.5 w-1.5 text-green-600 flex-shrink-0" />
-                                    <div className="flex-1">
-                                      <div className="w-full h-1 bg-gray-200 rounded mb-0.5"></div>
-                                      <div className="w-3/4 h-1 bg-gray-200 rounded mb-0.5"></div>
-                                      <div className="w-1/2 h-1 bg-green-200 rounded"></div>
-                                    </div>
-                                  </div>
-                                  <div className="w-full h-1.5 bg-green-600 rounded mt-1"></div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Animation de notification */}
-                          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
-                            <span className="text-white text-xs font-bold">1</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Textes à droite et en bas */}
-                      <div className="flex-1 flex flex-col justify-between h-40">
-                        <div>
-                          <h3 className="text-gray-900 text-sm font-semibold mb-1">
-                            Soyez le premier prévenu sur votre téléphone
-                          </h3>
-                          <p className="text-xs text-gray-600 leading-relaxed">
-                            + de 3200 artisans reçoivent déjà leurs chantiers via l’appli
-                          </p>
-                        </div>
-                        
-                        {/* Logos des stores en bas */}
-                        <div className="flex items-center gap-2 mt-2">
-                          <a href="#" className="transition-transform hover:scale-105">
-                            <img 
-                              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
-                              alt="Télécharger sur l'App Store"
-                              className="h-6 w-auto"
-                            />
-                          </a>
-                          <a href="#" className="transition-transform hover:scale-105">
-                            <svg width="64" height="24" viewBox="0 0 64 24" className="h-6">
-                              <rect width="64" height="24" rx="3" fill="#000"/>
-                              <text x="32" y="15" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold" fontFamily="Arial">Google Play</text>
-                            </svg>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
+                    <p className="font-semibold text-orange-600 text-sm">Sans engagement</p>
                   </div>
                 </div>
               </CardContent>
@@ -445,7 +495,7 @@ export default function OnboardingStep3Content() {
             <Card className="bg-white border border-gray-200">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-2 mb-6">
-                  <Lock className="h-5 w-5 text-green-600" />
+                  <Lock className="h-5 w-5 text-orange-600" />
                   <h2 className="text-xl font-bold text-gray-900">Paiement sécurisé</h2>
                 </div>
 
@@ -524,16 +574,31 @@ export default function OnboardingStep3Content() {
                     />
                   </div>
 
+                  {/* Texte au-dessus du bouton */}
+                  <div className="text-center mb-4">
+                    <p className="text-sm font-medium text-gray-700">Vous ne risquez rien: vous payez seulement l'accès, pas les chantiers.</p>
+                  </div>
+
                   {/* Bouton énorme */}
                   <Button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full text-xl py-6 font-bold bg-green-700 hover:bg-green-800 text-white flex items-center justify-center space-x-3"
-                    style={{backgroundColor: '#16a34a'}}
+                    className="w-full text-xl py-6 font-bold bg-orange-700 hover:bg-orange-800 text-white flex items-center justify-center space-x-3"
                   >
-                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Finaliser – 89 €"}</span>
+                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Activer ma visibilité maintenant – 49 €"}</span>
                     {!isProcessing && <ArrowRight className="h-6 w-6" />}
                   </Button>
+
+                  {/* Textes sous le bouton */}
+                  <div className="text-center space-y-1 mt-4">
+                    <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
+                      <span>Résiliation en 1 clic</span>
+                      <span>•</span>
+                      <span>Aucun engagement</span>
+                      <span>•</span>
+                      <span>Paiement 100 % sécurisé</span>
+                    </div>
+                  </div>
 
                   {/* Badges sécurité */}
                   <PaymentSecurityBadges />
@@ -541,7 +606,7 @@ export default function OnboardingStep3Content() {
                   {/* Texte légal */}
                   <div className="mt-6 pt-4 border-t border-gray-100">
                     <p className="text-xs text-gray-400 leading-relaxed">
-                      En soumettant ce formulaire, vous vous engagez à un abonnement de 89 €/mois avec une garantie d'au moins 1 demande de travaux par mois (ou le mois suivant offert). Vous apparaissez parmi nos artisans et recevez des demandes issues de notre site et de nos partenaires. Engagement de 6 mois, renouvelable tacitement, résiliable à tout moment après.
+                      Vous activez votre visibilité professionnelle à 49 €/mois, sans engagement. Vous pouvez arrêter à tout moment depuis votre espace.
                     </p>
                   </div>
                 </form>
@@ -555,138 +620,145 @@ export default function OnboardingStep3Content() {
             {/* Colonne gauche - Récapitulatif */}
             <Card className="bg-white border border-gray-200">
               <CardContent className="p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Récapitulatif de votre inscription</h2>
-                <p className="text-base text-gray-600 mb-8 italic">Vous devenez l'artisan référent dans votre secteur sur Portail Habitat.</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Vous êtes à 30 secondes de recevoir vos premières demandes</h2>
+                <p className="text-base text-gray-600 mb-8">Votre fiche est prête. Dès l'activation, vous apparaissez dans votre zone et recevez gratuitement les demandes des particuliers qui vous contactent directement.</p>
                 
                 <div className="space-y-8">
                   {/* Zone couverte */}
-                  <div className="pb-6 border-b border-gray-100">
+                  <div className="pb-6 border-b border-gray-100 border-l-4 border-l-orange-500 pl-4">
                     <h3 className="text-gray-600 text-base font-medium mb-3">Zone couverte :</h3>
                     <p className="font-semibold text-base">{prospectData.selectedCity} + {prospectData.selectedZoneRadius} km — {getProfessionLabel(prospectData.profession)}</p>
                   </div>
                   
                   {/* Demandes estimées */}
-                  <div className="pb-6 border-b border-gray-100">
+                  <div className="pb-6 border-b border-gray-100 border-l-4 border-l-orange-500 pl-4">
                     <h3 className="text-gray-600 text-base font-medium mb-3">Demandes estimées dans votre secteur :</h3>
-                    <p className="font-semibold text-base">4 à 12 demandes qualifiées / mois</p>
+                    <p className="font-semibold text-base">jusqu'à 150 demandes de devis chaque mois sur le portail</p>
                   </div>
                   
                   {/* Vos avantages inclus */}
-                  <div className="pb-6 border-b border-gray-100">
+                  <div className="pb-6 border-b border-gray-100 border-l-4 border-l-orange-500 pl-4">
                     <h3 className="text-gray-600 text-base font-medium mb-4">Vos avantages inclus :</h3>
                     <div className="space-y-3">
                       <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Page professionnelle dédiée, visible par les particuliers de votre secteur</span>
+                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-700">Visibilité prioritaire sur votre métier et votre ville</span>
                       </div>
                       <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Accès au portail (64 000+ demandes nationales / mois)</span>
+                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-700">Demandes clients GRATUITES quand on vous contacte depuis votre fiche</span>
                       </div>
                       <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Mise en avant automatique dans votre zone auprès des clients proches</span>
+                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-700">Accès aux chantiers ciblés uniquement si vous le souhaitez</span>
                       </div>
                       <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Application mobile pour recevoir et gérer vos demandes</span>
+                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-700">Vous ne payez que les demandes que vous acceptez</span>
                       </div>
                       <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Demandes envoyées directement dans votre boîte mail</span>
+                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-700">Sans engagement, résiliable à tout moment</span>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-sm text-gray-700">Application mobile pour recevoir les demandes en temps réel</span>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Abonnement */}
-                  <div className="pb-6 border-b border-gray-100">
-                    <h3 className="text-gray-600 text-base font-medium mb-3">Abonnement :</h3>
-                    <p className="font-semibold text-green-600 text-base">89 € / mois</p>
-                  </div>
-                  
-                  {/* Garantie satisfaction */}
-                  <div className="pb-6 border-b border-gray-100">
-                    <h3 className="text-gray-600 text-base font-medium mb-3">Garantie satisfaction :</h3>
-                    <p className="font-semibold text-green-600 text-base">Aucun risque : si vous ne recevez pas 1 demande ce mois-ci, nous vous offrons le mois suivant</p>
-                  </div>
-                  
-                  {/* Section Application Mobile */}
-                  <div className="bg-gray-50 p-5 rounded-xl">
-                    <div className="flex items-start gap-5">
-                      {/* Téléphone à gauche */}
-                      <div className="flex-shrink-0">
-                        <div className="relative">
-                          {/* Téléphone */}
-                          <div className="w-24 h-48 bg-gray-900 rounded-xl p-1 shadow-lg">
-                            <div className="w-full h-full bg-white rounded-lg overflow-hidden relative">
-                              {/* Barre de statut */}
-                              <div className="bg-gray-50 h-4 flex items-center justify-between px-2 text-xs">
-                                <span className="font-medium">9:41</span>
-                                <div className="w-3 h-1.5 bg-green-500 rounded-sm"></div>
-                              </div>
-                              
-                              {/* Contenu de l'app - très simplifié */}
-                              <div className="p-2 bg-gradient-to-b from-green-50 to-white h-full flex flex-col">
-                                {/* Logo app minimaliste */}
-                                <div className="text-center mb-2">
-                                  <div className="w-4 h-4 bg-green-600 rounded-full mx-auto flex items-center justify-center">
-                                    <span className="text-white text-xs font-bold">P</span>
-                                  </div>
+                  {/* Témoignages */}
+                  <section className="mt-8 pb-6">
+                    <h3 className="text-gray-600 text-base font-medium mb-4">
+                      Ce que disent nos artisans
+                    </h3>
+
+                    <AutoplayCarousel 
+                      className="w-full max-w-md"
+                      opts={{
+                        align: "start",
+                        loop: true,
+                      }}
+                    >
+                      <CarouselContent>
+                        <CarouselItem>
+                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white text-sm font-bold">J</span>
                                 </div>
-                                
-                                {/* Notification très simple */}
-                                <div className="bg-white rounded p-1.5 shadow-sm border border-green-200 flex-1">
-                                  <div className="flex items-center space-x-1">
-                                    <Bell className="h-2 w-2 text-green-600 flex-shrink-0" />
-                                    <div className="flex-1">
-                                      <div className="w-full h-1 bg-gray-200 rounded mb-1"></div>
-                                      <div className="w-3/4 h-1 bg-gray-200 rounded mb-1"></div>
-                                      <div className="w-1/2 h-1 bg-green-200 rounded"></div>
-                                    </div>
-                                  </div>
-                                  <div className="w-full h-2 bg-green-600 rounded mt-2"></div>
+                                <div className="flex gap-1">
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                                 </div>
                               </div>
-                            </div>
-                          </div>
-                          
-                          {/* Animation de notification */}
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center animate-pulse">
-                            <span className="text-white text-xs font-bold">1</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Textes à droite et en bas */}
-                      <div className="flex-1 flex flex-col justify-between h-48">
-                        <div>
-                          <h3 className="text-gray-900 text-base font-semibold mb-2">
-                            Soyez le premier prévenu sur votre téléphone
-                          </h3>
-                          <p className="text-sm text-gray-600 leading-relaxed">
-                            Plus de 3200 artisans reçoivent déjà leurs chantiers via l’appli
-                          </p>
-                        </div>
-                        
-                        {/* Logos des stores en bas */}
-                        <div className="flex items-center gap-3 mt-4">
-                          <a href="#" className="transition-transform hover:scale-105">
-                            <img 
-                              src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg"
-                              alt="Télécharger sur l'App Store"
-                              className="h-8 w-auto"
-                            />
-                          </a>
-                          <a href="#" className="transition-transform hover:scale-105">
-                            <svg width="85" height="32" viewBox="0 0 85 32" className="h-8">
-                              <rect width="85" height="32" rx="4" fill="#000"/>
-                              <text x="42.5" y="20" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold" fontFamily="Arial">Google Play</text>
-                            </svg>
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                              <p className="text-sm text-gray-800">
+                                "Premier chantier signé en 12 jours, abonnement déjà rentabilisé."
+                              </p>
+                              <p className="mt-2 text-xs text-gray-500">
+                                Julien — Plombier à Toulouse
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </CarouselItem>
+
+                        <CarouselItem>
+                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white text-sm font-bold">S</span>
+                                </div>
+                                <div className="flex gap-1">
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                </div>
+                              </div>
+                              <p className="text-sm text-gray-800">
+                                "Je choisis uniquement les demandes qui m'intéressent, je ne subis plus les prospects."
+                              </p>
+                              <p className="mt-2 text-xs text-gray-500">
+                                Sarah — Électricienne à Bordeaux
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </CarouselItem>
+
+                        <CarouselItem>
+                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
+                            <CardContent className="p-4">
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white text-sm font-bold">O</span>
+                                </div>
+                                <div className="flex gap-1">
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                </div>
+                              </div>
+                              <p className="text-sm text-gray-800">
+                                "J'ai testé un mois sans risque, maintenant je garde l'abonnement en continu."
+                              </p>
+                              <p className="mt-2 text-xs text-gray-500">
+                                Omar — Peintre à Lille
+                              </p>
+                            </CardContent>
+                          </Card>
+                        </CarouselItem>
+                      </CarouselContent>
+                    </AutoplayCarousel>
+                  </section>
+                  
                 </div>
               </CardContent>
             </Card>
@@ -696,7 +768,7 @@ export default function OnboardingStep3Content() {
               <Card className="bg-white border border-gray-200">
                 <CardContent className="p-8">
                 <div className="flex items-center space-x-3 mb-8">
-                  <Lock className="h-6 w-6 text-green-600" />
+                  <Lock className="h-6 w-6 text-orange-600" />
                   <h2 className="text-2xl font-bold text-gray-900">Paiement sécurisé</h2>
                 </div>
 
@@ -775,16 +847,31 @@ export default function OnboardingStep3Content() {
                     />
                   </div>
 
+                  {/* Texte au-dessus du bouton */}
+                  <div className="text-center mb-6">
+                    <p className="text-base font-medium text-gray-700">Vous ne risquez rien: vous payez seulement l'accès, pas les chantiers.</p>
+                  </div>
+
                   {/* Bouton énorme */}
                   <Button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full text-2xl py-8 font-bold bg-green-700 hover:bg-green-800 text-white flex items-center justify-center space-x-4 rounded-lg"
-                    style={{backgroundColor: '#16a34a'}}
+                    className="w-full text-2xl py-8 font-bold bg-orange-700 hover:bg-orange-800 text-white flex items-center justify-center space-x-4 rounded-lg"
                   >
-                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Finaliser – 89 €"}</span>
+                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Activer ma visibilité maintenant – 49 €"}</span>
                     {!isProcessing && <ArrowRight className="h-7 w-7" />}
                   </Button>
+
+                  {/* Textes sous le bouton */}
+                  <div className="text-center space-y-2 mt-6">
+                    <div className="flex items-center justify-center gap-3 text-sm text-gray-600">
+                      <span>Résiliation en 1 clic</span>
+                      <span>•</span>
+                      <span>Aucun engagement</span>
+                      <span>•</span>
+                      <span>Paiement 100 % sécurisé</span>
+                    </div>
+                  </div>
 
                   {/* Badges sécurité */}
                   <PaymentSecurityBadges />
@@ -792,7 +879,7 @@ export default function OnboardingStep3Content() {
                   {/* Texte légal */}
                   <div className="mt-6 pt-4 border-t border-gray-100">
                     <p className="text-xs text-gray-400 leading-relaxed">
-                      En soumettant ce formulaire, vous vous engagez à un abonnement de 89 €/mois avec une garantie d'au moins 1 demande de travaux par mois (ou le mois suivant offert). Vous apparaissez parmi nos artisans et recevez des demandes issues de notre site et de nos partenaires. Engagement de 6 mois, renouvelable tacitement, résiliable à tout moment après.
+                      Vous activez votre visibilité professionnelle à 49 €/mois, sans engagement. Vous pouvez arrêter à tout moment depuis votre espace.
                     </p>
                   </div>
                 </form>

@@ -265,7 +265,7 @@ export default function OnboardingStep2Content() {
           {selectedCity && (
             <div className="absolute bottom-4 left-4 right-4 z-10">
               <div className="bg-white rounded-lg shadow-lg p-4">
-                <p className="font-semibold text-green-600 mb-3">
+                <p className="font-semibold text-orange-600 mb-3">
                   📍 {selectedCity}
                 </p>
                 <div className="space-y-2">
@@ -277,7 +277,7 @@ export default function OnboardingStep2Content() {
                         onClick={() => setSelectedRadius(radius)}
                         className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                           selectedRadius === radius
-                            ? 'bg-green-600 text-white'
+                            ? 'bg-orange-600 text-white'
                             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                       >
@@ -322,7 +322,7 @@ export default function OnboardingStep2Content() {
             <Button
               onClick={handleReserveZone}
               disabled={!selectedCity}
-              className="px-6 py-3 font-semibold bg-green-600 hover:bg-green-700 disabled:bg-gray-300"
+              className="px-6 py-3 font-semibold bg-orange-600 hover:bg-orange-700 disabled:bg-gray-300"
             >
               RÉSERVER
             </Button>
@@ -347,7 +347,7 @@ export default function OnboardingStep2Content() {
               {selectedCity && (
                 <div className="absolute bottom-4 left-4 right-4 z-10">
                   <div className="bg-white rounded-lg shadow-lg p-4">
-                    <p className="font-semibold text-green-600 mb-3">
+                    <p className="font-semibold text-orange-600 mb-3">
                       📍 {selectedCity}
                     </p>
                     <div className="space-y-2">
@@ -359,7 +359,7 @@ export default function OnboardingStep2Content() {
                             onClick={() => setSelectedRadius(radius)}
                             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
                               selectedRadius === radius
-                                ? 'bg-green-600 text-white'
+                                ? 'bg-orange-600 text-white'
                                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                             }`}
                           >
@@ -410,21 +410,28 @@ export default function OnboardingStep2Content() {
                                 <>
                                   <strong>Environ {estimatedSearches} recherches</strong> ces dernières 24h pour un {getProfessionLabel(profession).toLowerCase()} sur {selectedCity}
                                   <br />
-                                  <span className="text-sm text-green-600 font-medium">Zone très active en ce moment</span>
+                                  <span className="text-sm text-orange-600 font-medium">Zone très active en ce moment</span>
                                 </>
                               )}
                             </span>
                           </div>
 
                           <div className="flex items-center space-x-3">
-                            <CheckCircle className="w-8 h-8 flex-shrink-0 text-green-600" />
+                            <CheckCircle className="w-8 h-8 flex-shrink-0 text-orange-600" />
                             <span className="text-lg text-gray-700">
-                              <strong>1 demande minimum garantie / mois</strong> • La plupart de nos artisans en reçoivent entre 4 et 6
+                              <strong>Visibilité locale</strong>
                             </span>
                           </div>
                           
                           <div className="flex items-center space-x-3">
-                            <CheckCircle className="w-8 h-8 flex-shrink-0 text-green-600" />
+                            <CheckCircle className="w-8 h-8 flex-shrink-0 text-orange-600" />
+                            <span className="text-lg text-gray-700">
+                              <strong>12 demandes de devis proposées hier</strong>
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center space-x-3">
+                            <CheckCircle className="w-8 h-8 flex-shrink-0 text-orange-600" />
                             <span className="text-lg text-gray-700">
                               <strong>Disponible immédiatement</strong>
                             </span>
@@ -446,7 +453,7 @@ export default function OnboardingStep2Content() {
                     <Button
                       onClick={handleReserveZone}
                       disabled={!selectedCity}
-                      className="w-full py-4 text-xl font-semibold bg-green-600 hover:bg-green-700 disabled:bg-gray-300"
+                      className="w-full py-4 text-xl font-semibold bg-orange-600 hover:bg-orange-700 disabled:bg-gray-300"
                     >
                       RÉSERVER CETTE ZONE →
                     </Button>
