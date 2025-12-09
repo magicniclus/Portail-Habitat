@@ -189,7 +189,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     sideOffset={4}
                   >
                     <DropdownMenuItem asChild>
-                      <Link href="/admin/profile">
+                      <Link href="/admin/profil">
                         <User />
                         Mon profil
                       </Link>
