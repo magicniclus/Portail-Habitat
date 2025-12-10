@@ -48,4 +48,9 @@ next-env.d.ts
 
 scripts/create-admin-user.js
 scripts/README-admin.md
+scripts/migrate-stats.js
+scripts/migrate-stats-config.js
+scripts/test-stats-config.js
+scripts/README-migrate-stats.md
+scripts/test-stats.js
 admin-creator.js

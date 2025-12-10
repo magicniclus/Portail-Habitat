@@ -33,7 +33,8 @@ import {
   Eye,
   CreditCard,
   Settings,
-  Plus
+  Plus,
+  Euro
 } from "lucide-react";
 
 interface UserDetail {
@@ -155,6 +156,13 @@ export default function UserDetailPage() {
   const [isPrestationsModalOpen, setIsPrestationsModalOpen] = useState(false);
   const [isUpdatingPrestations, setIsUpdatingPrestations] = useState(false);
 
+  // Fonction pour changer d'onglet et mettre à jour l'URL
+  const handleTabChange = (tabValue: string) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('tab', tabValue);
+    router.push(`${window.location.pathname}?${newSearchParams.toString()}`, { scroll: false });
+  };
+
   useEffect(() => {
     if (userId) {
       loadUserData();
@@ -218,10 +226,12 @@ export default function UserDetailPage() {
         // Charger les estimations assignées
         if (artisanData.assignedLeads && artisanData.assignedLeads.length > 0) {
           const estimationIds = artisanData.assignedLeads.map((lead: any) => lead.estimationId);
+          // Dédupliquer les IDs d'estimation pour éviter les doublons
+          const uniqueEstimationIds = [...new Set(estimationIds.filter(id => id))];
           const estimationsData = [];
           
           // Charger chaque estimation individuellement (Firestore ne supporte pas les requêtes IN avec plus de 10 éléments)
-          for (const estimationId of estimationIds.slice(0, 20)) { // Limiter à 20 pour les performances
+          for (const estimationId of uniqueEstimationIds.slice(0, 20)) { // Limiter à 20 pour les performances
             try {
               const estimationDoc = await getDoc(doc(db, "estimations", estimationId));
               if (estimationDoc.exists()) {
@@ -376,7 +386,7 @@ export default function UserDetailPage() {
       </div>
 
       {/* Informations principales */}
-      <Tabs defaultValue={defaultTab} className="space-y-4">
+      <Tabs value={defaultTab} onValueChange={handleTabChange} className="space-y-4">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="profile">Profil</TabsTrigger>
           <TabsTrigger value="business">Entreprise</TabsTrigger>
@@ -660,6 +670,20 @@ export default function UserDetailPage() {
                         {lead.city}
                       </span>
                       <span>{lead.budget}</span>
+                      {/* Afficher le prix d'assignation si disponible */}
+                      {user.type === 'artisan' && user.assignedLeads && (
+                        (() => {
+                          const assignedLead = user.assignedLeads.find(
+                            (assigned: any) => assigned.estimationId === lead.id
+                          );
+                          return assignedLead?.price ? (
+                            <span className="flex items-center gap-1 text-green-600 font-medium">
+                              <Euro className="h-3 w-3" />
+                              Assigné à {assignedLead.price}€
+                            </span>
+                          ) : null;
+                        })()
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -689,8 +713,8 @@ export default function UserDetailPage() {
             <Badge variant="outline">{assignedEstimations.length} estimations</Badge>
           </div>
           
-          {assignedEstimations.map((estimation: any) => (
-            <Card key={estimation.id}>
+          {assignedEstimations.map((estimation: any, index: number) => (
+            <Card key={`${estimation.id}-${index}`}>
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -713,6 +737,20 @@ export default function UserDetailPage() {
                           style: 'currency',
                           currency: 'EUR'
                         }).format(estimation.pricing.estimatedPrice)}</div>
+                      )}
+                      {/* Afficher le prix d'assignation */}
+                      {user.type === 'artisan' && user.assignedLeads && (
+                        (() => {
+                          const assignedLead = user.assignedLeads.find(
+                            (assigned: any) => assigned.estimationId === estimation.id
+                          );
+                          return assignedLead?.price ? (
+                            <div className="flex items-center gap-1 text-green-600 font-medium">
+                              <Euro className="h-4 w-4" />
+                              Assigné à {assignedLead.price}€
+                            </div>
+                          ) : null;
+                        })()
                       )}
                     </div>
                   </div>

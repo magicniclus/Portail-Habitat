@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, getDocs, where, updateDoc, doc } from "firebase/firestore";
+import { collection, query, orderBy, getDocs, where } from "firebase/firestore";
 import Link from "next/link";
 import { db } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,21 +122,6 @@ export default function DemandesPage() {
     setFilteredProspects(filtered);
   };
 
-  const updateProspectStep = async (prospectId: string, newStep: string) => {
-    try {
-      await updateDoc(doc(db, "prospects", prospectId), {
-        funnelStep: newStep,
-        updatedAt: new Date()
-      });
-      
-      // Mettre à jour l'état local
-      setProspects(prospects.map(p => 
-        p.id === prospectId ? { ...p, funnelStep: newStep } : p
-      ));
-    } catch (error) {
-      console.error('Erreur lors de la mise à jour:', error);
-    }
-  };
 
   const getFunnelBadge = (step: string) => {
     const stepConfig = {
@@ -304,58 +289,47 @@ export default function DemandesPage() {
       <div className="space-y-4">
         {filteredProspects.map((prospect) => (
           <Card key={prospect.id}>
-            <CardContent className="pt-6">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-6 flex-1">
+                  <div className="flex items-center gap-3">
                     <h3 className="font-semibold">
                       {prospect.firstName} {prospect.lastName}
                     </h3>
                     {getFunnelBadge(prospect.funnelStep)}
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-6 text-sm text-gray-600">
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
                       <span>{prospect.email || 'Non renseigné'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
-                      <span>{prospect.phone || 'Non renseigné'}</span>
+                      {prospect.phone ? (
+                        <a 
+                          href={`tel:${prospect.phone}`}
+                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                          {prospect.phone}
+                        </a>
+                      ) : (
+                        <span>Non renseigné</span>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
                       <span>{prospect.city} ({prospect.postalCode})</span>
                     </div>
                   </div>
-                  
-                  <div className="mt-2 text-sm text-gray-500">
-                    <div>Projet: {prospect.prestationType} - {prospect.propertyType}</div>
-                    <div>Surface: {prospect.surface}m² • Source: {prospect.utm_source}</div>
-                  </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
                   <div className="text-right text-xs text-gray-500">
-                    <div>{prospect.createdAt?.toDate?.()?.toLocaleDateString('fr-FR')}</div>
-                    <div>Session: {prospect.sessionId?.slice(-8)}</div>
+                    <div>
+                      {prospect.createdAt?.toDate?.()?.toLocaleDateString('fr-FR')} • {prospect.createdAt?.toDate?.()?.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
                   </div>
-                  
-                  <Select 
-                    value={prospect.funnelStep} 
-                    onValueChange={(value) => updateProspectStep(prospect.id, value)}
-                  >
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FUNNEL_STEPS.map((step) => (
-                        <SelectItem key={step.value} value={step.value}>
-                          {step.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   
                   <Button size="sm" variant="outline" asChild>
                     <Link href={`/admin/demandes/${prospect.id}?returnTo=/admin/demandes`}>

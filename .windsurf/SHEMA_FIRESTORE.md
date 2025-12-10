@@ -155,17 +155,74 @@ adminLogs
 
 stats
 └── global (id = "global")
+    // MÉTRIQUES GLOBALES
     ├── totalArtisans
     ├── activeSubscribers
-    ├── mrr
-    ├── sitesSold69
-    ├── sitesSold129
-    ├── sitesOffered
+    ├── mrr                             ← Monthly Recurring Revenue (calculé automatiquement)
+    ├── arr                             ← Annual Recurring Revenue (mrr * 12)
     ├── totalUpsellRevenue
     ├── leadsThisMonth
     ├── searchesToday
     ├── demandsLast30d
-    ├── updatedAt
+    
+    // DÉTAIL PAR OFFRE (structure dynamique)
+    ├── offerBreakdown {
+    │   ├── offer69 {
+    │   │   ├── activeSubscribers       ← nombre d'abonnés actifs à 69€
+    │   │   ├── totalSold               ← total vendu (sites + abonnements)
+    │   │   ├── sitesSold               ← sites vendus à 69€
+    │   │   ├── sitesOffered            ← sites offerts à 69€
+    │   │   ├── monthlyRevenue          ← revenus mensuels de cette offre
+    │   │   ├── totalRevenue            ← revenus totaux de cette offre
+    │   │   └── churnCount              ← nombre de désabonnements
+    │   │   }
+    │   ├── offer129 {
+    │   │   ├── activeSubscribers
+    │   │   ├── totalSold
+    │   │   ├── sitesSold
+    │   │   ├── sitesOffered
+    │   │   ├── monthlyRevenue
+    │   │   ├── totalRevenue
+    │   │   └── churnCount
+    │   │   }
+    │   ├── offer199 {                  ← nouvelle offre exemple
+    │   │   ├── activeSubscribers
+    │   │   ├── totalSold
+    │   │   ├── sitesSold
+    │   │   ├── sitesOffered
+    │   │   ├── monthlyRevenue
+    │   │   ├── totalRevenue
+    │   │   └── churnCount
+    │   │   }
+    │   └── marketplace {               ← ventes marketplace
+    │       ├── totalSales              ← nombre total de ventes
+    │       ├── totalRevenue            ← revenus totaux marketplace
+    │       ├── averagePrice            ← prix moyen par vente
+    │       └── thisMonthSales          ← ventes du mois en cours
+    │       }
+    │   }
+    
+    // MÉTRIQUES TEMPORELLES
+    ├── monthlyMetrics {
+    │   ├── currentMonth {
+    │   │   ├── newSubscriptions        ← nouveaux abonnements ce mois
+    │   │   ├── churnedSubscriptions    ← désabonnements ce mois
+    │   │   ├── netGrowth               ← croissance nette (new - churned)
+    │   │   ├── mrrGrowth               ← croissance MRR ce mois
+    │   │   ├── marketplaceSales        ← ventes marketplace ce mois
+    │   │   └── marketplaceRevenue      ← revenus marketplace ce mois
+    │   │   }
+    │   └── lastMonth {                 ← pour comparaisons
+    │       ├── newSubscriptions
+    │       ├── churnedSubscriptions
+    │       ├── netGrowth
+    │       ├── mrrGrowth
+    │       ├── marketplaceSales
+    │       └── marketplaceRevenue
+    │       }
+    │   }
+    
+    └── updatedAt
 
 subscriptions (collection - pour tracking des abonnements)
 └── {subscriptionId}
@@ -256,13 +313,40 @@ estimations (collection - toutes les estimations générées par le simulateur)
     │       └── price               ← prix payé par l'artisan (optionnel)
     │       }
     
+    // BOURSE AU TRAVAIL (MARKETPLACE)
+    ├── isPublished                 ← projet publié sur la bourse (boolean, défaut: false)
+    ├── publishedAt                 ← date de publication sur la bourse (timestamp, optionnel)
+    ├── marketplacePrice            ← prix du lead en euros (int, défaut: 35)
+    ├── maxSales                    ← limite de ventes du lead (int, défaut: 3)
+    ├── marketplaceDescription      ← description spécifique pour la bourse (string, optionnel)
+    ├── marketplacePrestations []   ← prestations ciblées pour la bourse (array<string>)
+    ├── marketplaceViews            ← nombre de vues sur la bourse (int, défaut: 0)
+    ├── marketplaceSales            ← nombre de ventes réalisées (int, défaut: 0)
+    ├── marketplaceStatus           ← statut de la bourse ("active" | "completed" | "paused")
+    ├── marketplaceCompletedAt      ← date de complétion (quand limite atteinte) (timestamp, optionnel)
+    ├── marketplacePurchases []     ← historique des achats (array)
+    │   └── {
+    │       ├── artisanId           ← ID de l'artisan acheteur
+    │       ├── artisanName         ← nom de l'artisan
+    │       ├── purchasedAt         ← date d'achat
+    │       ├── price               ← prix payé (peut être 0 pour assignations gratuites)
+    │       └── paymentId           ← référence du paiement (ex: "manual-assignment-123", "sync-assignment-artisanId")
+    │       }
+    │
+    │   NOTES IMPORTANTES:
+    │   - marketplaceSales est synchronisé avec assignments[] automatiquement
+    │   - Suppression d'assignation → suppression de marketplacePurchases + décrément marketplaceSales
+    │   - Si marketplaceSales < maxSales après suppression → marketplaceStatus repasse à "active"
+    │   - Prix 0€ acceptés pour assignations gratuites
+    │   - isPublished N'EST JAMAIS modifié automatiquement (contrôle admin uniquement)
+    │   - Structure marketplace initialisée avec isPublished = false par défaut
+    │   - Assignations manuelles ne changent PAS le statut de publication
+    
     // HORODATAGE ET STATUT
     ├── createdAt                   ← création de l'estimation
     ├── completedAt                 ← finalisation du simulateur
     ├── sentAt                      ← envoi par email
-    ├── updatedAt                   ← dernière modification
-    ├── isPublished                 ← projet publié sur le site (boolean, défaut: false)
-    └── publishedAt                 ← date de publication (timestamp, optionnel)
+    └── updatedAt                   ← dernière modification
 
     // SOUS-COLLECTIONS
     └── interactions (sous-collection - pour tracker les interactions)

@@ -479,7 +479,7 @@ export default function OnboardingStep3Content() {
                   {/* Abonnement */}
                   <div className="pb-4 border-b border-gray-100">
                     <h3 className="text-gray-600 text-sm font-medium mb-2">Abonnement :</h3>
-                    <p className="font-semibold text-orange-600 text-sm">Activation immédiate – 49 €/mois, sans engagement</p>
+                    <p className="font-semibold text-orange-600 text-sm">Activation immédiate – 69 €/mois, sans engagement</p>
                   </div>
                   
                   {/* Garantie satisfaction */}
@@ -585,7 +585,7 @@ export default function OnboardingStep3Content() {
                     disabled={isProcessing}
                     className="w-full text-xl py-6 font-bold bg-orange-700 hover:bg-orange-800 text-white flex items-center justify-center space-x-3"
                   >
-                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Activer ma visibilité maintenant – 49 €"}</span>
+                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Activer ma visibilité maintenant – 69 €"}</span>
                     {!isProcessing && <ArrowRight className="h-6 w-6" />}
                   </Button>
 
@@ -606,7 +606,7 @@ export default function OnboardingStep3Content() {
                   {/* Texte légal */}
                   <div className="mt-6 pt-4 border-t border-gray-100">
                     <p className="text-xs text-gray-400 leading-relaxed">
-                      Vous activez votre visibilité professionnelle à 49 €/mois, sans engagement. Vous pouvez arrêter à tout moment depuis votre espace.
+                      Vous activez votre visibilité professionnelle à 69 €/mois, sans engagement. Vous pouvez arrêter à tout moment depuis votre espace.
                     </p>
                   </div>
                 </form>
@@ -855,7 +855,7 @@ export default function OnboardingStep3Content() {
                     disabled={isProcessing}
                     className="w-full text-2xl py-8 font-bold bg-orange-700 hover:bg-orange-800 text-white flex items-center justify-center space-x-4 rounded-lg"
                   >
-                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Activer ma visibilité maintenant – 49 €"}</span>
+                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Activer ma visibilité maintenant – 69 €"}</span>
                     {!isProcessing && <ArrowRight className="h-7 w-7" />}
                   </Button>
 
@@ -876,7 +876,7 @@ export default function OnboardingStep3Content() {
                   {/* Texte légal */}
                   <div className="mt-6 pt-4 border-t border-gray-100">
                     <p className="text-xs text-gray-400 leading-relaxed">
-                      Vous activez votre visibilité professionnelle à 49 €/mois, sans engagement. Vous pouvez arrêter à tout moment depuis votre espace.
+                      Vous activez votre visibilité professionnelle à 69 €/mois, sans engagement. Vous pouvez arrêter à tout moment depuis votre espace.
                     </p>
                   </div>
                 </form>

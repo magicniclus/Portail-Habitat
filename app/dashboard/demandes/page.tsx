@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,10 +11,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Filter, Plus, Eye, MessageSquare, Phone, Mail, Loader2, X } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Filter, Plus, Eye, MessageSquare, Phone, Mail, Loader2, X, Package, Euro } from "lucide-react";
 import { collection, query, orderBy, onSnapshot, where, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
+import { getBoughtLeads, updateLeadStatus, type ArtisanLead } from '@/lib/artisan-leads';
 
 // Interface pour les leads
 interface Lead {
@@ -81,12 +84,26 @@ const getTypeBadge = (type: string) => {
 };
 
 export default function DemandesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [leads, setLeads] = useState<Lead[]>([]);
+  const [boughtLeads, setBoughtLeads] = useState<ArtisanLead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingBought, setLoadingBought] = useState(true);
   const [artisanId, setArtisanId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  
+  // Récupérer l'onglet actif depuis l'URL
+  const activeTab = searchParams.get('tab') || 'generated';
+  
+  // Fonction pour changer d'onglet et mettre à jour l'URL
+  const handleTabChange = (newTab: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('tab', newTab);
+    router.push(`/dashboard/demandes?${params.toString()}`);
+  };
   
   // États pour les modales
   const [isNewLeadModalOpen, setIsNewLeadModalOpen] = useState(false);
@@ -167,6 +184,25 @@ export default function DemandesPage() {
     });
 
     return () => unsubscribe();
+  }, [artisanId]);
+
+  // Récupérer les leads achetés
+  useEffect(() => {
+    if (!artisanId) return;
+
+    const loadBoughtLeads = async () => {
+      setLoadingBought(true);
+      try {
+        const purchased = await getBoughtLeads(artisanId);
+        setBoughtLeads(purchased);
+      } catch (error) {
+        console.error('Erreur lors du chargement des leads achetés:', error);
+      } finally {
+        setLoadingBought(false);
+      }
+    };
+
+    loadBoughtLeads();
   }, [artisanId]);
 
   // Filtrer les leads
@@ -326,6 +362,28 @@ export default function DemandesPage() {
     }
   };
 
+  // Fonction pour mettre à jour le statut d'un lead acheté
+  const handleUpdateBoughtLeadStatus = async (leadId: string, newStatus: "new" | "contacted" | "converted" | "lost") => {
+    if (!artisanId) return;
+
+    try {
+      const success = await updateLeadStatus(artisanId, leadId, newStatus);
+      
+      if (success) {
+        // Mettre à jour l'état local
+        setBoughtLeads(prevLeads => 
+          prevLeads.map(lead => 
+            lead.id === leadId 
+              ? { ...lead, status: newStatus }
+              : lead
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du statut du lead acheté:', error);
+    }
+  };
+
   // Fonction pour ouvrir les détails d'un lead
   const handleViewLead = (lead: Lead) => {
     setSelectedLead(lead);
@@ -397,7 +455,7 @@ export default function DemandesPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Mes demandes</h1>
           <p className="text-muted-foreground">
-            Gérez toutes vos demandes et communications clients
+            Gérez toutes vos demandes générées et achetées
           </p>
         </div>
         <Dialog open={isNewLeadModalOpen} onOpenChange={(open) => {
@@ -590,7 +648,22 @@ export default function DemandesPage() {
         </Dialog>
       </div>
 
-      {/* Statistiques rapides */}
+      {/* Onglets */}
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="generated" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Demandes générées ({leads.length})
+          </TabsTrigger>
+          <TabsTrigger value="bought" className="flex items-center gap-2">
+            <Package className="h-4 w-4" />
+            Appels d'offres ({boughtLeads.length})
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Onglet Demandes générées */}
+        <TabsContent value="generated" className="space-y-6">
+          {/* Statistiques rapides */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -1109,6 +1182,183 @@ export default function DemandesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+        </TabsContent>
+
+        {/* Onglet Appels d'offres */}
+        <TabsContent value="bought" className="space-y-6">
+          {loadingBought ? (
+            <div className="flex items-center justify-center min-h-[200px]">
+              <div className="text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                <p>Chargement des appels d'offres...</p>
+              </div>
+            </div>
+          ) : boughtLeads.length === 0 ? (
+            <Card className="bg-gray-50 border-gray-200">
+              <CardContent className="p-8 text-center">
+                <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Aucun appel d'offres
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Vous n'avez pas encore répondu à d'appels d'offres via la bourse au travail.
+                </p>
+                <Button asChild>
+                  <a href="/dashboard/marketplace">
+                    Voir la bourse au travail
+                  </a>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {boughtLeads.map((lead) => (
+                <div key={lead.id} className="border rounded-lg hover:bg-muted/50 transition-colors">
+                  {/* Version Desktop */}
+                  <div className="hidden md:flex items-start justify-between p-4">
+                    <div className="flex items-start space-x-4 flex-1">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-medium">{lead.clientName || 'Client anonyme'}</h3>
+                          <Badge className="bg-orange-100 text-orange-800">
+                            Appel d'offres
+                          </Badge>
+                          <Badge className={
+                            lead.status === 'new' ? 'bg-blue-100 text-blue-800' :
+                            lead.status === 'contacted' ? 'bg-yellow-100 text-yellow-800' :
+                            lead.status === 'converted' ? 'bg-green-100 text-green-800' :
+                            'bg-red-100 text-red-800'
+                          }>
+                            {lead.status === 'new' ? 'Nouveau' :
+                             lead.status === 'contacted' ? 'Contacté' :
+                             lead.status === 'converted' ? 'Converti' : 'Perdu'}
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-medium text-muted-foreground">{lead.projectType}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{lead.notes || 'Aucune note'}</p>
+                        <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                          <span>{lead.clientEmail}</span>
+                          <span>•</span>
+                          <span>{lead.clientPhone}</span>
+                          <span>•</span>
+                          <span>{lead.createdAt?.toDate?.()?.toLocaleDateString() || 'Date inconnue'}</span>
+                          {lead.city && (
+                            <>
+                              <span>•</span>
+                              <span>{lead.city}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        title="Appeler le client"
+                        onClick={() => window.open(`tel:${lead.clientPhone}`, '_self')}
+                      >
+                        <Phone className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        title="Envoyer un email"
+                        onClick={() => window.open(`mailto:${lead.clientEmail}`, '_blank')}
+                      >
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      
+                      <Select
+                        value={lead.status}
+                        onValueChange={(value) => handleUpdateBoughtLeadStatus(lead.id, value as "new" | "contacted" | "converted" | "lost")}
+                      >
+                        <SelectTrigger className="w-[140px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">Nouveau</SelectItem>
+                          <SelectItem value="contacted">Contacté</SelectItem>
+                          <SelectItem value="converted">Converti</SelectItem>
+                          <SelectItem value="lost">Perdu</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Version Mobile */}
+                  <div className="md:hidden p-4 space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-1">
+                        <h3 className="font-medium">{lead.clientName || 'Client anonyme'}</h3>
+                        <p className="text-sm text-muted-foreground">{lead.projectType}</p>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <Badge className="bg-orange-100 text-orange-800 text-xs">
+                          Appel d'offres
+                        </Badge>
+                        <Badge className={
+                          lead.status === 'new' ? 'bg-blue-100 text-blue-800' :
+                          lead.status === 'contacted' ? 'bg-yellow-100 text-yellow-800' :
+                          lead.status === 'converted' ? 'bg-green-100 text-green-800' :
+                          'bg-red-100 text-red-800'
+                        }>
+                          {lead.status === 'new' ? 'Nouveau' :
+                           lead.status === 'contacted' ? 'Contacté' :
+                           lead.status === 'converted' ? 'Converti' : 'Perdu'}
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    <div className="text-xs text-muted-foreground space-y-1">
+                      <div>{lead.clientEmail}</div>
+                      <div>{lead.clientPhone}</div>
+                      <div>{lead.createdAt?.toDate?.()?.toLocaleDateString() || 'Date inconnue'} {lead.city && `• ${lead.city}`}</div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => window.open(`tel:${lead.clientPhone}`, '_self')}
+                      >
+                        <Phone className="h-3 w-3 mr-1" />
+                        Appeler
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1"
+                        onClick={() => window.open(`mailto:${lead.clientEmail}`, '_blank')}
+                      >
+                        <Mail className="h-3 w-3 mr-1" />
+                        Email
+                      </Button>
+                    </div>
+                    
+                    <Select
+                      value={lead.status}
+                      onValueChange={(value) => handleUpdateBoughtLeadStatus(lead.id, value as "new" | "contacted" | "converted" | "lost")}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">Nouveau</SelectItem>
+                        <SelectItem value="contacted">Contacté</SelectItem>
+                        <SelectItem value="converted">Converti</SelectItem>
+                        <SelectItem value="lost">Perdu</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -8,8 +8,10 @@ import { getCurrentAdmin, hasPermission, ADMIN_PERMISSIONS } from "@/lib/admin-a
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import EditableField from "@/components/admin/EditableField";
 import EditableSelect from "@/components/admin/EditableSelect";
+import EmailModal from "@/components/admin/EmailModal";
 import { 
   ArrowLeft,
   User,
@@ -24,7 +26,8 @@ import {
   Globe,
   Link,
   Copy,
-  ExternalLink
+  ExternalLink,
+  PhoneCall
 } from "lucide-react";
 
 interface Prospect {
@@ -72,6 +75,7 @@ export default function ProspectDetailPage() {
   const [prospect, setProspect] = useState<Prospect | null>(null);
   const [loading, setLoading] = useState(true);
   const [canEdit, setCanEdit] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   useEffect(() => {
     if (prospectId) {
@@ -148,14 +152,26 @@ export default function ProspectDetailPage() {
     return `${window.location.origin}/onboarding/step2?${params.toString()}`;
   };
 
-  const copyRegistrationLink = async () => {
+  const copyRegistrationLink = () => {
     const link = generateRegistrationLink();
+    navigator.clipboard.writeText(link);
+    // Ici tu pourrais ajouter une notification de succès
+  };
+
+  const handleSendEmail = async (emailData: any) => {
     try {
-      await navigator.clipboard.writeText(link);
-      // Vous pourriez ajouter une notification toast ici
-      console.log('Lien copié dans le presse-papiers');
+      // Ici tu peux implémenter l'envoi d'email via une API
+      // Par exemple avec SendGrid ou une autre solution
+      console.log('Envoi email:', emailData);
+      
+      // Pour l'instant, on simule l'envoi
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Tu peux ajouter une notification de succès ici
+      console.log('Email envoyé avec succès');
     } catch (error) {
-      console.error('Erreur lors de la copie:', error);
+      console.error('Erreur lors de l\'envoi de l\'email:', error);
+      throw error;
     }
   };
 
@@ -209,13 +225,29 @@ export default function ProspectDetailPage() {
           </Button>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Entreprise candidate - {prospect.firstName} {prospect.lastName}
+              {prospect.firstName} {prospect.lastName}
             </h1>
-            <p className="text-gray-600">{prospect.prestationType} • {prospect.city}</p>
+
           </div>
         </div>
         
         <div className="flex items-center gap-2">
+          {prospect.phone && (
+            <Button variant="outline" asChild>
+              <a href={`tel:${prospect.phone}`}>
+                <PhoneCall className="h-4 w-4 mr-2" />
+                Appeler
+              </a>
+            </Button>
+          )}
+          
+          {prospect.email && (
+            <Button variant="outline" onClick={() => setIsEmailModalOpen(true)}>
+              <Mail className="h-4 w-4 mr-2" />
+              Envoyer un email
+            </Button>
+          )}
+          
           <Button variant="outline" onClick={copyRegistrationLink}>
             <Copy className="h-4 w-4 mr-2" />
             Copier lien d'inscription
@@ -318,15 +350,25 @@ export default function ProspectDetailPage() {
             <CardTitle>Suivi de candidature</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <EditableSelect
-              label="Étape d'inscription"
-              value={prospect.funnelStep || ''}
-              options={FUNNEL_STEPS}
-              onSave={(value) => updateField('funnelStep', value)}
-              placeholder="Sélectionner une étape"
-              disabled={!canEdit}
-              renderValue={(value) => getFunnelBadge(value)}
-            />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Étape d'inscription</label>
+              <Select
+                value={prospect.funnelStep || ''}
+                onValueChange={(value: string) => updateField('funnelStep', value)}
+                disabled={!canEdit}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner une étape" />
+                </SelectTrigger>
+                <SelectContent>
+                  {FUNNEL_STEPS.map((step) => (
+                    <SelectItem key={step.value} value={step.value}>
+                      {step.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
             <EditableField
               label="Assigné à"
@@ -399,6 +441,15 @@ export default function ProspectDetailPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal d'envoi d'email */}
+      <EmailModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        recipientEmail={prospect.email || ''}
+        recipientName={`${prospect.firstName} ${prospect.lastName}`}
+        onSend={handleSendEmail}
+      />
     </div>
   );
 }

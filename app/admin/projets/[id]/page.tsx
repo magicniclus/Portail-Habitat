@@ -12,6 +12,8 @@ import { Switch } from "@/components/ui/switch";
 import EditableField from "@/components/admin/EditableField";
 import EditableSelect from "@/components/admin/EditableSelect";
 import ArtisanAssignment from "@/components/admin/ArtisanAssignment";
+import ProjectMarketplaceCard from "@/components/admin/ProjectMarketplaceCard";
+import { syncAssignmentsToMarketplace } from "@/lib/marketplace-utils";
 import { 
   ArrowLeft,
   User,
@@ -99,6 +101,26 @@ export default function ProjetDetailPage() {
     }
   }, [projetId]);
 
+  // Synchroniser les assignations avec la marketplace au chargement
+  useEffect(() => {
+    const syncMarketplace = async () => {
+      if (estimation?.id) {
+        try {
+          await syncAssignmentsToMarketplace(estimation.id);
+          console.log("Synchronisation marketplace effectuée");
+          // Recharger l'estimation pour avoir les données à jour
+          loadEstimation();
+        } catch (error) {
+          console.error("Erreur lors de la synchronisation:", error);
+        }
+      }
+    };
+
+    if (estimation?.id) {
+      syncMarketplace();
+    }
+  }, [estimation?.id]);
+
   const loadEstimation = async () => {
     try {
       setLoading(true);
@@ -173,14 +195,23 @@ export default function ProjetDetailPage() {
     }
   };
 
-  const handleAssignmentsUpdate = (assignments: Assignment[]) => {
-    if (!estimation) return;
-    
-    setEstimation({
-      ...estimation,
-      assignments,
-      updatedAt: new Date()
-    });
+  const handleAssignmentsUpdate = (assignments: any[]) => {
+    if (estimation) {
+      setEstimation({
+        ...estimation,
+        assignments
+      });
+    }
+  };
+
+  // Fonction pour recharger l'estimation complète (marketplace incluse)
+  const handleMarketplaceUpdate = async () => {
+    if (projetId) {
+      // Petit délai pour laisser le temps à Firestore de se synchroniser
+      setTimeout(() => {
+        loadEstimation();
+      }, 800);
+    }
   };
 
   const togglePublishStatus = async (newPublishedStatus: boolean) => {
@@ -490,11 +521,19 @@ export default function ProjetDetailPage() {
             </CardContent>
           </Card>
 
+          {/* Bourse au travail */}
+          <ProjectMarketplaceCard
+            estimation={estimation}
+            onUpdate={(updatedEstimation) => setEstimation(updatedEstimation)}
+            disabled={!canEdit}
+          />
+
           {/* Attribution aux artisans */}
           <ArtisanAssignment
             estimationId={estimation.id}
             currentAssignments={estimation.assignments || []}
             onAssignmentsUpdate={handleAssignmentsUpdate}
+            onMarketplaceUpdate={handleMarketplaceUpdate}
             disabled={!canEdit}
           />
 

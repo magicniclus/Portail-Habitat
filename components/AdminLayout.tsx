@@ -39,6 +39,13 @@ import {
   UserCheck,
 } from "lucide-react";
 
+interface NavigationItem {
+  title: string;
+  url: string;
+  icon: any;
+  subPaths?: string[];
+}
+
 const navigation = [
   {
     title: "Tableau de bord",
@@ -47,6 +54,11 @@ const navigation = [
         title: "Vue d'ensemble",
         url: "/admin",
         icon: Home,
+      },
+      {
+        title: "Statistiques",
+        url: "/admin/dashboard",
+        icon: FileText,
       },
     ],
   },
@@ -57,6 +69,7 @@ const navigation = [
         title: "Artisans",
         url: "/admin/utilisateurs",
         icon: Users,
+        subPaths: ["/admin/utilisateurs", "/admin/artisans"], // Inclure les deux chemins
       },
       {
         title: "Demandes",
@@ -141,19 +154,26 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {group.items.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={pathname === item.url}
-                        >
-                          <Link href={item.url}>
-                            <item.icon />
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
+                    {group.items.map((item) => {
+                      // Vérifier si la page actuelle correspond à cet item
+                      const isActive = item.subPaths 
+                        ? item.subPaths.some(path => pathname.startsWith(path))
+                        : pathname === item.url;
+                      
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActive}
+                          >
+                            <Link href={item.url}>
+                              <item.icon />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>

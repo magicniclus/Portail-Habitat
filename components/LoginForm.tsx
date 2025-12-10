@@ -92,7 +92,33 @@ export default function LoginForm({
       }
     } catch (error: any) {
       console.error("Erreur de connexion:", error);
-      alert("Erreur de connexion : Email ou mot de passe incorrect.");
+      
+      let errorMessage = "Une erreur s'est produite lors de la connexion.";
+      
+      switch (error.code) {
+        case 'auth/invalid-credential':
+          errorMessage = "Email ou mot de passe incorrect.";
+          break;
+        case 'auth/user-not-found':
+          errorMessage = "Aucun compte trouvé avec cet email.";
+          break;
+        case 'auth/wrong-password':
+          errorMessage = "Mot de passe incorrect.";
+          break;
+        case 'auth/invalid-email':
+          errorMessage = "Format d'email invalide.";
+          break;
+        case 'auth/user-disabled':
+          errorMessage = "Ce compte a été désactivé.";
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = "Trop de tentatives de connexion. Veuillez réessayer plus tard.";
+          break;
+        default:
+          errorMessage = `Erreur de connexion : ${error.message}`;
+      }
+      
+      alert(errorMessage);
     } finally {
       setIsLoading(false);
     }

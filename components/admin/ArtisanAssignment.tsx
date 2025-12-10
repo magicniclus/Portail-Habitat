@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { collection, query, where, getDocs, doc, updateDoc, arrayUnion, arrayRemove, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { recordMarketplacePurchase, initializeMarketplaceStructure, removeMarketplacePurchase, syncAssignmentsToMarketplace } from "@/lib/marketplace-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ interface ArtisanAssignmentProps {
   estimationId: string;
   currentAssignments: Assignment[];
   onAssignmentsUpdate: (assignments: Assignment[]) => void;
+  onMarketplaceUpdate?: () => void; // Callback pour recharger la marketplace
   disabled?: boolean;
 }
 
@@ -47,6 +49,7 @@ export default function ArtisanAssignment({
   estimationId, 
   currentAssignments, 
   onAssignmentsUpdate,
+  onMarketplaceUpdate,
   disabled = false 
 }: ArtisanAssignmentProps) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -137,9 +140,26 @@ export default function ArtisanAssignment({
         updatedAt: new Date()
       });
 
+      // Initialiser la structure marketplace et synchroniser les compteurs
+      // IMPORTANT: Synchronise les compteurs SANS toucher à isPublished
+      try {
+        await initializeMarketplaceStructure(estimationId);
+        await syncAssignmentsToMarketplace(estimationId);
+        console.log("Compteurs marketplace mis à jour (isPublished inchangé)");
+      } catch (marketplaceError) {
+        console.log("Erreur synchronisation marketplace:", marketplaceError);
+      }
+
       // Mettre à jour l'état local
       const updatedAssignments = [...currentAssignments, newAssignment];
       onAssignmentsUpdate(updatedAssignments);
+
+      // Notifier la mise à jour marketplace avec un délai
+      if (onMarketplaceUpdate) {
+        setTimeout(() => {
+          onMarketplaceUpdate();
+        }, 300);
+      }
 
       // Réinitialiser la recherche
       setSearchTerm("");
@@ -172,9 +192,23 @@ export default function ArtisanAssignment({
         updatedAt: new Date()
       });
 
+      // Retirer l'achat de la marketplace pour mettre à jour les compteurs
+      // IMPORTANT: Met à jour les compteurs SANS toucher à isPublished
+      try {
+        await removeMarketplacePurchase(estimationId, assignment.artisanId);
+        console.log("Compteurs marketplace mis à jour après suppression (isPublished inchangé)");
+      } catch (marketplaceError) {
+        console.log("Erreur mise à jour compteurs marketplace:", marketplaceError);
+      }
+
       // Mettre à jour l'état local
       const updatedAssignments = currentAssignments.filter(a => a.artisanId !== assignment.artisanId);
       onAssignmentsUpdate(updatedAssignments);
+
+      // Notifier la mise à jour marketplace
+      if (onMarketplaceUpdate) {
+        onMarketplaceUpdate();
+      }
 
     } catch (error) {
       console.error("Erreur lors de la suppression:", error);
@@ -186,22 +220,49 @@ export default function ArtisanAssignment({
   // Mettre à jour le prix d'une attribution
   const updateAssignmentPrice = async (artisanId: string, price: number) => {
     try {
+      const assignment = currentAssignments.find(a => a.artisanId === artisanId);
+      if (!assignment) return;
+
       const updatedAssignments = currentAssignments.map(assignment => 
         assignment.artisanId === artisanId 
           ? { ...assignment, price }
           : assignment
       );
 
-      // Mettre à jour Firestore
+      // Mettre à jour Firestore - Assignments
       await updateDoc(doc(db, "estimations", estimationId), {
         assignments: updatedAssignments,
         updatedAt: new Date()
       });
 
+      // Enregistrer l'achat pour mettre à jour les compteurs marketplace
+      // IMPORTANT: Met à jour les compteurs SANS toucher à isPublished
+      if (price >= 0) {
+        try {
+          await initializeMarketplaceStructure(estimationId);
+          await recordMarketplacePurchase(estimationId, {
+            artisanId,
+            artisanName: assignment.artisanName,
+            purchasedAt: new Date(),
+            price: price || 0,
+            paymentId: `manual-assignment-${Date.now()}`
+          });
+          console.log("Compteurs marketplace mis à jour avec nouveau prix (isPublished inchangé)");
+        } catch (marketplaceError) {
+          console.log("Erreur mise à jour compteurs marketplace:", marketplaceError);
+        }
+      }
+
+      // Mettre à jour l'état local
       onAssignmentsUpdate(updatedAssignments);
+
+      // Notifier la mise à jour marketplace
+      if (onMarketplaceUpdate) {
+        onMarketplaceUpdate();
+      }
+
     } catch (error) {
       console.error("Erreur lors de la mise à jour du prix:", error);
-      throw error;
     }
   };
 
