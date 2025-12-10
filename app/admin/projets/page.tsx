@@ -170,7 +170,7 @@ export default function ProjetsPage() {
   };
 
   const formatPrice = (price?: number) => {
-    if (!price) return 'Non calculé';
+    if (price === undefined || price === null) return 'Non calculé';
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'EUR',
