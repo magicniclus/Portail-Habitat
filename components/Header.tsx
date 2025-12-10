@@ -195,7 +195,7 @@ export default function Header() {
                 Devenir partenaire
               </Link>
               <Button asChild>
-                <Link href="/connexion">Mon Espace</Link>
+                <Link href="/connexion-pro">Mon Espace</Link>
               </Button>
             </div>
 
@@ -318,7 +318,7 @@ export default function Header() {
                     Devenir partenaire
                   </Link>
                   <Button asChild className="w-full">
-                    <Link href="/connexion" onClick={() => setIsMenuOpen(false)}>
+                    <Link href="/connexion-pro" onClick={() => setIsMenuOpen(false)}>
                       Mon Espace
                     </Link>
                   </Button>
