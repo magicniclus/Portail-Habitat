@@ -70,6 +70,13 @@ interface Estimation {
   notes?: string;
   assignedTo?: string;
   assignments?: Assignment[];
+  marketplacePurchases?: Array<{
+    artisanId: string;
+    artisanName: string;
+    purchasedAt: any;
+    price: number;
+    paymentId: string;
+  }>;
   isPublished?: boolean;
   publishedAt?: any;
   createdAt: any;
@@ -532,6 +539,7 @@ export default function ProjetDetailPage() {
           <ArtisanAssignment
             estimationId={estimation.id}
             currentAssignments={estimation.assignments || []}
+            marketplacePurchases={estimation.marketplacePurchases || []}
             onAssignmentsUpdate={handleAssignmentsUpdate}
             onMarketplaceUpdate={handleMarketplaceUpdate}
             disabled={!canEdit}

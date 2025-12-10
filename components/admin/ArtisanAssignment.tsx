@@ -37,9 +37,18 @@ interface Assignment {
   price?: number;
 }
 
+interface MarketplacePurchase {
+  artisanId: string;
+  artisanName: string;
+  purchasedAt: any; // Date ou Timestamp Firestore
+  price: number;
+  paymentId: string;
+}
+
 interface ArtisanAssignmentProps {
   estimationId: string;
   currentAssignments: Assignment[];
+  marketplacePurchases?: MarketplacePurchase[]; // Ajout des achats marketplace
   onAssignmentsUpdate: (assignments: Assignment[]) => void;
   onMarketplaceUpdate?: () => void; // Callback pour recharger la marketplace
   disabled?: boolean;
@@ -48,6 +57,7 @@ interface ArtisanAssignmentProps {
 export default function ArtisanAssignment({ 
   estimationId, 
   currentAssignments, 
+  marketplacePurchases = [],
   onAssignmentsUpdate,
   onMarketplaceUpdate,
   disabled = false 
@@ -273,7 +283,12 @@ export default function ArtisanAssignment({
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <User className="h-5 w-5" />
-            Artisans assignés ({currentAssignments.length})
+            Artisans assignés ({currentAssignments.length + marketplacePurchases.length})
+            {marketplacePurchases.length > 0 && (
+              <span className="text-sm font-normal text-gray-600">
+                • {currentAssignments.length} assignés, {marketplacePurchases.length} achetés
+              </span>
+            )}
           </div>
           {!disabled && (
             <Button 
@@ -361,10 +376,11 @@ export default function ArtisanAssignment({
           </div>
         )}
 
-        {/* Liste des artisans assignés */}
+        {/* Liste des artisans assignés et acheteurs */}
         <div className="space-y-4">
+          {/* Artisans assignés manuellement */}
           {currentAssignments.map((assignment) => (
-            <div key={assignment.artisanId} className="border rounded-lg p-4 bg-gray-50">
+            <div key={`assigned-${assignment.artisanId}`} className="border rounded-lg p-4 bg-gray-50">
               <div className="mb-3">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-semibold text-gray-900">{assignment.artisanName}</span>
@@ -414,9 +430,31 @@ export default function ArtisanAssignment({
             </div>
           ))}
 
-          {currentAssignments.length === 0 && (
+          {/* Artisans qui ont acheté l'appel d'offres */}
+          {marketplacePurchases.map((purchase) => (
+            <div key={`purchased-${purchase.artisanId}`} className="border rounded-lg p-4 bg-green-50">
+              <div className="mb-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-semibold text-gray-900">{purchase.artisanName}</span>
+                  <Badge className="bg-green-100 text-green-800">Acheté</Badge>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  🛒 Acheté le {purchase.purchasedAt?.toDate?.()?.toLocaleDateString('fr-FR') || 
+                              new Date(purchase.purchasedAt).toLocaleDateString('fr-FR')}
+                </div>
+                <div className="text-sm font-medium text-green-600 mt-1">
+                  💰 Prix payé: {purchase.price}€
+                </div>
+                <div className="text-xs text-gray-400 mt-1">
+                  ID Paiement: {purchase.paymentId}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {currentAssignments.length === 0 && marketplacePurchases.length === 0 && (
             <div className="text-center py-6 text-gray-500">
-              Aucun artisan assigné à ce projet
+              Aucun artisan assigné ou acheteur pour ce projet
             </div>
           )}
         </div>
