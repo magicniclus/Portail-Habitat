@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Search, 
   Users, 
@@ -39,26 +38,10 @@ interface Artisan {
   totalLeads: number;
 }
 
-interface Prospect {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  city: string;
-  profession: string;
-  funnelStep: string;
-  createdAt: any;
-  searchesLast24h: number;
-  demandsLast30d: number;
-}
-
 export default function AdminUtilisateurs() {
   const [artisans, setArtisans] = useState<Artisan[]>([]);
-  const [prospects, setProspects] = useState<Prospect[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("artisans");
 
   useEffect(() => {
     loadData();
@@ -80,20 +63,7 @@ export default function AdminUtilisateurs() {
         ...doc.data()
       })) as Artisan[];
 
-      // Charger les prospects
-      const prospectsQuery = query(
-        collection(db, "prospects"),
-        orderBy("createdAt", "desc"),
-        limit(50)
-      );
-      const prospectsSnapshot = await getDocs(prospectsQuery);
-      const prospectsData = prospectsSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Prospect[];
-
       setArtisans(artisansData);
-      setProspects(prospectsData);
     } catch (error) {
       console.error("Erreur lors du chargement des données:", error);
     } finally {
@@ -115,34 +85,12 @@ export default function AdminUtilisateurs() {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
-  const getFunnelBadge = (step: string) => {
-    const stepConfig = {
-      step1: { label: "Étape 1", className: "bg-blue-100 text-blue-800" },
-      step2: { label: "Étape 2", className: "bg-yellow-100 text-yellow-800" },
-      step3: { label: "Étape 3", className: "bg-orange-100 text-orange-800" },
-      abandoned: { label: "Abandonné", className: "bg-red-100 text-red-800" },
-      paid: { label: "Payé", className: "bg-green-100 text-green-800" }
-    };
-    
-    const config = stepConfig[step as keyof typeof stepConfig] || 
-                   { label: step, className: "bg-gray-100 text-gray-800" };
-    
-    return <Badge className={config.className}>{config.label}</Badge>;
-  };
-
   const filteredArtisans = artisans.filter(artisan =>
     artisan.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     artisan.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     artisan.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     artisan.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     artisan.city?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredProspects = prospects.filter(prospect =>
-    prospect.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    prospect.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    prospect.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    prospect.city?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -161,8 +109,8 @@ export default function AdminUtilisateurs() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Utilisateurs</h1>
-          <p className="text-gray-600">Gestion des artisans et prospects</p>
+          <h1 className="text-3xl font-bold text-gray-900">Artisans</h1>
+          <p className="text-gray-600">Gestion des artisans inscrits</p>
         </div>
         <Button onClick={loadData}>
           Actualiser
@@ -170,13 +118,13 @@ export default function AdminUtilisateurs() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center">
               <Building2 className="h-4 w-4 text-blue-600" />
               <div className="ml-2">
-                <p className="text-sm font-medium text-gray-600">Artisans</p>
+                <p className="text-sm font-medium text-gray-600">Total Artisans</p>
                 <p className="text-2xl font-bold">{artisans.length}</p>
               </div>
             </div>
@@ -185,18 +133,7 @@ export default function AdminUtilisateurs() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center">
-              <Users className="h-4 w-4 text-green-600" />
-              <div className="ml-2">
-                <p className="text-sm font-medium text-gray-600">Prospects</p>
-                <p className="text-2xl font-bold">{prospects.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center">
-              <UserCheck className="h-4 w-4 text-purple-600" />
+              <UserCheck className="h-4 w-4 text-green-600" />
               <div className="ml-2">
                 <p className="text-sm font-medium text-gray-600">Actifs</p>
                 <p className="text-2xl font-bold">
@@ -211,9 +148,9 @@ export default function AdminUtilisateurs() {
             <div className="flex items-center">
               <TrendingUp className="h-4 w-4 text-orange-600" />
               <div className="ml-2">
-                <p className="text-sm font-medium text-gray-600">Conversions</p>
+                <p className="text-sm font-medium text-gray-600">Total Leads</p>
                 <p className="text-2xl font-bold">
-                  {prospects.filter(p => p.funnelStep === 'paid').length}
+                  {artisans.reduce((total, a) => total + (a.totalLeads || 0), 0)}
                 </p>
               </div>
             </div>
@@ -236,113 +173,74 @@ export default function AdminUtilisateurs() {
         </CardContent>
       </Card>
 
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="artisans">
+      {/* Artisans List */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-gray-900">
             Artisans ({filteredArtisans.length})
-          </TabsTrigger>
-          <TabsTrigger value="prospects">
-            Prospects ({filteredProspects.length})
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="artisans" className="space-y-4">
-          {filteredArtisans.map((artisan) => (
-            <Card key={artisan.id}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Building2 className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {artisan.companyName || `${artisan.firstName} ${artisan.lastName}`}
-                      </h3>
-                      <p className="text-sm text-gray-600">{artisan.profession}</p>
-                      <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {artisan.email}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {artisan.phone}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {artisan.city}
-                        </span>
-                      </div>
-                    </div>
+          </h2>
+        </div>
+        
+        {filteredArtisans.map((artisan) => (
+          <Card key={artisan.id}>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Building2 className="h-6 w-6 text-blue-600" />
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="flex items-center gap-3">
-                      {getStatusBadge(artisan.subscriptionStatus)}
-                      <div className="text-sm font-medium">{artisan.totalLeads || 0} leads</div>
-                      <Button size="sm" variant="outline" asChild>
-                        <Link href={`/admin/utilisateurs/${artisan.id}`}>
-                          <Eye className="h-4 w-4 mr-1" />
-                          Voir
-                        </Link>
-                      </Button>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">
+                      {artisan.companyName || `${artisan.firstName} ${artisan.lastName}`}
+                    </h3>
+                    <p className="text-sm text-gray-600">{artisan.profession}</p>
+                    <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Mail className="h-3 w-3" />
+                        {artisan.email}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Phone className="h-3 w-3" />
+                        {artisan.phone}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {artisan.city}
+                      </span>
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-
-        <TabsContent value="prospects" className="space-y-4">
-          {filteredProspects.map((prospect) => (
-            <Card key={prospect.id}>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                      <Users className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">
-                        {prospect.firstName} {prospect.lastName}
-                      </h3>
-                      <p className="text-sm text-gray-600">{prospect.profession}</p>
-                      <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
-                        <span className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {prospect.email}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {prospect.phone}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          {prospect.city}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="flex items-center gap-3">
-                      {getFunnelBadge(prospect.funnelStep)}
-                      <div className="text-sm font-medium">{prospect.searchesLast24h || 0} recherches</div>
-                      <Button size="sm" variant="outline" asChild>
-                        <Link href={`/admin/utilisateurs/${prospect.id}`}>
-                          <Eye className="h-4 w-4 mr-1" />
-                          Voir
-                        </Link>
-                      </Button>
-                    </div>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex items-center gap-3">
+                    {getStatusBadge(artisan.subscriptionStatus)}
+                    <div className="text-sm font-medium">{artisan.totalLeads || 0} leads</div>
+                    <Button size="sm" variant="outline" asChild>
+                      <Link href={`/admin/utilisateurs/${artisan.id}`}>
+                        <Eye className="h-4 w-4 mr-1" />
+                        Voir
+                      </Link>
+                    </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-      </Tabs>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+        
+        {filteredArtisans.length === 0 && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun artisan trouvé</h3>
+                <p className="text-gray-600">
+                  {searchTerm ? "Essayez de modifier votre recherche" : "Aucun artisan inscrit pour le moment"}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

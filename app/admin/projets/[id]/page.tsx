@@ -27,8 +27,7 @@ import {
   FileText,
   Send,
   Download,
-  Eye,
-  Globe
+  Eye
 } from "lucide-react";
 
 interface Assignment {
@@ -221,36 +220,6 @@ export default function ProjetDetailPage() {
     }
   };
 
-  const togglePublishStatus = async (newPublishedStatus: boolean) => {
-    if (!estimation || !canEdit) return;
-
-    try {
-      const updateData: any = {
-        isPublished: newPublishedStatus,
-        updatedAt: new Date()
-      };
-
-      // Si on publie, ajouter la date de publication
-      if (newPublishedStatus) {
-        updateData.publishedAt = new Date();
-      } else {
-        // Si on dépublie, supprimer la date de publication
-        updateData.publishedAt = null;
-      }
-
-      await updateDoc(doc(db, "estimations", projetId), updateData);
-      
-      // Mettre à jour l'état local
-      setEstimation({
-        ...estimation,
-        isPublished: newPublishedStatus,
-        publishedAt: newPublishedStatus ? new Date() : null,
-        updatedAt: new Date()
-      });
-    } catch (error) {
-      console.error('Erreur lors de la publication:', error);
-    }
-  };
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
@@ -308,20 +277,6 @@ export default function ProjetDetailPage() {
         </div>
         
         <div className="flex items-center gap-4">
-          {canEdit && (
-            <div className="flex items-center gap-3">
-              <label htmlFor="publish-switch" className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                Publier le projet
-              </label>
-              <Switch
-                id="publish-switch"
-                checked={estimation.isPublished || false}
-                onCheckedChange={togglePublishStatus}
-              />
-            </div>
-          )}
-
           {estimation.status === 'completed' && (
             <Button variant="outline">
               <Send className="h-4 w-4 mr-2" />
@@ -506,21 +461,6 @@ export default function ProjetDetailPage() {
                     Envoyé le {estimation.sentAt?.toDate?.()?.toLocaleDateString('fr-FR')}
                   </div>
                 )}
-                <div className="flex items-center gap-2 mt-1">
-                  {estimation.isPublished ? (
-                    <>
-                      <Globe className="h-3 w-3 text-green-600" />
-                      <span className="text-green-600">
-                        Publié le {estimation.publishedAt?.toDate?.()?.toLocaleDateString('fr-FR') || 'Date inconnue'}
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Eye className="h-3 w-3 text-gray-400" />
-                      <span className="text-gray-500">Non publié</span>
-                    </>
-                  )}
-                </div>
                 <div className="mt-2">
                   Session ID: {estimation.sessionId}
                 </div>
