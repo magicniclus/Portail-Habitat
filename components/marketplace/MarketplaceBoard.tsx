@@ -585,13 +585,21 @@ export default function MarketplaceBoard({
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
-              <div className="text-sm text-blue-800">
-                <p className="font-medium mb-1">Comment ça marche ?</p>
-                <ul className="space-y-1 text-blue-700">
-                  <li>• Cliquez sur "Répondre" pour voir plus de détails et acheter le contact</li>
-                  <li>• Une fois acheté, vous recevrez les coordonnées complètes du client</li>
-                  <li>• Chaque demande est limitée à {leads[0]?.maxSales || 3} artisans maximum</li>
-                </ul>
+              <div className="flex-1">
+                <div className="text-sm text-blue-800">
+                  <p className="font-medium mb-1">Comment ça marche ?</p>
+                  <ul className="space-y-1 text-blue-700">
+                    <li>• Cliquez sur "Répondre" pour voir plus de détails et acheter le contact</li>
+                    <li>• Une fois acheté, vous recevrez les coordonnées complètes du client</li>
+                  </ul>
+                </div>
+                <div className="mt-3">
+                  <Link href="/dashboard/demandes?tab=bought">
+                    <Button variant="outline" size="sm" className="text-blue-700 border-blue-300 hover:bg-blue-100">
+                      Voir mes appels d'offres
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </CardContent>
