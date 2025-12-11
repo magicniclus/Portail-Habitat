@@ -4,9 +4,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { MapPin, ArrowRight } from 'lucide-react'
+import { getCoordinatesFromPostalCode, type Coordinates } from '@/lib/geo-utils'
 
 interface PostalCodeStepProps {
-  onNext: (postalCode: string, city: string) => void
+  onNext: (postalCode: string, city: string, coordinates?: Coordinates) => void
   onPrevious?: () => void
   initialValue?: string
 }
@@ -14,14 +15,16 @@ interface PostalCodeStepProps {
 export default function PostalCodeStep({ onNext, onPrevious, initialValue = '' }: PostalCodeStepProps) {
   const [postalCode, setPostalCode] = useState(initialValue)
   const [city, setCity] = useState('')
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Fonction pour valider et récupérer la ville
+  // Fonction pour valider et récupérer la ville + coordonnées
   const validatePostalCode = async (code: string) => {
     if (code.length !== 5 || !/^\d{5}$/.test(code)) {
       setError('Le code postal doit contenir 5 chiffres')
       setCity('')
+      setCoordinates(null)
       return false
     }
 
@@ -29,44 +32,38 @@ export default function PostalCodeStep({ onNext, onPrevious, initialValue = '' }
     setError('')
 
     try {
-      // Simulation d'appel API pour récupérer la ville
-      // En réalité, vous utiliseriez une vraie API comme l'API Géo du gouvernement français
-      const response = await fetch(`https://geo.api.gouv.fr/communes?codePostal=${code}&fields=nom,centre&format=json&geometry=centre`)
-      const data = await response.json()
+      const result = await getCoordinatesFromPostalCode(code)
       
-      if (data && data.length > 0) {
-        setCity(data[0].nom)
+      if (result) {
+        setCity(result.city)
+        setCoordinates(result.coordinates)
         setError('')
+        console.log(`📍 Coordonnées récupérées pour ${code}:`, result.coordinates)
         return true
       } else {
-        setError('Code postal non trouvé')
+        // Message d'erreur plus informatif selon le code postal
+        if (!/^[0-9]{5}$/.test(code)) {
+          setError('Le code postal doit contenir exactement 5 chiffres')
+        } else {
+          const dept = code.substring(0, 2)
+          if (code === '75000') {
+            setError('Code générique Paris détecté. Préférez un arrondissement (75001-75020) pour plus de précision.')
+          } else if (['76'].includes(dept) && code.endsWith('04')) {
+            setError('Ce code postal semble être un code spécial ou inexistant')
+          } else {
+            setError(`Code postal ${code} non reconnu. Vérifiez qu'il existe bien.`)
+          }
+        }
         setCity('')
+        setCoordinates(null)
         return false
       }
     } catch (err) {
-      // Fallback avec quelques codes postaux courants
-      const commonCities: { [key: string]: string } = {
-        '75001': 'Paris 1er',
-        '75002': 'Paris 2e',
-        '75003': 'Paris 3e',
-        '69001': 'Lyon 1er',
-        '13001': 'Marseille 1er',
-        '31000': 'Toulouse',
-        '44000': 'Nantes',
-        '59000': 'Lille',
-        '67000': 'Strasbourg',
-        '33000': 'Bordeaux'
-      }
-      
-      if (commonCities[code]) {
-        setCity(commonCities[code])
-        setError('')
-        return true
-      } else {
-        setError('Impossible de vérifier le code postal')
-        setCity('')
-        return false
-      }
+      console.error('Erreur validation code postal:', err)
+      setError('Impossible de vérifier le code postal')
+      setCity('')
+      setCoordinates(null)
+      return false
     } finally {
       setIsLoading(false)
     }
@@ -86,7 +83,7 @@ export default function PostalCodeStep({ onNext, onPrevious, initialValue = '' }
 
   const handleNext = () => {
     if (postalCode.length === 5 && city && !error) {
-      onNext(postalCode, city)
+      onNext(postalCode, city, coordinates || undefined)
     }
   }
 

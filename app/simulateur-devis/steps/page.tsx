@@ -29,6 +29,7 @@ interface ContactInfo {
 interface SimulatorData {
   postalCode?: string
   city?: string
+  coordinates?: { lat: number; lng: number }
   propertyType?: string
   selectedPrestation?: string
   projectDetails?: ProjectDetails
@@ -287,8 +288,9 @@ function SimulatorStepsContent() {
   }
 
   // Gestion de la navigation vers l'étape suivante
-  const handlePostalCodeNext = (postalCode: string, city: string) => {
-    const newData = { postalCode, city }
+  const handlePostalCodeNext = (postalCode: string, city: string, coordinates?: { lat: number; lng: number }) => {
+    const newData = { postalCode, city, coordinates }
+    console.log(' Sauvegarde des données de localisation:', newData)
     setSimulatorData(prev => ({ ...prev, ...newData }))
     updateURL(newData, 2)
     setCurrentStep(2)

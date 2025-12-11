@@ -50,9 +50,11 @@ export default function MarketplacePage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <MarketplaceBoard 
-        artisanProfessions={[]} // Passer un tableau vide pour afficher TOUTES les demandes
+        artisanProfessions={artisan.professions || []} // Utiliser les professions de l'artisan
         artisanId={artisan.id}
-        showAllLeads={true} // Nouveau prop pour indiquer qu'on veut tout voir
+        showAllLeads={true} // Afficher tous les projets par défaut (meilleure expérience utilisateur)
+        artisanCoordinates={artisan.coordinates} // Passer les coordonnées de l'artisan
+        artisanCity={artisan.city} // Passer la ville de l'artisan
       />
     </div>
   );

@@ -128,7 +128,7 @@ export default function ContactFormStep({
           postalCode: simulatorData?.postalCode || '',
           city: simulatorData?.city || '',
           department: simulatorData?.postalCode?.substring(0, 2) || '',
-          coordinates: null // À implémenter avec une API de géocodage
+          coordinates: simulatorData?.coordinates || null
         },
         
         project: {

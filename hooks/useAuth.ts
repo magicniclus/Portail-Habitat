@@ -13,6 +13,10 @@ interface ArtisanData {
   professions: string[];
   city: string;
   subscriptionStatus: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 interface UseAuthReturn {
@@ -46,7 +50,8 @@ export function useAuth(): UseAuthReturn {
               profession: artisanData.profession || '',
               professions: artisanData.professions || [],
               city: artisanData.city || '',
-              subscriptionStatus: artisanData.subscriptionStatus || 'inactive'
+              subscriptionStatus: artisanData.subscriptionStatus || 'inactive',
+              coordinates: artisanData.coordinates || undefined
             });
           } else {
             setArtisan(null);

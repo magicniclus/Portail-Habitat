@@ -21,7 +21,8 @@ import {
   Eye,
   Send,
   Download,
-  Building2
+  Building2,
+  ShoppingCart
 } from "lucide-react";
 
 interface Estimation {
@@ -52,6 +53,12 @@ interface Estimation {
     priceRange: { min: number; max: number };
     artisanCount: number;
   };
+  // Champs marketplace
+  isPublished?: boolean;
+  marketplaceStatus?: string;
+  marketplaceSales?: number;
+  maxSales?: number;
+  marketplacePrice?: number;
   createdAt: any;
   updatedAt?: any;
   sentAt?: any;
@@ -205,7 +212,7 @@ export default function ProjetsPage() {
       </div>
 
       {/* Statistiques rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -271,6 +278,22 @@ export default function ProjetsPage() {
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                <ShoppingCart className="h-5 w-5 text-orange-600" />
+              </div>
+              <div>
+                <div className="text-2xl font-bold text-orange-600">
+                  {estimations.filter(e => e.isPublished).length}
+                </div>
+                <div className="text-sm text-gray-600">Sur la bourse</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filtres */}
@@ -332,6 +355,13 @@ export default function ProjetsPage() {
                       {estimation.clientInfo?.firstName}
                     </h3>
                     {getStatusBadge(estimation.status)}
+                    {/* Indicateur bourse au travail */}
+                    {estimation.isPublished && (
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-800 flex items-center gap-1">
+                        <ShoppingCart className="h-3 w-3" />
+                        Bourse ({estimation.marketplaceSales || 0}/{estimation.maxSales || 3})
+                      </Badge>
+                    )}
                     {estimation.pricing?.estimatedPrice && (
                       <Badge variant="outline" className="text-green-600">
                         {formatPrice(estimation.pricing.estimatedPrice)}

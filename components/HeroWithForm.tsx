@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getCoordinatesFromPostalCode, type Coordinates } from "@/lib/geo-utils";
 
 export default function HeroWithForm() {
   const router = useRouter();
@@ -25,6 +26,10 @@ export default function HeroWithForm() {
     profession: "",
     acceptedTerms: false
   });
+
+  // États pour la géolocalisation
+  const [city, setCity] = useState("");
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
 
   // Charger les données depuis localStorage au montage
   useEffect(() => {
@@ -55,6 +60,33 @@ export default function HeroWithForm() {
     "Application mobile pour répondre instantanément"
   ];
 
+  // Fonction pour valider le code postal et récupérer les coordonnées
+  const validatePostalCode = async (postalCode: string) => {
+    if (postalCode.length === 5 && /^\d{5}$/.test(postalCode)) {
+      try {
+        console.log(`🌍 Récupération coordonnées pour code postal: ${postalCode}`);
+        const result = await getCoordinatesFromPostalCode(postalCode);
+        
+        if (result) {
+          setCity(result.city);
+          setCoordinates(result.coordinates);
+          console.log(`✅ Coordonnées récupérées:`, result);
+        } else {
+          setCity("");
+          setCoordinates(null);
+          console.log(`❌ Aucune coordonnée trouvée pour: ${postalCode}`);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des coordonnées:", error);
+        setCity("");
+        setCoordinates(null);
+      }
+    } else {
+      setCity("");
+      setCoordinates(null);
+    }
+  };
+
   // Fonction de soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,11 +102,15 @@ export default function HeroWithForm() {
         email: formData.email,
         phone: formData.phone,
         postalCode: formData.postalCode,
+        city: city || "",
+        coordinates: coordinates || null,
         profession: formData.profession,
         funnelStep: "step1",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
+
+      console.log("📍 Sauvegarde prospect avec coordonnées:", { city, coordinates });
 
       const docRef = await addDoc(collection(db, "prospects"), prospectData);
       const prospectId = docRef.id;
@@ -87,6 +123,8 @@ export default function HeroWithForm() {
         email: formData.email,
         phone: formData.phone,
         postalCode: formData.postalCode,
+        city: city || "",
+        coordinates: coordinates || null,
         profession: formData.profession,
         funnelStep: "step1",
         step: "1",
@@ -258,9 +296,23 @@ export default function HeroWithForm() {
                         maxLength={5}
                         pattern="[0-9]{5}"
                         value={formData.postalCode}
-                        onChange={(e) => setFormData({...formData, postalCode: e.target.value})}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 5);
+                          setFormData({...formData, postalCode: value});
+                          if (value.length === 5) {
+                            validatePostalCode(value);
+                          } else {
+                            setCity("");
+                            setCoordinates(null);
+                          }
+                        }}
                         required
                       />
+                      {city && (
+                        <p className="text-sm text-green-600 mt-1">
+                          📍 {city}
+                        </p>
+                      )}
                     </div>
                   </div>
 

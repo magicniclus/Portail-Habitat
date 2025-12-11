@@ -18,6 +18,12 @@ export interface MarketplaceLead {
   id: string;
   city: string;
   department: string;
+  location?: {
+    coordinates?: {
+      lat: number;
+      lng: number;
+    };
+  };
   projectType: string;
   prestationType: string;
   propertyType: string;
@@ -88,6 +94,9 @@ export async function getMarketplaceLeads(
         id: doc.id,
         city: data.location?.city || 'Ville non renseignée',
         department: data.location?.department || '',
+        location: data.location ? {
+          coordinates: data.location.coordinates
+        } : undefined,
         projectType: data.project?.prestationType || 'Projet non défini',
         prestationType: data.project?.prestationType || '',
         propertyType: data.project?.propertyType || '',

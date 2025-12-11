@@ -19,7 +19,7 @@ prospects (collection – tous les leads avant paiement)
     ├── city
     ├── postalCode
     ├── department
-    ├── coordinates { lat, lng }
+    ├── coordinates { lat, lng } ← récupérées automatiquement via Mapbox Geocoding API lors de la saisie du code postal
     ├── selectedZoneRadius (30 | 50 | 100)  → km
     ├── funnelStep ("step1" | "step2" | "step3" | "abandoned" | "paid")
     ├── abandonedAt (timestamp)
@@ -41,7 +41,7 @@ artisans
     ├── city
     ├── postalCode
     ├── fullAddress
-    ├── coordinates { lat, lng }
+    ├── coordinates { lat, lng } ← récupérées automatiquement via Mapbox Geocoding API
     ├── profession
     ├── professions []
     ├── description
@@ -286,7 +286,7 @@ estimations (collection - toutes les estimations générées par le simulateur)
     │   ├── postalCode              ← code postal du projet
     │   ├── city                    ← ville
     │   ├── department              ← département (calculé automatiquement)
-    │   └── coordinates { lat, lng } ← coordonnées géographiques
+    │   └── coordinates { lat, lng } ← coordonnées géographiques (récupérées automatiquement via Mapbox Geocoding API)
     │   }
     
     // PROJET
