@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { usePhoneTracking, useContactFormTracking } from "@/hooks/useArtisanTracking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -96,6 +97,32 @@ export default function FicheEntreprisePublic({
   const mainCardRef = useRef<HTMLDivElement>(null);
   const avisClientsSectionRef = useRef<HTMLDivElement>(null);
 
+  // Fonctions de tracking avec logs détaillés
+  const trackPhoneClick = async () => {
+    try {
+      console.log('📞 Début tracking clic téléphone pour:', entreprise.id);
+      const { trackPhoneClick: trackPhone } = await import('@/lib/artisan-analytics');
+      await trackPhone(entreprise.id);
+      console.log('✅ Clic téléphone tracké avec succès pour:', entreprise.id);
+    } catch (error) {
+      console.error('❌ Erreur tracking téléphone:', error);
+    }
+  };
+
+  const trackFormSubmission = async (formData: any) => {
+    try {
+      console.log('📧 Début tracking formulaire pour:', entreprise.id, formData);
+      const { trackFormSubmission: trackForm } = await import('@/lib/artisan-analytics');
+      await trackForm(entreprise.id, formData);
+      console.log('✅ Formulaire tracké avec succès pour:', entreprise.id);
+      return true;
+    } catch (error) {
+      console.error('❌ Erreur tracking formulaire:', error);
+      return false;
+    }
+  };
+
+
   // Récupérer les paramètres de confidentialité de l'artisan
   useEffect(() => {
     const fetchPrivacySettings = async () => {
@@ -189,6 +216,8 @@ export default function FicheEntreprisePublic({
     if (!showPhone) {
       setShowPhone(true);
     } else {
+      // Tracker le clic téléphone
+      trackPhoneClick();
       window.location.href = `tel:${entreprise.telephone}`;
     }
   };
@@ -214,6 +243,15 @@ export default function FicheEntreprisePublic({
     setIsSubmittingForm(true);
 
     try {
+      // Tracker la soumission du formulaire
+      await trackFormSubmission({
+        name: `${formData.prenom} ${formData.nom}`,
+        email: formData.email,
+        phone: formData.telephone,
+        message: formData.description || '',
+        projectType: 'Contact depuis fiche artisan'
+      });
+
       // Créer le lead dans la sous-collection de l'artisan
       const leadsRef = collection(db, 'artisans', entreprise.id, 'leads');
       

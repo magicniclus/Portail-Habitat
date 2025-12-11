@@ -45,6 +45,7 @@ import {
   ShoppingCart,
   Briefcase,
   Package,
+  BarChart3,
 } from "lucide-react";
 
 const navigation = [
@@ -80,6 +81,11 @@ const navigation = [
         title: "Avis",
         url: "/dashboard/avis",
         icon: Star,
+      },
+      {
+        title: "Analytics",
+        url: "/dashboard/analytics",
+        icon: BarChart3,
       },
       {
         title: "Contact & support",

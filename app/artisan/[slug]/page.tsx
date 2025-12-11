@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import FicheEntreprisePublic from "@/components/FicheEntreprisePublic";
+import { trackArtisanView } from "@/lib/artisan-analytics";
 import { doc, getDoc, query, where, collection, getDocs, onSnapshot } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -32,6 +33,28 @@ export default function ArtisanPage() {
   const [notFound, setNotFound] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [isArtisan, setIsArtisan] = useState(false);
+
+  // Tracking automatique de la vue de la fiche (après chargement de l'entreprise)
+  useEffect(() => {
+    if (entreprise?.id && !loading) {
+      console.log('🔍 Tracking vue pour artisan:', entreprise.id);
+      console.log('📊 Données entreprise:', { id: entreprise.id, nom: entreprise.nom });
+      
+      trackArtisanView(entreprise.id)
+        .then(() => {
+          console.log('✅ Vue trackée avec succès pour:', entreprise.id);
+        })
+        .catch((error) => {
+          console.error('❌ Erreur tracking vue:', error);
+        });
+    } else {
+      console.log('⏳ En attente de chargement:', { 
+        hasEntreprise: !!entreprise, 
+        hasId: !!entreprise?.id, 
+        loading 
+      });
+    }
+  }, [entreprise?.id, loading]);
 
   // Vérifier l'authentification
   useEffect(() => {

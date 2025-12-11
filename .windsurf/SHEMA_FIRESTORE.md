@@ -82,6 +82,16 @@ artisans
     │       ├── assignedAt       ← date d'attribution
     │       └── price            ← prix payé pour ce lead (optionnel)
     │       }
+    ├── analytics {              ← statistiques de la fiche artisan
+    │   ├── totalViews           ← nombre total de vues de la fiche
+    │   ├── totalPhoneClicks     ← nombre total de clics sur le téléphone
+    │   ├── totalFormSubmissions ← nombre total d'envois de formulaire
+    │   ├── viewsThisMonth       ← vues du mois en cours
+    │   ├── phoneClicksThisMonth ← clics téléphone du mois en cours
+    │   ├── formSubmissionsThisMonth ← formulaires du mois en cours
+    │   ├── lastViewedAt         ← dernière vue de la fiche
+    │   └── updatedAt            ← dernière mise à jour des stats
+    │   }
     ├── isPriority (true/false)
     ├── createdAt
     └── updatedAt
@@ -129,6 +139,25 @@ artisans
                     ├── text         string
                     ├── createdAt    timestamp
                     ├── isApproved   boolean (modération si besoin)
+
+    └── visitor_interactions/        ← sous-collection pour tracker les interactions visiteurs
+        └── {interactionId}
+            ├── type                 ← "view" | "phone_click" | "form_submission"
+            ├── timestamp            ← moment de l'interaction
+            ├── visitorId            ← identifiant unique du visiteur (sessionId ou fingerprint)
+            ├── userAgent            ← navigateur utilisé
+            ├── ipAddress            ← adresse IP du visiteur
+            ├── referrer             ← page de provenance
+            ├── deviceType           ← "mobile" | "tablet" | "desktop"
+            ├── utm_source           ← source marketing (si applicable)
+            ├── utm_medium           ← medium marketing (si applicable)
+            ├── utm_campaign         ← campagne marketing (si applicable)
+            └── formData {}          ← données du formulaire (seulement pour form_submission)
+                ├── name             ← nom du visiteur
+                ├── email            ← email du visiteur
+                ├── phone            ← téléphone du visiteur
+                ├── message          ← message du visiteur
+                └── projectType      ← type de projet (si applicable)
 
 payments
 └── {paymentId}
