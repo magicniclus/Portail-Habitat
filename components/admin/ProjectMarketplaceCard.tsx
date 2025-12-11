@@ -229,7 +229,7 @@ export default function ProjectMarketplaceCard({
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Globe className="h-5 w-5" />
-              Bourse au chantier
+              Appels d'offres
             </CardTitle>
             {getStatusBadge()}
           </div>
@@ -346,7 +346,7 @@ export default function ProjectMarketplaceCard({
           }`}>
             <div className="flex-1">
               <Label className="text-base font-medium">
-                Publier sur la bourse au chantier
+                Publier sur les appels d'offres
               </Label>
               <p className={`text-sm mt-1 ${
                 marketplacePrice === 0 || maxSales === 0 ? "text-red-600" : "text-gray-600"

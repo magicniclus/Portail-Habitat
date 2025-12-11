@@ -612,15 +612,15 @@ export default function FicheEntreprise({
               
               <div className="flex flex-wrap gap-2 items-center">
                 {entreprise.specialites.map((specialite, index) => (
-                  <Badge key={index} variant="secondary" className="text-sm group relative">
-                    {specialite}
+                  <Badge key={index} variant="secondary" className="text-sm group relative flex items-center justify-center">
+                    <span className="text-center">{specialite}</span>
                     {canEdit && (
                       <button
                         onClick={() => {
                           const newSpecialites = entreprise.specialites.filter((_, i) => i !== index);
                           onPrestationsChange?.(newSpecialites);
                         }}
-                        className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600"
+                        className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600 flex-shrink-0"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -891,15 +891,15 @@ export default function FicheEntreprise({
                 <h3 className="text-lg font-semibold">Certifications & Labels</h3>
                 <div className="flex flex-wrap gap-2 items-center">
                   {entreprise.certifications.map((certification, index) => (
-                    <Badge key={index} variant="outline" className="text-sm bg-green-50 text-green-700 border-green-200 group relative">
-                      {certification}
+                    <Badge key={index} variant="outline" className="text-sm bg-green-50 text-green-700 border-green-200 group relative flex items-center justify-center">
+                      <span className="text-center">{certification}</span>
                       {canEdit && (
                         <button
                           onClick={() => {
                             const newCertifications = entreprise.certifications.filter((_, i) => i !== index);
                             onCertificationsChange?.(newCertifications);
                           }}
-                          className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600"
+                          className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-600 flex-shrink-0"
                         >
                           <X className="h-3 w-3" />
                         </button>
@@ -927,8 +927,8 @@ export default function FicheEntreprise({
                 
                 <div className="flex flex-wrap gap-2">
                   {entreprise.zoneIntervention.map((zone, index) => (
-                    <Badge key={index} variant="outline" className="text-sm">
-                      {zone}
+                    <Badge key={index} variant="outline" className="text-sm flex items-center justify-center">
+                      <span className="text-center">{zone}</span>
                     </Badge>
                   ))}
                 </div>

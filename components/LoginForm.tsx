@@ -44,11 +44,11 @@ export default function LoginForm({
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Utilisateur connecté, rediriger vers le dashboard
+        // Utilisateur connecté, rediriger selon le type
         if (isProfessional) {
           router.push("/dashboard");
         } else {
-          router.push("/dashboard"); // Même redirection pour les particuliers
+          router.push("/"); // Redirection vers l'accueil pour les particuliers
         }
       } else {
         // Utilisateur non connecté, charger les identifiants sauvegardés
@@ -82,14 +82,7 @@ export default function LoginForm({
         localStorage.removeItem("rememberedPassword");
       }
 
-      // Connexion réussie - redirection automatique
-
-      // Redirection selon le type d'utilisateur
-      if (isProfessional) {
-        router.push("/dashboard");
-      } else {
-        router.push("/"); // ou une autre page pour les particuliers
-      }
+      // Connexion réussie - la redirection se fait automatiquement via onAuthStateChanged
     } catch (error: any) {
       console.error("Erreur de connexion:", error);
       
@@ -221,6 +214,25 @@ export default function LoginForm({
             >
               {linkText}
             </button>
+          </div>
+
+          {/* Lien de basculement entre espaces */}
+          <div className="text-center border-t pt-4">
+            {isProfessional ? (
+              <Link 
+                href="/connexion" 
+                className="text-sm text-gray-600 hover:text-gray-800 hover:underline"
+              >
+                Je suis un particulier →
+              </Link>
+            ) : (
+              <Link 
+                href="/connexion-pro" 
+                className="text-sm text-gray-600 hover:text-gray-800 hover:underline"
+              >
+                Je suis un professionnel →
+              </Link>
+            )}
           </div>
 
           <div className="text-center">

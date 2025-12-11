@@ -6,24 +6,77 @@ import { Input } from "@/components/ui/input";
 import { Search, MapPin, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getFilteredSuggestions, getPopularSuggestions } from '@/lib/renovation-suggestions';
 
 export default function Hero() {
-  const [projet, setProjet] = useState("");
-  const [localisation, setLocalisation] = useState("");
-  const [selectedLocation, setSelectedLocation] = useState<{
-    name: string;
-    coordinates: [number, number];
-  } | null>(null);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [projectInput, setProjectInput] = useState("");
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isLocationSelected, setIsLocationSelected] = useState(false);
+  const [hasSelectedSuggestion, setHasSelectedSuggestion] = useState(false);
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
+  // Gérer les suggestions
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setProjectInput(value);
+    setHasSelectedSuggestion(false); // Reset quand l'utilisateur tape
+    
+    if (value.length >= 2) {
+      const filteredSuggestions = getFilteredSuggestions(value, 8);
+      setSuggestions(filteredSuggestions);
+      setShowSuggestions(true);
+    } else if (value.length === 0) {
+      // Afficher les suggestions populaires si l'input est vide
+      const popularSuggestions = getPopularSuggestions(8);
+      setSuggestions(popularSuggestions);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  // Gérer le focus sur l'input
+  const handleInputFocus = () => {
+    if (projectInput.length === 0) {
+      // Afficher les suggestions populaires si l'input est vide
+      const popularSuggestions = getPopularSuggestions(8);
+      setSuggestions(popularSuggestions);
+      setShowSuggestions(true);
+    } else if (projectInput.length >= 2) {
+      // Afficher les suggestions filtrées si il y a du texte
+      const filteredSuggestions = getFilteredSuggestions(projectInput, 8);
+      setSuggestions(filteredSuggestions);
+      setShowSuggestions(true);
+    }
+  };
+
+  // Sélectionner une suggestion
+  const handleSuggestionClick = (suggestion: string) => {
+    setProjectInput(suggestion);
+    setShowSuggestions(false);
+    setHasSelectedSuggestion(true);
+  };
+
+  // Fonction pour créer l'URL vers le simulateur
+  const getSimulatorURL = () => {
+    if (projectInput) {
+      return `/simulateur-devis/steps?project=${encodeURIComponent(projectInput)}`;
+    }
+    return '/simulateur-devis/steps';
+  };
 
   // Fermer les suggestions quand on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (inputRef.current && !inputRef.current.parentElement?.contains(event.target as Node)) {
+      if (
+        inputRef.current && 
+        !inputRef.current.contains(event.target as Node) &&
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node)
+      ) {
         setShowSuggestions(false);
       }
     };
@@ -33,132 +86,6 @@ export default function Hero() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-
-  // Fonction pour rechercher des suggestions avec Mapbox
-  const searchLocations = async (query: string) => {
-    if (query.length < 3) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    // Vérifier que la clé API est disponible
-    const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
-    console.log('Mapbox token présent:', !!mapboxToken);
-    
-    if (!mapboxToken) {
-      console.error('Clé API Mapbox manquante - Ajoutez NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN dans votre fichier .env.local');
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    try {
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?` +
-        `access_token=${mapboxToken}&` +
-        `country=FR&` +
-        `types=place,locality,postcode&` +
-        `limit=5`;
-      
-      console.log('URL de recherche Mapbox:', url);
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        console.error(`Erreur API Mapbox: ${response.status} - ${response.statusText}`);
-        const errorText = await response.text();
-        console.error('Détails de l\'erreur:', errorText);
-        setSuggestions([]);
-        setShowSuggestions(false);
-        return;
-      }
-      
-      const data = await response.json();
-      console.log('Réponse complète Mapbox:', data);
-      console.log('Suggestions reçues:', data.features);
-      
-      if (data.features && data.features.length > 0) {
-        setSuggestions(data.features);
-        setShowSuggestions(true);
-      } else {
-        console.log('Aucune suggestion trouvée pour:', query);
-        setSuggestions([]);
-        setShowSuggestions(false);
-      }
-    } catch (error) {
-      console.error('Erreur lors de la recherche de localisation:', error);
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  };
-
-  // Debounce pour la recherche
-  useEffect(() => {
-    if (localisation.length >= 3 && !isLocationSelected) {
-      const timeoutId = setTimeout(() => {
-        console.log('Recherche API pour:', localisation);
-        searchLocations(localisation);
-      }, 300);
-      
-      return () => clearTimeout(timeoutId);
-    } else if (localisation.length < 3 && !isLocationSelected) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-    }
-  }, [localisation, isLocationSelected]);
-
-  // Gérer le changement de saisie
-  const handleLocationChange = (value: string) => {
-    console.log('Changement de saisie:', value);
-    setLocalisation(value);
-    setIsLocationSelected(false); // Reset la sélection quand on tape
-    console.log('isLocationSelected reset à false');
-  };
-
-  // Sélectionner une suggestion
-  const selectLocation = (feature: any) => {
-    const locationName = feature.place_name;
-    const coordinates = feature.center;
-    
-    console.log('Sélection de:', locationName, coordinates);
-    
-    // Marquer comme sélectionné AVANT de changer la localisation
-    setIsLocationSelected(true);
-    setSelectedLocation({
-      name: locationName,
-      coordinates: coordinates
-    });
-    setLocalisation(locationName);
-    setSuggestions([]);
-    setShowSuggestions(false);
-    
-    console.log('État après sélection - isLocationSelected:', true);
-  };
-
-  const handleSearch = () => {
-    // Vérifier qu'une localisation a été sélectionnée
-    if (!isLocationSelected || !selectedLocation) {
-      alert('Veuillez sélectionner une localisation dans la liste des suggestions.');
-      return;
-    }
-    
-    // Construire l'URL avec les paramètres de recherche
-    const params = new URLSearchParams();
-    
-    if (projet.trim()) {
-      params.set('projet', projet.trim());
-    }
-    params.set('localisation', localisation.trim());
-    
-    // Ajouter les coordonnées si disponibles
-    if (selectedLocation?.coordinates) {
-      params.set('lat', selectedLocation.coordinates[1].toString());
-      params.set('lng', selectedLocation.coordinates[0].toString());
-    }
-    
-    // Rediriger vers la page artisans avec les filtres
-    router.push(`/artisans?${params.toString()}`);
-  };
 
   return (
     <section className="w-screen min-h-[60vh] md:min-h-[80vh] flex flex-col lg:flex-row">
@@ -188,71 +115,71 @@ export default function Hero() {
                 Trouvez le bon artisan pour vos travaux
               </h1>
               <p className="text-lg sm:text-xl lg:text-2xl text-white/90 mb-6 lg:mb-8">
-                Que cherchez-vous ? Quel projet souhaitez-vous réaliser ?
+                Quel est votre projet ?
               </p>
               
-              {/* Formulaire de recherche */}
+              {/* Formulaire de recherche de projet */}
               <div className="bg-white rounded-lg p-4 sm:p-6 shadow-xl space-y-4">
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
                     Décrivez votre projet
                   </label>
                   <Input
-                    placeholder="Ex: pose de carrelage, rénovation salle de bain, extension..."
-                    value={projet}
-                    onChange={(e) => setProjet(e.target.value)}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 text-left">
-                    <MapPin className="inline h-4 w-4 mr-1" />
-                    Localisation
-                  </label>
-                  <Input
                     ref={inputRef}
-                    placeholder="Ville ou code postal"
-                    value={localisation}
-                    onChange={(e) => handleLocationChange(e.target.value)}
-                    className="w-full"
+                    placeholder="Ex: Rénovation salle de bain, cuisine, peinture..."
+                    value={projectInput}
+                    onChange={handleInputChange}
+                    onFocus={handleInputFocus}
+                    className="w-full text-lg"
                     autoComplete="off"
                   />
                   
                   {/* Suggestions dropdown */}
                   {showSuggestions && suggestions.length > 0 && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                    <div 
+                      ref={suggestionsRef}
+                      className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                    >
                       {suggestions.map((suggestion, index) => (
-                        <div
+                        <button
                           key={index}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            console.log('Clic sur suggestion:', suggestion.place_name);
-                            selectLocation(suggestion);
-                          }}
+                          onClick={() => handleSuggestionClick(suggestion)}
+                          className="w-full text-left px-4 py-3 hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg border-b border-gray-100 last:border-b-0 text-gray-900 text-sm"
                         >
-                          <div className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                            <span>{suggestion.place_name}</span>
-                          </div>
-                        </div>
+                          {suggestion}
+                        </button>
                       ))}
                     </div>
                   )}
                 </div>
                 
-                <Button 
-                  onClick={handleSearch}
-                  disabled={!isLocationSelected}
-                  className="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-lg py-3"
-                  size="lg"
-                  onMouseEnter={() => console.log('État bouton - isLocationSelected:', isLocationSelected, 'selectedLocation:', selectedLocation)}
-                >
-                  <Search className="mr-2 h-5 w-5" />
-                  <span className="lg:hidden">Rechercher</span>
-                  <span className="hidden lg:inline">Chercher parmi plus de 3 000 artisans</span>
-                </Button>
+                <Link href={getSimulatorURL()}>
+                  <Button 
+                    className="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-lg py-3"
+                    size="lg"
+                    disabled={!hasSelectedSuggestion}
+                  >
+                    <Search className="mr-2 h-5 w-5" />
+                    <span className="lg:hidden">Lancer mon estimation</span>
+                    <span className="hidden lg:inline">Lancer mon estimation gratuite</span>
+                  </Button>
+                </Link>
+              </div>
+              
+              {/* Tags de projets populaires */}
+              <div className="mt-6 flex flex-wrap gap-3 justify-center">
+                <span className="text-white/80 text-sm">Projets populaires :</span>
+                {['Cuisine', 'Salle de bain', 'Peinture', 'Électricité'].map((tag) => (
+                  <Link key={tag} href={`/simulateur-devis/steps?project=${encodeURIComponent(tag)}`}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                    >
+                      {tag}
+                    </Button>
+                  </Link>
+                ))}
               </div>
               
               {/* Stats */}

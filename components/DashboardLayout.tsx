@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import AuthGuard from "@/components/AuthGuard";
 import {
   Sidebar,
   SidebarContent,
@@ -48,7 +49,19 @@ import {
   BarChart3,
 } from "lucide-react";
 
-const navigation = [
+interface NavigationItem {
+  title: string;
+  url: string;
+  icon: any;
+  isSpecial?: boolean;
+}
+
+interface NavigationGroup {
+  title: string;
+  items: NavigationItem[];
+}
+
+const navigation: NavigationGroup[] = [
   {
     title: "Vue d'ensemble",
     items: [
@@ -63,19 +76,20 @@ const navigation = [
     title: "Gestion",
     items: [
       {
-        title: "Bourse au chantier",
+        title: "Appels d'offres",
         url: "/dashboard/marketplace",
         icon: ShoppingCart,
-      },
-      {
-        title: "Mes demandes",
-        url: "/dashboard/demandes",
-        icon: Mail,
+        isSpecial: true, // Pour appliquer la couleur orange
       },
       {
         title: "Ma fiche",
         url: "/dashboard/fiche",
         icon: IdCard,
+      },
+      {
+        title: "Mes demandes",
+        url: "/dashboard/demandes",
+        icon: Mail,
       },
       {
         title: "Avis",
@@ -120,9 +134,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <Sidebar>
+    <AuthGuard>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <Sidebar>
           <SidebarHeader>
             <div className="flex items-center gap-2 px-4 py-2">
               <Link href="/dashboard" className="flex items-center gap-2">
@@ -148,14 +163,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                       const isActive = pathname === item.url || 
                         (item.url !== '/dashboard' && pathname.startsWith(item.url));
                       
+                      // Classes spéciales pour les appels d'offres
+                      const specialClasses = item.isSpecial ? 
+                        "text-orange-600 hover:text-orange-700 hover:bg-orange-50 data-[active=true]:bg-orange-100 data-[active=true]:text-orange-700" : 
+                        "";
+                      
                       return (
                         <SidebarMenuItem key={item.title}>
                           <SidebarMenuButton
                             asChild
                             isActive={isActive}
+                            className={specialClasses}
                           >
                             <Link href={item.url}>
-                              <item.icon className="h-4 w-4" />
+                              <item.icon className={`h-4 w-4 ${item.isSpecial ? 'text-orange-600' : ''}`} />
                               <span>{item.title}</span>
                             </Link>
                           </SidebarMenuButton>
@@ -232,7 +253,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             {children}
           </div>
         </main>
-      </div>
-    </SidebarProvider>
+        </div>
+      </SidebarProvider>
+    </AuthGuard>
   );
 }

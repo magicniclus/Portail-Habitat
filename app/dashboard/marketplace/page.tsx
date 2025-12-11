@@ -38,7 +38,7 @@ export default function MarketplacePage() {
         <Alert className="border-yellow-200 bg-yellow-50">
           <AlertCircle className="h-4 w-4 text-yellow-600" />
           <AlertDescription className="text-yellow-700">
-            Vous devez être connecté en tant qu'artisan pour accéder à la bourse au chantier.
+            Vous devez être connecté en tant qu'artisan pour accéder aux appels d'offres.
           </AlertDescription>
         </Alert>
       </div>

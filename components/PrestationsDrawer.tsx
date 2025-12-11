@@ -15,73 +15,18 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Plus, Save } from "lucide-react";
+import { renovationPrestations } from "@/lib/renovation-suggestions";
 
 interface PrestationsDrawerProps {
   currentPrestations: string[];
   onSave: (prestations: string[]) => Promise<void>;
 }
 
-// Liste des prestations disponibles par défaut
-const PRESTATIONS_DISPONIBLES = [
-  "Aménagement pour personne à mobilité réduite",
-  "Bâtiment basse consommation",
-  "Boiserie murale",
-  "Briqueterie",
-  "Conception et construction de quai",
-  "Construction de balcon",
-  "Construction de béton",
-  "Construction de carport",
-  "Construction de cheminée",
-  "Construction de cuisine extérieure",
-  "Construction de fondations de maison",
-  "Construction de garage",
-  "Construction de mur de soutènement",
-  "Construction de pergola",
-  "Construction de terrasse",
-  "Construction de Tiny House",
-  "Construction écologique",
-  "Démolition",
-  "Désamiantage",
-  "Entreprises générales de bâtiment",
-  "Estimation travaux maison avant achat",
-  "Étanchéité",
-  "Étanchéité de cave",
-  "Extension de maison",
-  "Ignifugation",
-  "Installation d'éclairage",
-  "Installation d'allée carrossable en béton",
-  "Isolation des combles",
-  "Isolation par l'extérieur",
-  "Isolation phonique et acoustique",
-  "Isolation projetée",
-  "Maçonnerie",
-  "Maison d'architecte",
-  "Maison préfabriquée",
-  "Maîtrise d'œuvre",
-  "Nivellement du sol",
-  "Parement de brique",
-  "Plafonds tendus",
-  "Plan de masse pour permis de construire",
-  "Plans de chantier",
-  "Pose d'isolation",
-  "Pose de baignoire",
-  "Pose de carrelage",
-  "Préparation de chantier",
-  "Ragréage et terrassement",
-  "Ravalement de façade",
-  "Rénovation complète",
-  "Rénovation d'appartement",
-  "Rénovation de combles",
-  "Rénovation de cuisine",
-  "Rénovation de luxe",
-  "Rénovation de salle d'eau",
-  "Rénovation de salle de bain",
-  "Rénovation de toilettes",
-  "Restauration après dégât des eaux",
-  "Sablage",
-  "Surélévation",
-  "Traitement de l'humidité",
-];
+// Extraire les noms des prestations du simulateur (même liste que les suggestions)
+const PRESTATIONS_DISPONIBLES = renovationPrestations
+  .filter(prestation => prestation.questionnaire) // Seulement celles avec questionnaire
+  .map(prestation => prestation.nom)
+  .sort(); // Trier par ordre alphabétique
 
 export default function PrestationsDrawer({ currentPrestations, onSave }: PrestationsDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);

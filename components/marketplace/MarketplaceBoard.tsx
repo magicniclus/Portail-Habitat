@@ -262,11 +262,6 @@ export default function MarketplaceBoard({
   };
 
 
-  const getConfidenceColor = (score: number) => {
-    if (score >= 80) return "text-green-600 bg-green-50";
-    if (score >= 60) return "text-yellow-600 bg-yellow-50";
-    return "text-red-600 bg-red-50";
-  };
 
 
   if (error) {
@@ -289,7 +284,7 @@ export default function MarketplaceBoard({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Bourse au chantier</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Appels d'offres</h2>
           <p className="text-gray-600">
             {leads.length} demande{leads.length > 1 ? 's' : ''} disponible{leads.length > 1 ? 's' : ''}
             {showAllLeads ? (
@@ -447,7 +442,7 @@ export default function MarketplaceBoard({
             <p className="text-gray-500 mb-6">
               {artisanProfessions.length > 0 
                 ? "Aucune demande ne correspond à vos spécialités pour le moment."
-                : "Aucune demande n'est actuellement publiée sur la bourse au chantier."
+                : "Aucune demande n'est actuellement publiée dans les appels d'offres."
               }
             </p>
             <Button onClick={loadLeads} variant="outline">
@@ -534,13 +529,10 @@ export default function MarketplaceBoard({
                   {/* Estimation de prix */}
                   <div className="bg-blue-50 rounded-lg p-3">
                     <div className="text-sm text-gray-600 mb-1">Estimation du projet</div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center">
                       <span className="text-lg font-bold text-blue-600">
                         {formatPrice(lead.estimationLow)} - {formatPrice(lead.estimationHigh)}
                       </span>
-                      <Badge className={`${getConfidenceColor(lead.confidenceScore)} text-xs`}>
-                        {lead.confidenceScore}% fiable
-                      </Badge>
                     </div>
                   </div>
 
