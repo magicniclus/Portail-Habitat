@@ -214,10 +214,11 @@ export default function FicheEntreprisePublic({
 
   const handlePhoneClick = () => {
     if (!showPhone) {
+      // Tracker quand l'utilisateur révèle le numéro (plus pertinent)
+      trackPhoneClick();
       setShowPhone(true);
     } else {
-      // Tracker le clic téléphone
-      trackPhoneClick();
+      // Juste ouvrir l'appel sans tracking supplémentaire
       window.location.href = `tel:${entreprise.telephone}`;
     }
   };
