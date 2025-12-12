@@ -10,8 +10,7 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { Badge } from "@/components/ui/badge";
-import { Crown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Building } from "lucide-react";
 
 interface PremiumBannerProps {
   bannerPhotos: string[];
@@ -78,7 +77,7 @@ export default function PremiumBanner({
       <div className={`relative w-full bg-gradient-to-r from-gray-100 to-gray-200 overflow-hidden rounded-lg ${className}`}>
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <Crown className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+            <Building className="h-12 w-12 text-gray-400 mx-auto mb-2" />
             <p className="text-gray-500 text-sm">Aucune photo de bannière</p>
           </div>
         </div>
@@ -94,43 +93,40 @@ export default function PremiumBanner({
 
     return (
       <div className={`relative w-full overflow-hidden rounded-lg ${className}`}>
-        {/* Badge Premium */}
-        <div className="absolute top-4 left-4 z-10">
-          <div className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1 shadow-lg">
-            <Crown className="h-4 w-4" />
-            Premium
-          </div>
+        <div className="relative w-full h-96 overflow-hidden">
+          {/* Skeleton pendant le chargement */}
+          {loadingStates[media] && (
+            <Skeleton className="w-full h-full" />
+          )}
+
+          {/* Média unique */}
+          {isVideo ? (
+            <video
+              src={media}
+              className="w-full h-full object-cover"
+              autoPlay
+              muted
+              loop
+              onLoadStart={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
+              style={{ 
+                display: loadingStates[media] ? 'none' : 'block',
+                objectPosition: 'center center'
+              }}
+            />
+          ) : (
+            <img
+              src={media}
+              alt={`${companyName} - Image premium`}
+              className="w-full h-full object-cover"
+              onLoad={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
+              onError={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
+              style={{ 
+                display: loadingStates[media] ? 'none' : 'block',
+                objectPosition: 'center center'
+              }}
+            />
+          )}
         </div>
-
-        {/* Skeleton pendant le chargement */}
-        {loadingStates[media] && (
-          <Skeleton className="w-full h-full" />
-        )}
-
-        {/* Média unique */}
-        {isVideo ? (
-          <video
-            src={media}
-            className="w-full h-full object-cover"
-            autoPlay
-            muted
-            loop
-            onLoadStart={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-            style={{ display: loadingStates[media] ? 'none' : 'block' }}
-          />
-        ) : (
-          <img
-            src={media}
-            alt={`${companyName} - Image premium`}
-            className="w-full h-full object-cover"
-            onLoad={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-            onError={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-            style={{ 
-              display: loadingStates[media] ? 'none' : 'block',
-              objectPosition: 'center center'
-            }}
-          />
-        )}
       </div>
     );
   }
@@ -138,14 +134,6 @@ export default function PremiumBanner({
   // Plusieurs médias : utiliser le carousel
   return (
     <div className={`relative w-full overflow-hidden rounded-lg ${className}`}>
-      {/* Badge Premium */}
-      <div className="absolute top-4 right-4 z-20">
-        <Badge className="bg-gradient-to-r from-yellow-400 to-yellow-500 text-white border-yellow-300 shadow-lg">
-          <Crown className="h-3 w-3 mr-1" />
-          Premium
-        </Badge>
-      </div>
-
       {/* Indicateur de position */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
         <div className="flex space-x-2">
@@ -174,35 +162,40 @@ export default function PremiumBanner({
 
             return (
               <CarouselItem key={index} className="relative w-full h-full">
-                {/* Skeleton pendant le chargement */}
-                {loadingStates[media] && (
-                  <Skeleton className="w-full h-full" />
-                )}
+                <div className="relative w-full h-96 overflow-hidden">
+                  {/* Skeleton pendant le chargement */}
+                  {loadingStates[media] && (
+                    <Skeleton className="w-full h-full" />
+                  )}
 
-                {/* Contenu du slide */}
-                {isVideo ? (
-                  <video
-                    src={media}
-                    className="w-full h-full object-cover"
-                    autoPlay={currentIndex === index}
-                    muted
-                    loop
-                    onLoadStart={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-                    style={{ display: loadingStates[media] ? 'none' : 'block' }}
-                  />
-                ) : (
-                  <img
-                    src={media}
-                    alt={`${companyName} - Image ${index + 1}`}
-                    className="w-full h-full object-cover"
-                    onLoad={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-                    onError={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-                    style={{ 
-                      display: loadingStates[media] ? 'none' : 'block',
-                      objectPosition: 'center center'
-                    }}
-                  />
-                )}
+                  {/* Contenu du slide */}
+                  {isVideo ? (
+                    <video
+                      src={media}
+                      className="w-full h-full object-cover"
+                      autoPlay={currentIndex === index}
+                      muted
+                      loop
+                      onLoadStart={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
+                      style={{ 
+                        display: loadingStates[media] ? 'none' : 'block',
+                        objectPosition: 'center center'
+                      }}
+                    />
+                  ) : (
+                    <img
+                      src={media}
+                      alt={`${companyName} - Image ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      onLoad={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
+                      onError={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
+                      style={{ 
+                        display: loadingStates[media] ? 'none' : 'block',
+                        objectPosition: 'center center'
+                      }}
+                    />
+                  )}
+                </div>
               </CarouselItem>
             );
           })}

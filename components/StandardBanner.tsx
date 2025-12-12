@@ -43,23 +43,25 @@ export default function StandardBanner({
 
   return (
     <div className={`relative w-full overflow-hidden rounded-lg ${className}`}>
-      {/* Skeleton pendant le chargement */}
-      {isLoading && (
-        <Skeleton className="w-full h-full" />
-      )}
+      <div className="relative w-full h-96 overflow-hidden">
+        {/* Skeleton pendant le chargement */}
+        {isLoading && (
+          <Skeleton className="w-full h-full" />
+        )}
 
-      {/* Image de couverture */}
-      <img
-        src={coverUrl}
-        alt={`Couverture ${companyName}`}
-        className="w-full h-full object-cover"
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-        style={{ 
-          display: isLoading ? 'none' : 'block',
-          objectPosition: 'center center'
-        }}
-      />
+        {/* Image de couverture */}
+        <img
+          src={coverUrl}
+          alt={`Couverture ${companyName}`}
+          className="w-full h-full object-cover"
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+          style={{ 
+            display: isLoading ? 'none' : 'block',
+            objectPosition: 'center center'
+          }}
+        />
+      </div>
     </div>
   );
 }

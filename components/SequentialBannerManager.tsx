@@ -40,8 +40,9 @@ export default function SequentialBannerManager({
   const [bannerPhotos, setBannerPhotos] = useState(entreprise.premiumFeatures?.bannerPhotos || []);
   const maxSteps = 5;
 
-  // Créer un tableau de 5 slots (photos existantes + slots vides)
-  const allSlots = Array.from({ length: maxSteps }, (_, index) => bannerPhotos[index] || null);
+  // Créer un tableau limité aux photos existantes + 1 slot vide (max 5)
+  const availableSlots = Math.min(bannerPhotos.length + 1, maxSteps);
+  const allSlots = Array.from({ length: availableSlots }, (_, index) => bannerPhotos[index] || null);
 
   // Synchroniser avec les props quand l'entreprise change
   useEffect(() => {
@@ -168,11 +169,10 @@ export default function SequentialBannerManager({
         onUpdate(updatedEntreprise);
       }
 
-      // Si on supprime l'image actuelle et qu'on est au-delà du nombre d'images restantes
-      if (currentIndex >= updatedPhotos.length && updatedPhotos.length > 0) {
-        goToSlide(updatedPhotos.length - 1);
-      } else if (updatedPhotos.length === 0) {
-        goToSlide(0); // Retourner au premier slide (vide)
+      // Si on supprime l'image actuelle et qu'on est au-delà du nombre de slots disponibles
+      const newAvailableSlots = Math.min(updatedPhotos.length + 1, maxSteps);
+      if (currentIndex >= newAvailableSlots) {
+        goToSlide(Math.max(0, newAvailableSlots - 1));
       }
     } catch (error) {
       console.error('Erreur lors de la suppression de l\'image:', error);
@@ -289,7 +289,7 @@ export default function SequentialBannerManager({
       {/* Dots de navigation en bas */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20">
         <div className="flex space-x-2">
-          {Array.from({ length: Math.min(bannerPhotos.length + 1, maxSteps) }, (_, index) => (
+          {Array.from({ length: availableSlots }, (_, index) => (
             <button
               key={index}
               className={`w-2 h-2 rounded-full transition-all duration-200 ${
