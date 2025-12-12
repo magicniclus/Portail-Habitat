@@ -15,6 +15,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { filterArtisansByDistance } from "@/lib/geo-utils";
 import { renovationPrestations } from "@/lib/renovation-suggestions";
+import { filterAndSortArtisans, getFilteringStats } from "@/lib/artisan-filtering-algorithm";
+import TopArtisanBadge from "@/components/TopArtisanBadge";
 
 interface Artisan {
   id: string;
@@ -41,6 +43,16 @@ interface Artisan {
   // Propriétés ajoutées pour corriger les erreurs TypeScript
   isPromo?: boolean;
   distance?: number;
+  premiumFeatures?: {
+    isPremium: boolean;
+    premiumStartDate?: any;
+    premiumEndDate?: any;
+    premiumType?: 'monthly' | 'yearly' | 'lifetime';
+    bannerPhotos?: string[];
+    bannerVideo?: string;
+    showTopArtisanBadge?: boolean;
+    premiumBenefits?: string[];
+  };
 }
 
 export default function ArtisansClient() {
@@ -58,7 +70,7 @@ export default function ArtisansClient() {
   const [isArtisan, setIsArtisan] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 16;
+  const itemsPerPage = 10;
   const [hasUrlParams, setHasUrlParams] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
@@ -415,83 +427,26 @@ export default function ArtisansClient() {
     fetchArtisans();
   }, []);
 
-  // Filtrer les artisans selon les critères de recherche avec logique de fallback
-  const filteredArtisans = useMemo(() => {
-    // Si aucun critère de recherche, retourner tous les artisans
-    if (!secteurSearch.trim() && !prestationSearch.trim()) {
-      return artisans;
-    }
+  // Utiliser le nouvel algorithme de filtrage et tri
+  const filteredResult = useMemo(() => {
+    const criteria = {
+      secteurSearch,
+      prestationSearch,
+      selectedSecteur,
+      selectedPrestation
+    };
 
-    // Nouveau système avec secteur et prestation séparés
-    const secteurLower = secteurSearch.toLowerCase().trim();
-    const prestationLower = prestationSearch.toLowerCase().trim();
+    return filterAndSortArtisans(artisans, criteria, currentPage, itemsPerPage);
+  }, [artisans, secteurSearch, prestationSearch, selectedSecteur, selectedPrestation, currentPage, itemsPerPage]);
 
-    // Filtrer par secteur
-    let secteurFiltered = artisans;
-    if (secteurLower) {
-      if (selectedSecteur) {
-        // Si une ville spécifique est sélectionnée, utiliser la recherche géographique (70km)
-        secteurFiltered = filterArtisansByDistance(artisans, selectedSecteur.lat, selectedSecteur.lng, 70);
-      } else {
-        // Sinon, recherche textuelle classique
-        secteurFiltered = artisans.filter(artisan => 
-          artisan.city?.toLowerCase().includes(secteurLower)
-        );
-      }
-    }
+  // Extraire les données du résultat
+  const filteredArtisans = filteredResult.artisans;
+  const totalCount = filteredResult.totalCount;
+  const hasRandomPremium = filteredResult.hasRandomPremium;
 
-    // Filtrer par prestation
-    let prestationFiltered = artisans;
-    if (prestationLower) {
-      prestationFiltered = artisans.filter(artisan => 
-        artisan.profession?.toLowerCase().includes(prestationLower) ||
-        artisan.professions?.some(prof => prof.toLowerCase().includes(prestationLower)) ||
-        artisan.companyName?.toLowerCase().includes(prestationLower)
-      );
-    }
-
-    // Logique de fallback selon les critères demandés
-    if (secteurLower && prestationLower) {
-      // 1. Essayer secteur + prestation
-      const bothMatch = secteurFiltered.filter(artisan => 
-        prestationFiltered.includes(artisan)
-      );
-      if (bothMatch.length > 0) {
-        return bothMatch;
-      }
-      
-      // 2. Si pas de résultat, prendre tous ceux du secteur
-      if (secteurFiltered.length > 0) {
-        return secteurFiltered;
-      }
-      
-      // 3. Si pas de secteur, prendre tous ceux de la prestation
-      if (prestationFiltered.length > 0) {
-        return prestationFiltered;
-      }
-      
-      // 4. Sinon retourner tous les artisans
-      return artisans;
-    }
-    
-    // Si seulement secteur
-    if (secteurLower && !prestationLower) {
-      return secteurFiltered.length > 0 ? secteurFiltered : artisans;
-    }
-    
-    // Si seulement prestation
-    if (!secteurLower && prestationLower) {
-      return prestationFiltered.length > 0 ? prestationFiltered : artisans;
-    }
-
-    return artisans;
-  }, [artisans, secteurSearch, prestationSearch]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredArtisans.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedArtisans = filteredArtisans.slice(startIndex, endIndex);
+  // Pagination basée sur le total count
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const paginatedArtisans = filteredArtisans; // Déjà paginé par l'algorithme
 
   // Ajouter une carte promotionnelle si pas de recherche manuelle et pas artisan connecté
   const artisansWithPromo = useMemo(() => {
@@ -657,7 +612,7 @@ export default function ArtisansClient() {
               {/* Nombre de résultats */}
               <div className="mb-6">
                 <p className="text-gray-600">
-                  {filteredArtisans.length} artisan{filteredArtisans.length > 1 ? 's' : ''} trouvé{filteredArtisans.length > 1 ? 's' : ''}
+                  {totalCount} artisan{totalCount > 1 ? 's' : ''} trouvé{totalCount > 1 ? 's' : ''}
                   {secteurSearch && prestationSearch && ` pour "${prestationSearch}" dans "${secteurSearch}"`}
                   {secteurSearch && !prestationSearch && ` dans le secteur "${secteurSearch}"`}
                   {!secteurSearch && prestationSearch && ` pour "${prestationSearch}"`}
@@ -738,6 +693,17 @@ export default function ArtisansClient() {
                         <div className="overflow-hidden hover:shadow-xl transition-shadow duration-300 group rounded-lg bg-white border border-gray-200">
                           {/* Image de couverture */}
                           <div className="relative h-48 bg-gray-200">
+                            
+                            {/* Badge Top Artisan en haut à droite */}
+                            {artisan.premiumFeatures?.isPremium && 
+                             (artisan.premiumFeatures as any)?.showTopArtisanBadge && (
+                              <div className="absolute top-2 right-2 z-10">
+                                <TopArtisanBadge 
+                                  size="sm" 
+                                  variant="compact"
+                                />
+                              </div>
+                            )}
                             {artisan.coverUrl ? (
                               <Image
                                 src={artisan.coverUrl}

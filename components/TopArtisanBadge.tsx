@@ -1,6 +1,6 @@
 "use client";
 
-import { Hammer } from "lucide-react";
+import { Crown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface TopArtisanBadgeProps {
@@ -29,28 +29,38 @@ export default function TopArtisanBadge({
 
   if (variant === "compact") {
     return (
-      <div className={`inline-flex items-center gap-1 ${className}`}>
-        <Hammer className={`${iconSizes[size]} text-yellow-500`} />
-        {size !== "sm" && (
-          <span className="text-yellow-600 font-semibold text-xs">TOP ARTISAN</span>
-        )}
-      </div>
+      <Badge 
+        className={`
+          bg-yellow-500 
+          text-white 
+          border-yellow-400 
+          shadow-sm 
+          font-semibold 
+          inline-flex items-center gap-1
+          ${sizeClasses[size]} 
+          ${className}
+        `}
+      >
+        <Crown className={`${iconSizes[size]}`} />
+        Top Artisan
+      </Badge>
     );
   }
 
   return (
     <Badge 
       className={`
-        bg-gradient-to-r from-yellow-400 to-yellow-500 
+        bg-yellow-500 
         text-white 
-        border-yellow-300 
+        border-yellow-400 
         shadow-md 
         font-semibold 
+        inline-flex items-center gap-1
         ${sizeClasses[size]} 
         ${className}
       `}
     >
-      <Hammer className={`${iconSizes[size]} mr-1`} />
+      <Crown className={`${iconSizes[size]}`} />
       Top Artisan
     </Badge>
   );
