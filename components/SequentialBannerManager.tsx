@@ -43,6 +43,14 @@ export default function SequentialBannerManager({
   // Créer un tableau limité aux photos existantes + 1 slot vide (max 5)
   const availableSlots = Math.min(bannerPhotos.length + 1, maxSteps);
   const allSlots = Array.from({ length: availableSlots }, (_, index) => bannerPhotos[index] || null);
+  
+  // Debug pour voir l'état
+  console.log('Debug SequentialBannerManager:', {
+    bannerPhotosLength: bannerPhotos.length,
+    availableSlots,
+    allSlotsLength: allSlots.length,
+    bannerPhotos
+  });
 
   // Synchroniser avec les props quand l'entreprise change
   useEffect(() => {
@@ -76,6 +84,8 @@ export default function SequentialBannerManager({
 
   // Fonction pour ajouter une image
   const handleAddMedia = async (file: File) => {
+    console.log('handleAddMedia appelé avec:', { file: file.name, currentLength: bannerPhotos.length });
+    
     if (bannerPhotos.length >= 5) {
       alert('Maximum 5 images autorisées');
       return;
@@ -248,8 +258,8 @@ export default function SequentialBannerManager({
                     )}
                   </div>
                 ) : (
-                  // Slide vide avec icône d'ajout (seulement si accessible)
-                  index <= bannerPhotos.length ? (
+                  // Slide vide avec icône d'ajout (seulement si on peut encore ajouter des images)
+                  index === bannerPhotos.length && bannerPhotos.length < maxSteps ? (
                     <div 
                       className="absolute inset-0 flex items-center justify-center cursor-pointer hover:bg-white/90 transition-all duration-300 ease-out"
                       onClick={() => triggerFileInput()}
@@ -261,7 +271,7 @@ export default function SequentialBannerManager({
                       </div>
                     </div>
                   ) : (
-                    // Slide non accessible
+                    // Slide non accessible ou maximum atteint
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
                         <div className="h-16 w-16 bg-gray-200 rounded-full mx-auto flex items-center justify-center">

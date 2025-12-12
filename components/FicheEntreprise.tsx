@@ -37,6 +37,7 @@ import RequestReviewsModal from "./RequestReviewsModal";
 import TopArtisanBadge from "./TopArtisanBadge";
 import { isPremiumActive } from "@/lib/premium-utils";
 import SequentialBannerManager from "./SequentialBannerManager";
+import StandardBannerManager from "./StandardBannerManager";
 
 interface FicheEntrepriseProps {
   entreprise: {
@@ -570,12 +571,23 @@ export default function FicheEntreprise({
 
       {/* Bannière */}
       <div className="relative">
-        <SequentialBannerManager 
-          entreprise={entreprise} 
-          className="h-96" 
-          canEdit={canEdit}
-          onUpdate={onEntrepriseUpdate}
-        />
+        {/* Vérifier si l'artisan est premium pour choisir le bon composant */}
+        {entreprise.premiumFeatures && isPremiumActive({ id: entreprise.id, premiumFeatures: entreprise.premiumFeatures }) ? (
+          <SequentialBannerManager 
+            entreprise={entreprise} 
+            className="h-96" 
+            canEdit={canEdit}
+            onUpdate={onEntrepriseUpdate}
+          />
+        ) : (
+          <StandardBannerManager 
+            entreprise={entreprise} 
+            className="h-96" 
+            canEdit={canEdit}
+            onUpdate={onEntrepriseUpdate}
+            onCoverChange={onCoverChange}
+          />
+        )}
 
         {/* Badge aperçu */}
         {isPreview && (
