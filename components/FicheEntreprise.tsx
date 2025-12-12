@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { collection, addDoc, updateDoc, doc, increment, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { addPremiumBannerPhoto, uploadPremiumBannerPhotos } from '@/lib/storage';
 import { sendLeadNotificationIfAllowed } from '@/lib/notification-service';
 import { getArtisanPreferencesWithDefaults } from '@/lib/artisan-preferences';
 import ZoneInterventionMap from "./ZoneInterventionMap";
@@ -33,6 +34,9 @@ import CertificationsDrawer from "./CertificationsDrawer";
 import AddProjectModal from "./AddProjectModal";
 import ProjectCard from "./ProjectCard";
 import RequestReviewsModal from "./RequestReviewsModal";
+import TopArtisanBadge from "./TopArtisanBadge";
+import { isPremiumActive } from "@/lib/premium-utils";
+import SequentialBannerManager from "./SequentialBannerManager";
 
 interface FicheEntrepriseProps {
   entreprise: {
@@ -52,12 +56,15 @@ interface FicheEntrepriseProps {
     zoneIntervention: string[];
     averageQuoteMin?: number;
     averageQuoteMax?: number;
+    premiumFeatures?: any;
   };
   showContactForm?: boolean;
   isPreview?: boolean;
   canEdit?: boolean;
   onCoverChange?: (file: File) => Promise<void>;
   onLogoChange?: (file: File) => Promise<void>;
+  onBannerPhotosChange?: (files: File[]) => Promise<void>;
+  onEntrepriseUpdate?: (updatedEntreprise: any) => void;
   onDescriptionChange?: (description: string) => Promise<void>;
   onPrestationsChange?: (prestations: string[]) => Promise<void>;
   onQuoteRangeChange?: (min: number, max: number) => Promise<void>;
@@ -92,6 +99,8 @@ export default function FicheEntreprise({
   canEdit = false,
   onCoverChange,
   onLogoChange,
+  onBannerPhotosChange,
+  onEntrepriseUpdate,
   onDescriptionChange,
   onPrestationsChange,
   onQuoteRangeChange,
@@ -106,6 +115,7 @@ export default function FicheEntreprise({
   const [showPhone, setShowPhone] = useState(false);
   const [isUploadingCover, setIsUploadingCover] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingBannerPhotos, setIsUploadingBannerPhotos] = useState(false);
   const [privacySettings, setPrivacySettings] = useState({
     profileVisible: true,
     showPhone: true,
@@ -114,6 +124,11 @@ export default function FicheEntreprise({
   });
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [tempDescription, setTempDescription] = useState(entreprise.description);
+  
+  // Vérifier si l'artisan est premium et a le badge activé
+  const shouldShowTopBadge = entreprise.premiumFeatures && 
+    isPremiumActive({ id: entreprise.id, premiumFeatures: entreprise.premiumFeatures }) && 
+    entreprise.premiumFeatures.showTopArtisanBadge;
   const [isSavingDescription, setIsSavingDescription] = useState(false);
   const [isCoverLoading, setIsCoverLoading] = useState(true);
   const [isLogoLoading, setIsLogoLoading] = useState(true);
@@ -134,6 +149,7 @@ export default function FicheEntreprise({
   const [cardLeft, setCardLeft] = useState(0);
   const coverInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerPhotosInputRef = useRef<HTMLInputElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -311,7 +327,17 @@ export default function FicheEntreprise({
   };
 
   const handleCoverClick = () => {
-    if (canEdit && coverInputRef.current) {
+    if (!canEdit) return;
+    
+    // Vérifier si l'artisan est premium
+    const isArtisanPremium = entreprise.premiumFeatures && 
+      isPremiumActive({ id: entreprise.id, premiumFeatures: entreprise.premiumFeatures });
+    
+    if (isArtisanPremium && bannerPhotosInputRef.current) {
+      // Artisan premium : ouvrir le sélecteur de photos multiples
+      bannerPhotosInputRef.current.click();
+    } else if (coverInputRef.current) {
+      // Artisan standard : ouvrir le sélecteur de photo unique
       coverInputRef.current.click();
     }
   };
@@ -384,6 +410,55 @@ export default function FicheEntreprise({
       // Reset input pour permettre de sélectionner le même fichier
       if (logoInputRef.current) {
         logoInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Fonction pour gérer l'upload des photos de bannière premium
+  const handleBannerPhotosFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Vérifications
+    if (files.length > 5) {
+      alert('Maximum 5 photos de bannière autorisées.');
+      return;
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        alert('Format de fichier non supporté. Utilisez JPG, PNG ou WebP.');
+        return;
+      }
+      if (file.size > maxSize) {
+        alert('Un fichier est trop volumineux. Taille maximale : 5MB par fichier.');
+        return;
+      }
+    }
+
+    try {
+      setIsUploadingBannerPhotos(true);
+      
+      // Utiliser le callback si disponible, sinon upload direct
+      if (onBannerPhotosChange) {
+        await onBannerPhotosChange(files);
+      } else {
+        // Upload direct (fallback)
+        await uploadPremiumBannerPhotos(entreprise.id, files);
+      }
+
+      alert(`${files.length} photo(s) de bannière uploadée(s) avec succès !`);
+    } catch (error) {
+      console.error('Erreur lors de l\'upload des photos de bannière:', error);
+      alert('Erreur lors de l\'upload des photos de bannière. Veuillez réessayer.');
+    } finally {
+      setIsUploadingBannerPhotos(false);
+      // Reset input
+      if (bannerPhotosInputRef.current) {
+        bannerPhotosInputRef.current.value = '';
       }
     }
   };
@@ -484,53 +559,27 @@ export default function FicheEntreprise({
         onChange={handleLogoFileChange}
         className="hidden"
       />
+      <input
+        ref={bannerPhotosInputRef}
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/webp"
+        onChange={handleBannerPhotosFileChange}
+        className="hidden"
+        multiple
+      />
 
       {/* Bannière */}
-      <div 
-        className={`relative h-96 ${canEdit ? 'cursor-pointer group' : ''}`}
-        onClick={handleCoverClick}
-      >
-        {entreprise.banniere ? (
-          <>
-            {isCoverLoading && (
-              <div className="w-full h-full absolute inset-0 bg-gray-300 animate-pulse" style={{ animationDuration: '2s' }} />
-            )}
-            <img
-              src={entreprise.banniere}
-              alt="Bannière entreprise"
-              className="w-full h-full object-cover"
-              onLoad={() => setIsCoverLoading(false)}
-              onError={() => setIsCoverLoading(false)}
-              style={{ display: isCoverLoading ? 'none' : 'block' }}
-            />
-          </>
-        ) : null}
-
-        {/* Overlay pour l'édition */}
-        {canEdit && (
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-200 flex items-center justify-center">
-            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 rounded-full p-3">
-              {isUploadingCover ? (
-                <Loader2 className="h-6 w-6 text-gray-700 animate-spin" />
-              ) : (
-                <Camera className="h-6 w-6 text-gray-700" />
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Spinner de chargement pour la bannière */}
-        {isUploadingCover && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <div className="bg-white/90 rounded-full p-4">
-              <Loader2 className="h-8 w-8 text-gray-700 animate-spin" />
-            </div>
-          </div>
-        )}
+      <div className="relative">
+        <SequentialBannerManager 
+          entreprise={entreprise} 
+          className="h-96" 
+          canEdit={canEdit}
+          onUpdate={onEntrepriseUpdate}
+        />
 
         {/* Badge aperçu */}
         {isPreview && (
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-4 right-4 z-20">
             <Badge className="bg-white/90 text-gray-800">
               <Eye className="h-3 w-3 mr-1" />
               Aperçu
@@ -542,7 +591,7 @@ export default function FicheEntreprise({
       {/* Contenu principal */}
       <div className="relative px-6 pb-6">
         {/* Logo entreprise (chevauchant la bannière) */}
-        <div className="relative -mt-12 mb-6">
+        <div className="relative -mt-12 mb-6 flex items-start gap-3">
           <div 
             className={`w-24 h-24 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center relative ${canEdit ? 'cursor-pointer group' : ''}`}
             onClick={handleLogoClick}
@@ -581,6 +630,16 @@ export default function FicheEntreprise({
               </div>
             )}
           </div>
+          
+          {/* Badge Top Artisan à droite du logo */}
+          {shouldShowTopBadge && (
+            <div className="flex items-end h-24">
+              <TopArtisanBadge 
+                size="md" 
+                variant="default"
+              />
+            </div>
+          )}
         </div>
 
         {/* Layout principal */}

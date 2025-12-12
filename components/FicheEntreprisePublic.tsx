@@ -2,11 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { usePhoneTracking, useContactFormTracking } from "@/hooks/useArtisanTracking";
+import { usePhoneTracking, useContactFormTracking, useArtisanTracking } from "@/hooks/useArtisanTracking";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import TopArtisanBadge from "@/components/TopArtisanBadge";
+import { isPremiumActive } from "@/lib/premium-utils";
+import ArtisanBanner from "@/components/ArtisanBanner";
 import { 
   Phone, 
   Mail, 
@@ -23,7 +26,8 @@ import {
 import { XIcon, FacebookIcon } from "@/components/icons/SocialIcons";
 import Link from "next/link";
 import { collection, addDoc, updateDoc, doc, increment, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { sendLeadNotificationIfAllowed } from '@/lib/notification-service';
 import { getArtisanPreferencesWithDefaults } from '@/lib/artisan-preferences';
 import ZoneInterventionMap from "./ZoneInterventionMap";
@@ -51,6 +55,7 @@ interface FicheEntreprisePublicProps {
     lastName?: string;
     siret?: string;
     profession?: string;
+    premiumFeatures?: any;
   };
   showContactForm?: boolean;
   isPreview?: boolean;
@@ -72,6 +77,7 @@ export default function FicheEntreprisePublic({
   showBottomBanner = false
 }: FicheEntreprisePublicProps) {
   const [showPhone, setShowPhone] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [privacySettings, setPrivacySettings] = useState({
     profileVisible: true,
     showPhone: true,
@@ -81,6 +87,11 @@ export default function FicheEntreprisePublic({
   const [isCoverLoading, setIsCoverLoading] = useState(true);
   const [isLogoLoading, setIsLogoLoading] = useState(true);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  
+  // Vérifier si l'artisan est premium et a le badge activé
+  const shouldShowTopBadge = entreprise.premiumFeatures && 
+    isPremiumActive({ id: entreprise.id, premiumFeatures: entreprise.premiumFeatures }) && 
+    entreprise.premiumFeatures.showTopArtisanBadge;
   const [showAllProjects, setShowAllProjects] = useState(false);
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
@@ -96,6 +107,24 @@ export default function FicheEntreprisePublic({
   const containerRef = useRef<HTMLDivElement>(null);
   const mainCardRef = useRef<HTMLDivElement>(null);
   const avisClientsSectionRef = useRef<HTMLDivElement>(null);
+
+  // Écouter l'authentification
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Vérifier si l'utilisateur connecté est le propriétaire de la fiche
+  const isOwner = currentUser?.uid === entreprise.id;
+
+  // Tracking automatique des vues de pages (seulement si ce n'est pas le propriétaire)
+  // On utilise une logique simple : si c'est pas une preview ET pas le propriétaire
+  useArtisanTracking({ 
+    artisanId: entreprise.id, 
+    autoTrackView: !isPreview && !isOwner
+  });
 
   // Fonctions de tracking avec logs détaillés
   const trackPhoneClick = async () => {
@@ -332,26 +361,8 @@ export default function FicheEntreprisePublic({
   return (
     <div ref={mainCardRef} className="w-full h-full bg-white overflow-hidden">
       {/* Bannière */}
-      <div className="relative h-96">
-        {entreprise.banniere ? (
-          <>
-            {isCoverLoading && (
-              <div className="w-full h-full absolute inset-0 bg-gray-300 animate-pulse" style={{ animationDuration: '2s' }} />
-            )}
-            <img
-              src={entreprise.banniere}
-              alt="Bannière entreprise"
-              className="w-full h-full object-cover"
-              onLoad={() => setIsCoverLoading(false)}
-              onError={() => setIsCoverLoading(false)}
-              style={{ display: isCoverLoading ? 'none' : 'block' }}
-            />
-          </>
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-            <Building className="h-24 w-24 text-gray-400" />
-          </div>
-        )}
+      <div className="relative">
+        <ArtisanBanner entreprise={entreprise} className="h-96" />
 
         {/* Badge aperçu */}
         {isPreview && (
@@ -367,7 +378,7 @@ export default function FicheEntreprisePublic({
       {/* Contenu principal */}
       <div className="relative px-6 pb-6">
         {/* Logo entreprise (chevauchant la bannière) */}
-        <div className="relative -mt-12 mb-6">
+        <div className="relative -mt-12 mb-6 flex items-start gap-3">
           <div className="w-24 h-24 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center relative">
             {entreprise.logo ? (
               <>
@@ -387,6 +398,14 @@ export default function FicheEntreprisePublic({
               <Building className="h-12 w-12 text-gray-400" />
             )}
           </div>
+          {shouldShowTopBadge && (
+            <div className="flex items-end h-24">
+              <TopArtisanBadge 
+                size="md" 
+                variant="default"
+              />
+            </div>
+          )}
         </div>
 
         {/* Layout principal */}

@@ -55,6 +55,16 @@ artisans
     ├── subscriptionStatus ("active" | "canceled" | "past_due" | "trialing")
     ├── stripeSubscriptionId
     ├── currentPeriodEnd
+    ├── premiumFeatures {            ← nouvelles fonctionnalités premium
+    │   ├── isPremium: false         ← statut premium de l'artisan (boolean)
+    │   ├── premiumStartDate         ← date de début du premium (timestamp, optionnel)
+    │   ├── premiumEndDate           ← date de fin du premium (timestamp, optionnel)
+    │   ├── premiumType              ← type d'offre premium ("monthly" | "yearly" | "lifetime")
+    │   ├── bannerPhotos []          ← URLs des photos de bannière premium (max 5)
+    │   ├── bannerVideo              ← URL de la vidéo de bannière (optionnel)
+    │   ├── showTopArtisanBadge: false ← afficher le badge "Top Artisan" (boolean)
+    │   └── premiumBenefits []       ← avantages premium activés ["multiple_banners", "video_banner", "top_badge", "priority_listing"]
+    │   }
     ├── leadCountThisMonth
     ├── totalLeads
     ├── averageRating

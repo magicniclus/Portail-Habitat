@@ -13,6 +13,7 @@ interface ArtisanData {
   professions: string[];
   city: string;
   subscriptionStatus: string;
+  premiumFeatures?: any;
   coordinates?: {
     lat: number;
     lng: number;
@@ -51,6 +52,7 @@ export function useAuth(): UseAuthReturn {
               professions: artisanData.professions || [],
               city: artisanData.city || '',
               subscriptionStatus: artisanData.subscriptionStatus || 'inactive',
+              premiumFeatures: artisanData.premiumFeatures || null,
               coordinates: artisanData.coordinates || undefined
             });
           } else {

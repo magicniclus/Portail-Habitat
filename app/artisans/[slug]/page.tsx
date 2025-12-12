@@ -120,7 +120,8 @@ export default function ArtisanPage() {
             firstName: artisanData.firstName || "",
             lastName: artisanData.lastName || "",
             siret: artisanData.siret || "",
-            profession: artisanData.profession || ""
+            profession: artisanData.profession || "",
+            premiumFeatures: artisanData.premiumFeatures || null
           });
 
           // Charger les projets publics de l'artisan
@@ -251,9 +252,9 @@ export default function ArtisanPage() {
   // Affichage de chargement
   if (loading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white flex flex-col">
         <Header />
-        <div className="flex items-center justify-center py-20">
+        <div className="flex-1 flex items-center justify-center min-h-screen">
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-green-600" />
             <p className="text-gray-600">Chargement de la fiche artisan...</p>
@@ -267,20 +268,22 @@ export default function ArtisanPage() {
   // Artisan non trouvé
   if (notFound || !entreprise) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white flex flex-col">
         <Header />
-        <div className="container mx-auto px-4 py-20">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Artisan non trouvé</h1>
-            <p className="text-gray-600 mb-8">
-              Cet artisan n'existe pas ou son profil n'est pas public.
-            </p>
-            <Link href="/artisans">
-              <Button>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Retour aux artisans
-              </Button>
-            </Link>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <h1 className="text-4xl font-bold text-gray-900 mb-4">Artisan non trouvé</h1>
+              <p className="text-gray-600 mb-8">
+                Cet artisan n'existe pas ou son profil n'est pas public.
+              </p>
+              <Link href="/artisans">
+                <Button>
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Retour aux artisans
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
         <Footer />
@@ -289,34 +292,35 @@ export default function ArtisanPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex flex-col">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="space-y-6">
-          {/* Header */}
-          <div className="flex items-center space-x-4">
-            <Link href="/artisans">
-              <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Retour
-              </Button>
-            </Link>
-          </div>
+      <div className="flex-1">
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="flex items-center space-x-4">
+              <Link href="/artisans">
+                <Button variant="outline" size="sm">
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Retour
+                </Button>
+              </Link>
+            </div>
 
-
-          {/* Fiche entreprise */}
-          <div className="w-full h-full">
-            <FicheEntreprisePublic 
-              entreprise={entreprise} 
-              showContactForm={true}
-              isPreview={false}
-              canEdit={false}
-              projects={projects}
-              reviews={reviews}
-              showPromoBanner={!user || !isArtisan}
-              showBottomBanner={!user || !isArtisan}
-            />
+            {/* Fiche entreprise */}
+            <div className="w-full h-full">
+              <FicheEntreprisePublic 
+                entreprise={entreprise} 
+                showContactForm={true}
+                isPreview={false}
+                canEdit={false}
+                projects={projects}
+                reviews={reviews}
+                showPromoBanner={!user || !isArtisan}
+                showBottomBanner={!user || !isArtisan}
+              />
+            </div>
           </div>
         </div>
       </div>

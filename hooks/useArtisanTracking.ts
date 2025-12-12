@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { 
   trackArtisanView, 
   trackPhoneClick, 
@@ -24,11 +24,28 @@ export function useArtisanTracking({
   autoTrackView = true 
 }: UseArtisanTrackingProps) {
   
+  // Référence pour éviter le double tracking
+  const hasTrackedView = useRef(false);
+  const lastTrackedArtisanId = useRef<string | null>(null);
+  
   // Tracker automatiquement la vue au montage du composant
   useEffect(() => {
-    if (autoTrackView && artisanId) {
-      trackArtisanView(artisanId);
+    // Seulement si autoTrackView est true ET qu'on a un artisanId valide
+    if (!autoTrackView || !artisanId) {
+      console.log('🚫 Tracking désactivé:', { autoTrackView, artisanId });
+      return;
     }
+
+    // Vérifier si on a déjà tracké pour cet artisan dans cette session
+    if (hasTrackedView.current && lastTrackedArtisanId.current === artisanId) {
+      console.log('⚠️ Vue déjà trackée pour cet artisan, skip:', artisanId);
+      return;
+    }
+
+    console.log('🎯 Tracking vue pour artisan:', artisanId);
+    trackArtisanView(artisanId);
+    hasTrackedView.current = true;
+    lastTrackedArtisanId.current = artisanId;
   }, [artisanId, autoTrackView]);
 
   // Fonction pour tracker un clic sur le téléphone

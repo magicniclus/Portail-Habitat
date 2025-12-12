@@ -473,3 +473,186 @@ export function validateImageFile(file: File): { isValid: boolean; error?: strin
   
   return { isValid: true };
 }
+
+/**
+ * Upload des photos de bannière premium pour un artisan
+ * Suit le schéma: /artisans/{artisanId}/premium/banner_photos/banner_001.jpg à banner_005.jpg
+ */
+export async function uploadPremiumBannerPhotos(artisanId: string, files: File[]): Promise<string[]> {
+  try {
+    if (files.length === 0) {
+      throw new Error('Aucun fichier à uploader');
+    }
+
+    if (files.length > 5) {
+      throw new Error('Maximum 5 photos de bannière autorisées');
+    }
+
+    // Valider tous les fichiers
+    for (const file of files) {
+      const validation = validateImageFile(file);
+      if (!validation.isValid) {
+        throw new Error(validation.error);
+      }
+    }
+
+    const uploadPromises = files.map(async (file, index) => {
+      // Créer la référence selon le schéma Storage
+      const bannerRef = ref(storage, `artisans/${artisanId}/premium/banner_photos/banner_${String(index + 1).padStart(3, '0')}.jpg`);
+      
+      // Upload du fichier
+      const snapshot = await uploadBytes(bannerRef, file);
+      
+      // Récupérer l'URL de téléchargement
+      return await getDownloadURL(snapshot.ref);
+    });
+
+    // Attendre tous les uploads
+    const downloadURLs = await Promise.all(uploadPromises);
+
+    // Mettre à jour Firestore avec les nouvelles URLs
+    const artisanRef = doc(db, 'artisans', artisanId);
+    await updateDoc(artisanRef, {
+      'premiumFeatures.bannerPhotos': downloadURLs,
+      updatedAt: new Date()
+    });
+
+    return downloadURLs;
+  } catch (error) {
+    console.error('Erreur lors de l\'upload des photos de bannière premium:', error);
+    throw error;
+  }
+}
+
+/**
+ * Ajouter une photo de bannière premium (jusqu'à 5 max)
+ */
+export async function addPremiumBannerPhoto(artisanId: string, file: File): Promise<string[]> {
+  try {
+    // Valider le fichier
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+
+    // Récupérer les photos existantes
+    const artisanRef = doc(db, 'artisans', artisanId);
+    const artisanDoc = await getDoc(artisanRef);
+    const existingPhotos = artisanDoc.data()?.premiumFeatures?.bannerPhotos || [];
+
+    if (existingPhotos.length >= 5) {
+      throw new Error('Maximum 5 photos de bannière autorisées');
+    }
+
+    // Déterminer l'index de la nouvelle photo
+    const newIndex = existingPhotos.length;
+    
+    // Créer la référence selon le schéma Storage
+    const bannerRef = ref(storage, `artisans/${artisanId}/premium/banner_photos/banner_${String(newIndex + 1).padStart(3, '0')}.jpg`);
+    
+    // Upload du fichier
+    const snapshot = await uploadBytes(bannerRef, file);
+    
+    // Récupérer l'URL de téléchargement
+    const downloadURL = await getDownloadURL(snapshot.ref);
+
+    // Ajouter à la liste existante
+    const updatedPhotos = [...existingPhotos, downloadURL];
+
+    // Mettre à jour Firestore
+    await updateDoc(artisanRef, {
+      'premiumFeatures.bannerPhotos': updatedPhotos,
+      updatedAt: new Date()
+    });
+
+    return updatedPhotos;
+  } catch (error) {
+    console.error('Erreur lors de l\'ajout de la photo de bannière premium:', error);
+    throw error;
+  }
+}
+
+/**
+ * Remplacer une photo de bannière premium spécifique
+ */
+export async function replacePremiumBannerPhoto(artisanId: string, photoIndex: number, file: File): Promise<string[]> {
+  try {
+    // Valider le fichier
+    const validation = validateImageFile(file);
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+
+    // Récupérer les photos existantes
+    const artisanRef = doc(db, 'artisans', artisanId);
+    const artisanDoc = await getDoc(artisanRef);
+    const existingPhotos = artisanDoc.data()?.premiumFeatures?.bannerPhotos || [];
+
+    if (photoIndex < 0 || photoIndex >= existingPhotos.length) {
+      throw new Error('Index de photo invalide');
+    }
+
+    // Créer la référence selon le schéma Storage (même nom de fichier)
+    const bannerRef = ref(storage, `artisans/${artisanId}/premium/banner_photos/banner_${String(photoIndex + 1).padStart(3, '0')}.jpg`);
+    
+    // Upload du nouveau fichier (remplace l'ancien)
+    const snapshot = await uploadBytes(bannerRef, file);
+    
+    // Récupérer l'URL de téléchargement avec timestamp pour forcer le rechargement
+    const baseURL = await getDownloadURL(snapshot.ref);
+    const downloadURL = `${baseURL}?t=${Date.now()}`;
+
+    // Remplacer dans la liste
+    const updatedPhotos = [...existingPhotos];
+    updatedPhotos[photoIndex] = downloadURL;
+
+    // Mettre à jour Firestore
+    await updateDoc(artisanRef, {
+      'premiumFeatures.bannerPhotos': updatedPhotos,
+      updatedAt: new Date()
+    });
+
+    return updatedPhotos;
+  } catch (error) {
+    console.error('Erreur lors du remplacement de la photo de bannière premium:', error);
+    throw error;
+  }
+}
+
+/**
+ * Supprimer une photo de bannière premium
+ */
+export async function removePremiumBannerPhoto(artisanId: string, photoIndex: number): Promise<string[]> {
+  try {
+    // Récupérer les photos existantes
+    const artisanRef = doc(db, 'artisans', artisanId);
+    const artisanDoc = await getDoc(artisanRef);
+    const existingPhotos = artisanDoc.data()?.premiumFeatures?.bannerPhotos || [];
+
+    if (photoIndex < 0 || photoIndex >= existingPhotos.length) {
+      throw new Error('Index de photo invalide');
+    }
+
+    // Supprimer le fichier du Storage
+    const bannerRef = ref(storage, `artisans/${artisanId}/premium/banner_photos/banner_${String(photoIndex + 1).padStart(3, '0')}.jpg`);
+    try {
+      await deleteObject(bannerRef);
+    } catch (error) {
+      console.warn('Fichier déjà supprimé ou inexistant:', error);
+    }
+
+    // Retirer de la liste
+    const updatedPhotos = existingPhotos.filter((_: string, index: number) => index !== photoIndex);
+
+    // Mettre à jour Firestore
+    await updateDoc(artisanRef, {
+      'premiumFeatures.bannerPhotos': updatedPhotos,
+      updatedAt: new Date()
+    });
+
+    return updatedPhotos;
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la photo de bannière premium:', error);
+    throw error;
+  }
+}

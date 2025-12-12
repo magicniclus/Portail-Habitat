@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import FicheEntreprise from "@/components/FicheEntreprise";
-import { uploadCoverPhoto, uploadLogoPhoto, updateArtisanDescription, updateArtisanPrestations, updateArtisanQuoteRange, updateArtisanCertifications, addArtisanProject, getArtisanProjects, updateProjectVisibility, deleteArtisanProject, updateArtisanProject } from "@/lib/storage";
+import { uploadCoverPhoto, uploadLogoPhoto, updateArtisanDescription, updateArtisanPrestations, updateArtisanQuoteRange, updateArtisanCertifications, addArtisanProject, getArtisanProjects, updateProjectVisibility, deleteArtisanProject, updateArtisanProject, addPremiumBannerPhoto, uploadPremiumBannerPhotos } from "@/lib/storage";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, query, where, collection, getDocs, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -13,6 +14,12 @@ import {
   Loader2
 } from "lucide-react";
 import { XIcon, FacebookIcon } from "@/components/icons/SocialIcons";
+import TopArtisanBadge from "@/components/TopArtisanBadge";
+import { isPremiumActive } from "@/lib/premium-utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Crown } from "lucide-react";
 
 export default function MaFichePage() {
   const [entreprise, setEntreprise] = useState<any>(null);
@@ -20,6 +27,12 @@ export default function MaFichePage() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isUploadingBannerPhotos, setIsUploadingBannerPhotos] = useState(false);
+  
+  // Vérifier si l'artisan est premium et a le badge activé
+  const shouldShowTopBadge = entreprise?.premiumFeatures && 
+    isPremiumActive({ id: entreprise.id, premiumFeatures: entreprise.premiumFeatures }) && 
+    entreprise.premiumFeatures.showTopArtisanBadge;
 
   // Récupérer l'utilisateur connecté et ses données artisan
   useEffect(() => {
@@ -39,6 +52,7 @@ export default function MaFichePage() {
             // Transformer les données Firestore en format attendu par le composant
             setEntreprise({
               id: artisanDoc.id, // L'ID réel du document artisan
+              slug: artisanData.slug || undefined, // Ajouter le slug
               nom: artisanData.companyName || "Nom de l'entreprise",
               logo: artisanData.logoUrl || undefined,
               banniere: artisanData.coverUrl || undefined,
@@ -53,7 +67,8 @@ export default function MaFichePage() {
               certifications: artisanData.certifications || [],
               zoneIntervention: artisanData.city ? [artisanData.city] : [],
               averageQuoteMin: artisanData.averageQuoteMin || undefined,
-              averageQuoteMax: artisanData.averageQuoteMax || undefined
+              averageQuoteMax: artisanData.averageQuoteMax || undefined,
+              premiumFeatures: artisanData.premiumFeatures || null
             });
 
             // Charger les projets de l'artisan
@@ -439,13 +454,16 @@ export default function MaFichePage() {
               <XIcon className="h-4 w-4" />
             </Button>
           </div>
-          <Button variant="outline" className="w-fit">
-            <ExternalLink className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Voir ma fiche publique</span>
-            <span className="sm:hidden">Voir fiche</span>
+          <Button variant="outline" className="w-fit" asChild>
+            <Link href={`/artisans/${entreprise?.slug}`} target="_blank">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Voir ma fiche publique</span>
+              <span className="sm:hidden">Voir fiche</span>
+            </Link>
           </Button>
         </div>
       </div>
+
 
       {/* Fiche entreprise */}
       <div className="w-full h-full">

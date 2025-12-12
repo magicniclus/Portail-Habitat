@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import EditableField from "@/components/admin/EditableField";
 import EditableSelect from "@/components/admin/EditableSelect";
 import PrestationsModal from "@/components/admin/PrestationsModal";
+import PremiumSwitch from "@/components/admin/PremiumSwitch";
 import { 
   ArrowLeft,
   Building2, 
@@ -34,7 +35,8 @@ import {
   CreditCard,
   Settings,
   Plus,
-  Euro
+  Euro,
+  Crown
 } from "lucide-react";
 
 interface UserDetail {
@@ -75,6 +77,7 @@ interface UserDetail {
   averageQuoteMin?: number;
   averageQuoteMax?: number;
   certifications?: string[];
+  premiumFeatures?: any;
   notifications?: {
     emailLeads?: boolean;
     emailReviews?: boolean;
@@ -611,6 +614,14 @@ export default function UserDetailPage() {
                   )}
                 </CardContent>
               </Card>
+
+              {/* Premium */}
+              <PremiumSwitch
+                artisanId={user.id}
+                premiumFeatures={user.premiumFeatures}
+                onUpdate={loadUserData}
+                disabled={!canEdit}
+              />
 
               {/* Abonnement et statut */}
               <div className="space-y-4">

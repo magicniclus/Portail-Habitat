@@ -191,8 +191,31 @@ export async function trackArtisanInteraction(
   }
 }
 
+// Cache pour éviter le double tracking rapide (même artisan dans les 5 secondes)
+const recentViews = new Map<string, number>();
+
 // Tracker une vue de fiche artisan
 export async function trackArtisanView(artisanId: string) {
+  const now = Date.now();
+  const lastView = recentViews.get(artisanId);
+  
+  // Si on a déjà tracké cet artisan dans les 5 dernières secondes, skip
+  if (lastView && (now - lastView) < 5000) {
+    console.log('⚠️ Vue déjà trackée récemment pour:', artisanId, 'skip');
+    return;
+  }
+  
+  // Enregistrer le timestamp de cette vue
+  recentViews.set(artisanId, now);
+  
+  // Nettoyer les anciennes entrées (plus de 10 secondes)
+  for (const [id, timestamp] of recentViews.entries()) {
+    if (now - timestamp > 10000) {
+      recentViews.delete(id);
+    }
+  }
+  
+  console.log('✅ Tracking vue autorisé pour:', artisanId);
   return trackArtisanInteraction(artisanId, "view");
 }
 

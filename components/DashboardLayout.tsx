@@ -47,6 +47,7 @@ import {
   Briefcase,
   Package,
   BarChart3,
+  Crown,
 } from "lucide-react";
 
 interface NavigationItem {
