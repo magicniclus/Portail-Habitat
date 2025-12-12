@@ -14,14 +14,12 @@ import { ChevronLeft, ChevronRight, Building } from "lucide-react";
 
 interface PremiumBannerProps {
   bannerPhotos: string[];
-  bannerVideo?: string;
   companyName: string;
   className?: string;
 }
 
 export default function PremiumBanner({ 
   bannerPhotos, 
-  bannerVideo, 
   companyName, 
   className = "" 
 }: PremiumBannerProps) {
@@ -29,8 +27,8 @@ export default function PremiumBanner({
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
   const [carouselApi, setCarouselApi] = useState<CarouselApi | null>(null);
 
-  // Combiner vidéo et photos si vidéo existe
-  const allMedia = bannerVideo ? [bannerVideo, ...bannerPhotos] : bannerPhotos;
+  // Utiliser seulement les photos
+  const allMedia = bannerPhotos;
 
   const handleImageLoad = (url: string) => {
     setLoadingStates(prev => ({ ...prev, [url]: false }));
@@ -85,10 +83,9 @@ export default function PremiumBanner({
     );
   }
 
-  // Si une seule image/vidéo, pas besoin de carousel
+  // Si une seule image, pas besoin de carousel
   if (allMedia.length === 1) {
     const media = allMedia[0];
-    const isVideo = media.includes('banner_video') || media.endsWith('.mp4');
     initializeLoading(media);
 
     return (
@@ -99,33 +96,18 @@ export default function PremiumBanner({
             <Skeleton className="w-full h-full" />
           )}
 
-          {/* Média unique */}
-          {isVideo ? (
-            <video
-              src={media}
-              className="w-full h-full object-cover"
-              autoPlay
-              muted
-              loop
-              onLoadStart={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-              style={{ 
-                display: loadingStates[media] ? 'none' : 'block',
-                objectPosition: 'center center'
-              }}
-            />
-          ) : (
-            <img
-              src={media}
-              alt={`${companyName} - Image premium`}
-              className="w-full h-full object-cover"
-              onLoad={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-              onError={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-              style={{ 
-                display: loadingStates[media] ? 'none' : 'block',
-                objectPosition: 'center center'
-              }}
-            />
-          )}
+          {/* Image unique */}
+          <img
+            src={media}
+            alt={`${companyName} - Image premium`}
+            className="w-full h-full object-cover"
+            onLoad={() => handleImageLoad(media)}
+            onError={() => handleImageError(media)}
+            style={{ 
+              display: loadingStates[media] ? 'none' : 'block',
+              objectPosition: 'center center'
+            }}
+          />
         </div>
       </div>
     );
@@ -157,7 +139,6 @@ export default function PremiumBanner({
       >
         <CarouselContent className="h-full">
           {allMedia.map((media, index) => {
-            const isVideo = media.includes('banner_video') || media.endsWith('.mp4');
             initializeLoading(media);
 
             return (
@@ -168,33 +149,18 @@ export default function PremiumBanner({
                     <Skeleton className="w-full h-full" />
                   )}
 
-                  {/* Contenu du slide */}
-                  {isVideo ? (
-                    <video
-                      src={media}
-                      className="w-full h-full object-cover"
-                      autoPlay={currentIndex === index}
-                      muted
-                      loop
-                      onLoadStart={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-                      style={{ 
-                        display: loadingStates[media] ? 'none' : 'block',
-                        objectPosition: 'center center'
-                      }}
-                    />
-                  ) : (
-                    <img
-                      src={media}
-                      alt={`${companyName} - Image ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      onLoad={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-                      onError={() => setLoadingStates(prev => ({ ...prev, [media]: false }))}
-                      style={{ 
-                        display: loadingStates[media] ? 'none' : 'block',
-                        objectPosition: 'center center'
-                      }}
-                    />
-                  )}
+                  {/* Image du slide */}
+                  <img
+                    src={media}
+                    alt={`${companyName} - Image ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    onLoad={() => handleImageLoad(media)}
+                    onError={() => handleImageError(media)}
+                    style={{ 
+                      display: loadingStates[media] ? 'none' : 'block',
+                      objectPosition: 'center center'
+                    }}
+                  />
                 </div>
               </CarouselItem>
             );

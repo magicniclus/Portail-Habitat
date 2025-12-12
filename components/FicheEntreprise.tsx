@@ -38,6 +38,7 @@ import TopArtisanBadge from "./TopArtisanBadge";
 import { isPremiumActive } from "@/lib/premium-utils";
 import SequentialBannerManager from "./SequentialBannerManager";
 import StandardBannerManager from "./StandardBannerManager";
+import BannerVideoManager from "./BannerVideoManager";
 
 interface FicheEntrepriseProps {
   entreprise: {
@@ -1003,6 +1004,15 @@ export default function FicheEntreprise({
                     </Badge>
                   ))}
                 </div>
+              </div>
+
+              {/* Vidéo de présentation */}
+              <div className="space-y-3">
+                <BannerVideoManager 
+                  entreprise={entreprise}
+                  canEdit={canEdit}
+                  onUpdate={onEntrepriseUpdate}
+                />
               </div>
 
               {/* Formulaire de contact mobile */}

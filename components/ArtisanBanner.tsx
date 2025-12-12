@@ -28,7 +28,6 @@ export default function ArtisanBanner({ entreprise, className = "" }: ArtisanBan
     return (
       <PremiumBanner
         bannerPhotos={entreprise.premiumFeatures.bannerPhotos}
-        bannerVideo={entreprise.premiumFeatures.bannerVideo}
         companyName={entreprise.nom}
         className={className}
       />

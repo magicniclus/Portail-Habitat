@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/carousel";
 import { addPremiumBannerPhoto, replacePremiumBannerPhoto, removePremiumBannerPhoto } from "@/lib/storage";
 import { X } from "lucide-react";
+import { toast } from "@/hooks/useToast";
 
 interface SequentialBannerManagerProps {
   entreprise: {
@@ -44,18 +45,33 @@ export default function SequentialBannerManager({
   const availableSlots = Math.min(bannerPhotos.length + 1, maxSteps);
   const allSlots = Array.from({ length: availableSlots }, (_, index) => bannerPhotos[index] || null);
   
-  // Debug pour voir l'état
-  console.log('Debug SequentialBannerManager:', {
-    bannerPhotosLength: bannerPhotos.length,
-    availableSlots,
-    allSlotsLength: allSlots.length,
-    bannerPhotos
-  });
 
   // Synchroniser avec les props quand l'entreprise change
   useEffect(() => {
-    setBannerPhotos(entreprise.premiumFeatures?.bannerPhotos || []);
-  }, [entreprise.premiumFeatures?.bannerPhotos]);
+    let initialPhotos = entreprise.premiumFeatures?.bannerPhotos || [];
+    
+    // Migration automatique : si pas de bannerPhotos mais qu'il y a une banniere
+    if (initialPhotos.length === 0 && entreprise.banniere) {
+      console.log('Migration automatique de banniere vers bannerPhotos:', entreprise.banniere);
+      initialPhotos = [entreprise.banniere];
+      
+      // Sauvegarder automatiquement la migration
+      const updatedEntreprise = {
+        ...entreprise,
+        premiumFeatures: {
+          ...entreprise.premiumFeatures,
+          bannerPhotos: initialPhotos
+        }
+      };
+      
+      if (onUpdate) {
+        console.log('Sauvegarde de la migration automatique');
+        onUpdate(updatedEntreprise);
+      }
+    }
+    
+    setBannerPhotos(initialPhotos);
+  }, [entreprise.premiumFeatures?.bannerPhotos, entreprise.banniere, onUpdate]);
 
   // Synchroniser avec l'API du carousel
   const onCarouselSelect = useCallback(() => {
@@ -84,10 +100,13 @@ export default function SequentialBannerManager({
 
   // Fonction pour ajouter une image
   const handleAddMedia = async (file: File) => {
-    console.log('handleAddMedia appelé avec:', { file: file.name, currentLength: bannerPhotos.length });
     
     if (bannerPhotos.length >= 5) {
-      alert('Maximum 5 images autorisées');
+      toast({
+        title: "Limite atteinte",
+        description: "Maximum 5 images autorisées pour la bannière premium.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -112,11 +131,26 @@ export default function SequentialBannerManager({
         onUpdate(updatedEntreprise);
       }
 
+      // Toast de succès
+      toast({
+        title: "Image ajoutée",
+        description: "L'image a été ajoutée avec succès à votre bannière premium.",
+        variant: "success"
+      });
+
       // Ne plus passer automatiquement à l'étape suivante
       // L'utilisateur reste sur l'image qu'il vient d'ajouter
     } catch (error) {
       console.error('Erreur lors de l\'ajout de l\'image:', error);
-      alert('Erreur lors de l\'ajout de l\'image. Veuillez réessayer.');
+      
+      // Afficher l'erreur spécifique avec un toast
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      
+      toast({
+        title: "Erreur d'upload",
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       setIsUploading(false);
     }
@@ -146,7 +180,13 @@ export default function SequentialBannerManager({
       }
     } catch (error) {
       console.error('Erreur lors du remplacement de l\'image:', error);
-      alert('Erreur lors du remplacement de l\'image. Veuillez réessayer.');
+      
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast({
+        title: "Erreur de remplacement",
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       setIsUploading(false);
     }
@@ -186,7 +226,13 @@ export default function SequentialBannerManager({
       }
     } catch (error) {
       console.error('Erreur lors de la suppression de l\'image:', error);
-      alert('Erreur lors de la suppression de l\'image. Veuillez réessayer.');
+      
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast({
+        title: "Erreur de suppression",
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       setIsUploading(false);
     }

@@ -656,3 +656,82 @@ export async function removePremiumBannerPhoto(artisanId: string, photoIndex: nu
     throw error;
   }
 }
+
+/**
+ * Valider un fichier vidéo
+ */
+function validateVideoFile(file: File): { isValid: boolean; error?: string } {
+  const maxSize = 50 * 1024 * 1024; // 50MB
+  const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+
+  if (!allowedTypes.includes(file.type)) {
+    return {
+      isValid: false,
+      error: 'Format de vidéo non supporté. Utilisez MP4, WebM ou OGG.'
+    };
+  }
+
+  if (file.size > maxSize) {
+    return {
+      isValid: false,
+      error: 'Le fichier vidéo est trop volumineux. Taille maximale : 50MB.'
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Ajouter ou remplacer la vidéo de bannière premium
+ */
+export async function uploadBannerVideo(artisanId: string, file: File): Promise<string> {
+  try {
+    // Valider le fichier
+    const validation = validateVideoFile(file);
+    if (!validation.isValid) {
+      throw new Error(validation.error);
+    }
+
+    // Créer la référence selon le schéma Storage
+    const videoRef = ref(storage, `artisans/${artisanId}/premium/banner_video/banner_video.mp4`);
+    
+    // Upload du fichier
+    const snapshot = await uploadBytes(videoRef, file);
+    
+    // Récupérer l'URL de téléchargement
+    const downloadURL = await getDownloadURL(snapshot.ref);
+
+    // Mettre à jour Firestore
+    const artisanRef = doc(db, 'artisans', artisanId);
+    await updateDoc(artisanRef, {
+      'premiumFeatures.bannerVideo': downloadURL,
+      updatedAt: new Date()
+    });
+
+    return downloadURL;
+  } catch (error) {
+    console.error('Erreur lors de l\'upload de la vidéo de bannière:', error);
+    throw error;
+  }
+}
+
+/**
+ * Supprimer la vidéo de bannière premium
+ */
+export async function removeBannerVideo(artisanId: string): Promise<void> {
+  try {
+    // Supprimer le fichier du Storage
+    const videoRef = ref(storage, `artisans/${artisanId}/premium/banner_video/banner_video.mp4`);
+    await deleteObject(videoRef);
+
+    // Mettre à jour Firestore
+    const artisanRef = doc(db, 'artisans', artisanId);
+    await updateDoc(artisanRef, {
+      'premiumFeatures.bannerVideo': null,
+      updatedAt: new Date()
+    });
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la vidéo de bannière:', error);
+    throw error;
+  }
+}

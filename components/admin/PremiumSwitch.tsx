@@ -29,6 +29,7 @@ import {
   updatePremiumDuration,
   togglePremiumFeature
 } from "@/lib/admin-premium";
+import { toast } from "@/hooks/useToast";
 
 interface PremiumSwitchProps {
   artisanId: string;
@@ -64,10 +65,19 @@ export default function PremiumSwitch({
         // Désactiver directement
         await deactivateArtisanPremium(artisanId);
         onUpdate();
+        toast({
+          title: "Premium désactivé",
+          description: "Le statut premium a été désactivé avec succès",
+          variant: "success"
+        });
       }
     } catch (error) {
       console.error('Erreur lors du toggle premium:', error);
-      alert('Erreur lors de la modification du statut premium');
+      toast({
+        title: "Erreur",
+        description: "Erreur lors de la modification du statut premium",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -80,9 +90,18 @@ export default function PremiumSwitch({
       await activateArtisanPremium(artisanId, premiumType, durationMonths);
       setConfigOpen(false);
       onUpdate();
+      toast({
+        title: "Premium activé",
+        description: `Le statut premium a été activé avec succès (${premiumType})`,
+        variant: "success"
+      });
     } catch (error) {
       console.error('Erreur lors de l\'activation:', error);
-      alert('Erreur lors de l\'activation du premium');
+      toast({
+        title: "Erreur d'activation",
+        description: "Erreur lors de l'activation du premium",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -98,7 +117,11 @@ export default function PremiumSwitch({
       onUpdate();
     } catch (error) {
       console.error('Erreur lors du toggle badge:', error);
-      alert('Erreur lors de la modification du badge');
+      toast({
+        title: "Erreur badge",
+        description: "Erreur lors de la modification du badge",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }

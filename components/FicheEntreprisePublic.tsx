@@ -28,9 +28,10 @@ import Link from "next/link";
 import { collection, addDoc, updateDoc, doc, increment, getDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
+import ZoneInterventionMap from "./ZoneInterventionMap";
+import BannerVideoManager from "./BannerVideoManager";
 import { sendLeadNotificationIfAllowed } from '@/lib/notification-service';
 import { getArtisanPreferencesWithDefaults } from '@/lib/artisan-preferences';
-import ZoneInterventionMap from "./ZoneInterventionMap";
 import ProjectCard from "./ProjectCard";
 
 interface FicheEntreprisePublicProps {
@@ -609,6 +610,37 @@ export default function FicheEntreprisePublic({
                   </div>
                 </div>
               </div>
+
+              {/* Zone d'intervention */}
+              {entreprise.zoneIntervention && entreprise.zoneIntervention.length > 0 && (
+                <div className="space-y-3 pb-6 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold">Zone d'intervention</h3>
+                  
+                  {/* Petite carte Mapbox */}
+                  <ZoneInterventionMap 
+                    zones={entreprise.zoneIntervention}
+                    centerCity={entreprise.ville}
+                  />
+                  
+                  <div className="flex flex-wrap gap-2">
+                    {entreprise.zoneIntervention.map((zone, index) => (
+                      <Badge key={index} variant="outline" className="text-sm flex items-center justify-center">
+                        <span className="text-center">{zone}</span>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Vidéo de présentation */}
+              {entreprise.premiumFeatures?.bannerVideo && (
+                <div className="space-y-3 pb-6 border-b border-gray-200">
+                  <BannerVideoManager 
+                    entreprise={entreprise}
+                    canEdit={false}
+                  />
+                </div>
+              )}
 
               {/* Certifications */}
               {entreprise.certifications && entreprise.certifications.length > 0 && (
