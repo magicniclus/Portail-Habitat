@@ -21,7 +21,8 @@ import {
   Loader2,
   Image as ImageIcon,
   CheckCircle,
-  Share2
+  Share2,
+  Crown
 } from "lucide-react";
 import { XIcon, FacebookIcon } from "@/components/icons/SocialIcons";
 import Link from "next/link";
@@ -365,9 +366,19 @@ export default function FicheEntreprisePublic({
       <div className="relative">
         <ArtisanBanner entreprise={entreprise} className="h-96" />
 
+        {/* Badge Top Artisan en haut à droite de la bannière */}
+        {shouldShowTopBadge && (
+          <div className="absolute top-4 right-4 z-20">
+            <TopArtisanBadge 
+              size="md" 
+              variant="default"
+            />
+          </div>
+        )}
+
         {/* Badge aperçu */}
         {isPreview && (
-          <div className="absolute top-4 right-4">
+          <div className={`absolute top-4 z-20 ${shouldShowTopBadge ? 'right-4 mt-12' : 'right-4'}`}>
             <Badge className="bg-white/90 text-gray-800">
               <Eye className="h-3 w-3 mr-1" />
               Aperçu
@@ -379,7 +390,7 @@ export default function FicheEntreprisePublic({
       {/* Contenu principal */}
       <div className="relative px-6 pb-6">
         {/* Logo entreprise (chevauchant la bannière) */}
-        <div className="relative -mt-12 mb-6 flex items-start gap-3">
+        <div className="relative -mt-12 mb-6">
           <div className="w-24 h-24 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center relative">
             {entreprise.logo ? (
               <>
@@ -398,15 +409,14 @@ export default function FicheEntreprisePublic({
             ) : (
               <Building className="h-12 w-12 text-gray-400" />
             )}
+            
+            {/* Couronne jaune en bas du logo pour les artisans premium */}
+            {shouldShowTopBadge && (
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center shadow-md border-2 border-white">
+                <Crown className="h-3 w-3 text-white" />
+              </div>
+            )}
           </div>
-          {shouldShowTopBadge && (
-            <div className="flex items-end h-24">
-              <TopArtisanBadge 
-                size="md" 
-                variant="default"
-              />
-            </div>
-          )}
         </div>
 
         {/* Layout principal */}

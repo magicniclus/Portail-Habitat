@@ -21,7 +21,8 @@ import {
   Check,
   X,
   Image as ImageIcon,
-  CheckCircle
+  CheckCircle,
+  Crown
 } from "lucide-react";
 import { collection, addDoc, updateDoc, doc, increment, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -590,9 +591,19 @@ export default function FicheEntreprise({
           />
         )}
 
+        {/* Badge Top Artisan en haut à droite de la bannière */}
+        {shouldShowTopBadge && (
+          <div className="absolute top-8 right-8 z-20">
+            <TopArtisanBadge 
+              size="md" 
+              variant="default"
+            />
+          </div>
+        )}
+
         {/* Badge aperçu */}
         {isPreview && (
-          <div className="absolute top-4 right-4 z-20">
+          <div className={`absolute top-4 z-20 ${shouldShowTopBadge ? 'right-4' : 'right-4'}`}>
             <Badge className="bg-white/90 text-gray-800">
               <Eye className="h-3 w-3 mr-1" />
               Aperçu
@@ -604,7 +615,7 @@ export default function FicheEntreprise({
       {/* Contenu principal */}
       <div className="relative px-6 pb-6">
         {/* Logo entreprise (chevauchant la bannière) */}
-        <div className="relative -mt-12 mb-6 flex items-start gap-3">
+        <div className="relative -mt-12 mb-6">
           <div 
             className={`w-24 h-24 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center relative ${canEdit ? 'cursor-pointer group' : ''}`}
             onClick={handleLogoClick}
@@ -627,6 +638,13 @@ export default function FicheEntreprise({
               <Building className="h-12 w-12 text-gray-400" />
             )}
             
+            {/* Couronne jaune en bas du logo pour les artisans premium */}
+            {shouldShowTopBadge && (
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center shadow-md border-2 border-white">
+                <Crown className="h-3 w-3 text-white" />
+              </div>
+            )}
+            
             {/* Overlay pour l'édition du logo */}
             {canEdit && !isUploadingLogo && (
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-200 flex items-center justify-center rounded-full">
@@ -643,16 +661,6 @@ export default function FicheEntreprise({
               </div>
             )}
           </div>
-          
-          {/* Badge Top Artisan à droite du logo */}
-          {shouldShowTopBadge && (
-            <div className="flex items-end h-24">
-              <TopArtisanBadge 
-                size="md" 
-                variant="default"
-              />
-            </div>
-          )}
         </div>
 
         {/* Layout principal */}
