@@ -40,6 +40,7 @@ import { isPremiumActive } from "@/lib/premium-utils";
 import SequentialBannerManager from "./SequentialBannerManager";
 import StandardBannerManager from "./StandardBannerManager";
 import BannerVideoManager from "./BannerVideoManager";
+import PremiumVideoCard from "./PremiumVideoCard";
 
 interface FicheEntrepriseProps {
   entreprise: {
@@ -1016,11 +1017,17 @@ export default function FicheEntreprise({
 
               {/* Vidéo de présentation */}
               <div className="space-y-3">
-                <BannerVideoManager 
-                  entreprise={entreprise}
-                  canEdit={canEdit}
-                  onUpdate={onEntrepriseUpdate}
-                />
+                {entreprise.premiumFeatures && isPremiumActive({ id: entreprise.id, premiumFeatures: entreprise.premiumFeatures }) ? (
+                  <BannerVideoManager 
+                    entreprise={entreprise}
+                    canEdit={canEdit}
+                    onUpdate={onEntrepriseUpdate}
+                  />
+                ) : (
+                  canEdit && (
+                    <PremiumVideoCard />
+                  )
+                )}
               </div>
 
               {/* Formulaire de contact mobile */}

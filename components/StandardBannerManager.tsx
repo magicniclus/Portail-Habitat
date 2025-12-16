@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, Upload } from "lucide-react";
+import { Camera, Upload, Crown } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building } from "lucide-react";
@@ -12,6 +12,9 @@ interface StandardBannerManagerProps {
     id: string;
     nom: string;
     banniere?: string;
+    premiumFeatures?: {
+      isPremium: boolean;
+    };
   };
   className?: string;
   canEdit?: boolean;
@@ -114,6 +117,22 @@ export default function StandardBannerManager({
               )}
             </div>
           </div>
+
+          {/* Bouton "+ de photo" pour non-premium en haut à droite */}
+          {canEdit && !entreprise.premiumFeatures?.isPremium && (
+            <div className="absolute top-4 right-4" onClick={(e) => e.stopPropagation()}>
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium shadow-lg border-0"
+                asChild
+              >
+                <a href="/dashboard/premium">
+                  <Crown className="h-4 w-4 mr-2" />
+                  + de photo
+                </a>
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Indicateur de chargement global */}
@@ -171,6 +190,22 @@ export default function StandardBannerManager({
               <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 ease-out bg-white/90 rounded-full p-3 transform scale-90 group-hover:scale-100">
                 <Camera className="h-6 w-6 text-gray-700" />
               </div>
+            </div>
+          )}
+
+          {/* Bouton "+ de photo" pour non-premium en haut à droite quand il y a une image */}
+          {canEdit && !entreprise.premiumFeatures?.isPremium && (
+            <div className="absolute top-4 right-4" onClick={(e) => e.stopPropagation()}>
+              <Button
+                size="sm"
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium shadow-lg border-0"
+                asChild
+              >
+                <a href="/dashboard/premium">
+                  <Crown className="h-4 w-4 mr-2" />
+                  + de photo
+                </a>
+              </Button>
             </div>
           )}
         </div>

@@ -374,12 +374,19 @@ export default function UserDetailPage() {
             Retour
           </Button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {user.type === 'artisan' 
-                ? (user.companyName || `${user.firstName} ${user.lastName}`)
-                : `${user.firstName} ${user.lastName}`
-              }
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-900">
+                {user.type === 'artisan' 
+                  ? (user.companyName || `${user.firstName} ${user.lastName}`)
+                  : `${user.firstName} ${user.lastName}`
+                }
+              </h1>
+              {user.type === 'artisan' && user.premiumFeatures?.isPremium && (
+                <div title="Artisan Premium">
+                  <Crown className="h-6 w-6 text-yellow-600" />
+                </div>
+              )}
+            </div>
             <p className="text-gray-600">
               {user.type === 'artisan' ? 'Artisan' : 'Prospect'} • {user.profession}
             </p>

@@ -18,7 +18,8 @@ import {
   Calendar,
   TrendingUp,
   Loader2,
-  Eye
+  Eye,
+  Crown
 } from "lucide-react";
 import Link from "next/link";
 
@@ -36,6 +37,11 @@ interface Artisan {
   reviewCount: number;
   createdAt: any;
   totalLeads: number;
+  premiumFeatures?: {
+    isPremium: boolean;
+    premiumType?: string;
+    showTopArtisanBadge?: boolean;
+  };
 }
 
 export default function AdminUtilisateurs() {
@@ -190,9 +196,16 @@ export default function AdminUtilisateurs() {
                     <Building2 className="h-6 w-6 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">
-                      {artisan.companyName || `${artisan.firstName} ${artisan.lastName}`}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-semibold text-gray-900">
+                        {artisan.companyName || `${artisan.firstName} ${artisan.lastName}`}
+                      </h3>
+                      {artisan.premiumFeatures?.isPremium && (
+                        <div title="Artisan Premium">
+                          <Crown className="h-4 w-4 text-yellow-600" />
+                        </div>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-600">{artisan.profession}</p>
                     <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
                       <span className="flex items-center gap-1">

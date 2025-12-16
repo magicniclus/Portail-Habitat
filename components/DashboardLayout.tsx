@@ -29,6 +29,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Home,
   Users,
@@ -48,6 +49,7 @@ import {
   Package,
   BarChart3,
   Crown,
+  Zap,
 } from "lucide-react";
 
 interface NavigationItem {
@@ -119,11 +121,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+  const { artisan } = useAuth();
 
   // Gérer l'hydratation
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // Vérifier si l'artisan n'est pas premium
+  const isNotPremium = artisan && !artisan.premiumFeatures?.isPremium;
 
   const handleLogout = async () => {
     try {
@@ -184,6 +190,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         </SidebarMenuItem>
                       );
                     })}
+                    
+                    {/* Bouton Premium conditionnel - seulement dans la section "Vue d'ensemble" */}
+                    {isNotPremium && group.title === "Vue d'ensemble" && (
+                      <SidebarMenuItem>
+                        <SidebarMenuButton
+                          asChild
+                          className="text-yellow-600 hover:text-yellow-700 hover:bg-yellow-50 font-medium"
+                        >
+                          <Link href="/dashboard/premium">
+                            <Crown className="h-4 w-4 text-yellow-600" />
+                            <span>Devenir Premium</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    )}
                   </SidebarMenu>
                 </SidebarGroupContent>
               </SidebarGroup>

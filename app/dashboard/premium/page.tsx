@@ -3,137 +3,37 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { 
   Crown, 
   Star, 
-  Image as ImageIcon, 
-  Video, 
-  TrendingUp,
-  Calendar,
-  Loader2,
   CheckCircle,
-  XCircle
+  XCircle,
+  Zap,
+  Shield,
+  TrendingUp,
+  Users,
+  Camera,
+  Video,
+  Award,
+  ArrowRight,
+  Play
 } from "lucide-react";
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { 
-  isPremiumActive, 
-  hasPremiumFeature, 
-  getPremiumStatusDisplay,
-  PremiumFeatures,
-  getDefaultPremiumFeatures
-} from "@/lib/premium-utils";
-import PremiumBannerUpload from "@/components/premium/PremiumBannerUpload";
-import PremiumBannerDisplay from "@/components/premium/PremiumBannerDisplay";
-import TopArtisanBadge from "@/components/TopArtisanBadge";
+import { useAuth } from "@/hooks/useAuth";
+import UpgradeButton from "@/components/UpgradeButton";
 
 export default function PremiumPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [artisanId, setArtisanId] = useState<string>("");
-  const [premiumFeatures, setPremiumFeatures] = useState<PremiumFeatures>(getDefaultPremiumFeatures());
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { user, artisan, isLoading } = useAuth();
 
-  // Écouter l'authentification
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        await loadArtisanData(currentUser.uid);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Charger les données de l'artisan
-  const loadArtisanData = async (userId: string) => {
-    try {
-      setLoading(true);
-      
-      // Récupérer l'artisan par userId
-      const artisansRef = collection(db, 'artisans');
-      const q = query(artisansRef, where('userId', '==', userId));
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
-        const artisanDoc = querySnapshot.docs[0];
-        const artisanData = artisanDoc.data();
-        
-        setArtisanId(artisanDoc.id);
-        setPremiumFeatures(artisanData.premiumFeatures || getDefaultPremiumFeatures());
-      }
-    } catch (error) {
-      console.error('Erreur lors du chargement des données artisan:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Sauvegarder les modifications
-  const savePremiumFeatures = async (newFeatures: PremiumFeatures) => {
-    if (!artisanId) return;
-
-    try {
-      setSaving(true);
-      
-      const artisanRef = doc(db, 'artisans', artisanId);
-      await updateDoc(artisanRef, {
-        premiumFeatures: newFeatures,
-        updatedAt: new Date()
-      });
-
-      setPremiumFeatures(newFeatures);
-    } catch (error) {
-      console.error('Erreur lors de la sauvegarde:', error);
-      alert('Erreur lors de la sauvegarde');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Mettre à jour les photos de bannière
-  const handlePhotosChange = (photos: string[]) => {
-    const newFeatures = {
-      ...premiumFeatures,
-      bannerPhotos: photos
-    };
-    savePremiumFeatures(newFeatures);
-  };
-
-  // Mettre à jour la vidéo de bannière
-  const handleVideoChange = (video?: string) => {
-    const newFeatures = {
-      ...premiumFeatures,
-      bannerVideo: video
-    };
-    savePremiumFeatures(newFeatures);
-  };
-
-  // Toggle du badge Top Artisan
-  const toggleTopArtisanBadge = () => {
-    const newFeatures = {
-      ...premiumFeatures,
-      showTopArtisanBadge: !premiumFeatures.showTopArtisanBadge
-    };
-    savePremiumFeatures(newFeatures);
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-yellow-600"></div>
       </div>
     );
   }
 
-  if (!user || !artisanId) {
+  if (!user || !artisan) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600">Vous devez être connecté pour accéder à cette page.</p>
@@ -141,178 +41,187 @@ export default function PremiumPage() {
     );
   }
 
-  const isActive = isPremiumActive({ id: artisanId, premiumFeatures });
-  const statusDisplay = getPremiumStatusDisplay({ id: artisanId, premiumFeatures });
+  // Si déjà premium, rediriger vers la fiche
+  if (artisan.premiumFeatures?.isPremium) {
+    return (
+      <div className="text-center py-12">
+        <Crown className="h-16 w-16 text-yellow-600 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Vous êtes déjà Premium !</h2>
+        <p className="text-gray-600 mb-6">Gérez vos fonctionnalités premium depuis votre fiche artisan.</p>
+        <Button asChild>
+          <a href="/dashboard/fiche">Aller à ma fiche</a>
+        </Button>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="space-y-8">
-        {/* En-tête */}
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Fonctionnalités Premium
-          </h1>
-          <p className="text-gray-600">
-            Améliorez votre visibilité avec nos options premium
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Crown className="h-12 w-12 text-yellow-600" />
+            <h1 className="text-4xl font-bold text-gray-900">Devenir Top Artisan</h1>
+          </div>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Démarquez-vous de la concurrence et attirez plus de clients avec nos fonctionnalités Top Artisan
           </p>
         </div>
 
-        {/* Statut Premium */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Crown className="h-5 w-5 text-yellow-500" />
-              Statut Premium
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {isActive ? (
-                  <CheckCircle className="h-6 w-6 text-green-500" />
-                ) : (
-                  <XCircle className="h-6 w-6 text-gray-400" />
-                )}
-                <div>
-                  <p className="font-semibold">{statusDisplay.label}</p>
-                  {statusDisplay.daysRemaining !== undefined && statusDisplay.daysRemaining > 0 && (
-                    <p className="text-sm text-gray-600">
-                      {statusDisplay.daysRemaining} jours restants
-                    </p>
-                  )}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+          {/* Colonne gauche - Vidéo et avantages */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Vidéo de présentation */}
+            <Card className="overflow-hidden">
+              <div className="relative bg-gradient-to-r from-yellow-600 to-orange-600 aspect-video flex items-center justify-center">
+                <div className="text-center text-white">
+                  <Play className="h-16 w-16 mx-auto mb-4 opacity-80" />
+                  <h3 className="text-2xl font-bold mb-2">Découvrez les avantages Top Artisan</h3>
+                  <p className="text-yellow-100">Vidéo de présentation des fonctionnalités</p>
                 </div>
               </div>
-              
-              <Badge variant={isActive ? "default" : "secondary"}>
-                {isActive ? "Actif" : "Inactif"}
-              </Badge>
+            </Card>
+
+            {/* Avantages détaillés */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-yellow-100 rounded-lg">
+                    <Award className="h-6 w-6 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">Badge "Top Artisan"</h3>
+                    <p className="text-gray-600">Affichez votre expertise avec un badge de qualité visible sur votre profil</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <Camera className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">Photos multiples</h3>
+                    <p className="text-gray-600">Jusqu'à 5 photos de bannière pour présenter vos réalisations</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-purple-100 rounded-lg">
+                    <Video className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">Vidéo de présentation</h3>
+                    <p className="text-gray-600">Présentez votre savoir-faire avec une vidéo personnalisée</p>
+                  </div>
+                </div>
+              </Card>
+
+              <Card className="p-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <TrendingUp className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg mb-2">Priorité d'affichage</h3>
+                    <p className="text-gray-600">Apparaissez en premier dans les résultats de recherche</p>
+                  </div>
+                </div>
+              </Card>
             </div>
 
-            {!isActive && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-                <p className="text-blue-800 text-sm">
-                  Souscrivez à notre offre premium pour débloquer toutes les fonctionnalités avancées.
-                </p>
-                <Button className="mt-2" size="sm">
-                  Découvrir Premium
-                </Button>
+            {/* Statistiques */}
+            <Card className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <h3 className="text-xl font-bold mb-4 text-center">Les Top Artisans obtiennent :</h3>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-3xl font-bold text-blue-600">+150%</div>
+                  <div className="text-sm text-gray-600">de visibilité</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-green-600">+85%</div>
+                  <div className="text-sm text-gray-600">de contacts</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-bold text-purple-600">+200%</div>
+                  <div className="text-sm text-gray-600">de conversions</div>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </Card>
+          </div>
 
-        {/* Fonctionnalités Premium */}
-        {isActive && (
-          <>
-            {/* Badge Top Artisan */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-yellow-500" />
-                  Badge "Top Artisan"
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
+          {/* Colonne droite - Panneau de paiement */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8">
+              <Card className="p-6 shadow-xl border-2 border-yellow-200">
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 rounded-full text-yellow-800 text-sm font-medium mb-4">
+                    <Zap className="h-4 w-4" />
+                    Offre limitée
+                  </div>
+                  <div className="text-4xl font-bold text-gray-900 mb-2">99€</div>
+                  <div className="text-gray-600">par mois</div>
+                  <div className="text-sm text-gray-500 line-through">129€</div>
+                </div>
+
+                <div className="space-y-4 mb-6">
                   <div className="flex items-center gap-3">
-                    <TopArtisanBadge />
-                    <div>
-                      <p className="font-medium">Afficher le badge "Top Artisan"</p>
-                      <p className="text-sm text-gray-600">
-                        Met en valeur votre expertise sur votre fiche
-                      </p>
-                    </div>
+                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    <span className="text-sm">Badge "Top Artisan"</span>
                   </div>
-                  
-                  <Switch
-                    checked={premiumFeatures.showTopArtisanBadge}
-                    onCheckedChange={toggleTopArtisanBadge}
-                    disabled={saving}
-                  />
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    <span className="text-sm">5 photos de bannière</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    <span className="text-sm">Vidéo de présentation</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    <span className="text-sm">Priorité d'affichage</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
+                    <span className="text-sm">Support prioritaire</span>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Bannières Premium */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <ImageIcon className="h-5 w-5" />
-                  Bannières Premium
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Aperçu */}
-                {(premiumFeatures.bannerPhotos.length > 0 || premiumFeatures.bannerVideo) && (
-                  <div>
-                    <h3 className="font-medium mb-3">Aperçu</h3>
-                    <PremiumBannerDisplay
-                      photos={premiumFeatures.bannerPhotos}
-                      video={premiumFeatures.bannerVideo}
-                      height="h-48"
-                    />
-                  </div>
-                )}
-
-                <Separator />
-
-                {/* Gestion des uploads */}
-                <PremiumBannerUpload
-                  artisanId={artisanId}
-                  currentPhotos={premiumFeatures.bannerPhotos}
-                  currentVideo={premiumFeatures.bannerVideo}
-                  onPhotosChange={handlePhotosChange}
-                  onVideoChange={handleVideoChange}
+                <UpgradeButton 
+                  currentPlan="basic"
+                  monthlyPrice={artisan.monthlySubscriptionPrice || 69}
+                  className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-lg text-lg"
                 />
-              </CardContent>
-            </Card>
 
-            {/* Avantages Premium */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Vos avantages Premium
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Bannières multiples</p>
-                      <p className="text-sm text-gray-600">Jusqu'à 5 photos en carrousel</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Vidéo de présentation</p>
-                      <p className="text-sm text-gray-600">Présentez votre savoir-faire</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Badge "Top Artisan"</p>
-                      <p className="text-sm text-gray-600">Marque de qualité visible</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                    <div>
-                      <p className="font-medium">Priorité d'affichage</p>
-                      <p className="text-sm text-gray-600">Apparaissez en premier</p>
-                    </div>
+                <div className="mt-4 text-center">
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+                    <Shield className="h-4 w-4" />
+                    <span>Paiement sécurisé • Annulation à tout moment</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </>
-        )}
+              </Card>
+
+              {/* Témoignage */}
+              <Card className="p-4 mt-6 bg-gray-50">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    JM
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-700 italic mb-2">
+                      "Depuis que je suis passé Premium, j'ai triplé mes demandes de devis !"
+                    </p>
+                    <p className="text-xs text-gray-500">Jean-Michel, Plombier à Lyon</p>
+                  </div>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
