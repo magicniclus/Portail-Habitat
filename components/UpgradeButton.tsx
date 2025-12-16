@@ -10,6 +10,9 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Crown, Loader2, Check, Zap } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useEffect, useState as useStateHook } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { useRouter } from 'next/navigation';
 // Note: Remplacer par votre système de toast préféré
 // import { toast } from 'sonner';
@@ -29,7 +32,7 @@ const PLANS = {
   },
   premium: {
     name: 'Top Artisan',
-    price: 129,
+    price: 99,
     color: 'bg-yellow-100 text-yellow-800',
     features: ['Tout Basic +', 'Badge Top Artisan', 'Jusqu\'à 5 photos bannière', 'Priorité d\'affichage']
   },
@@ -43,19 +46,27 @@ const PLANS = {
 
 export default function UpgradeButton({ 
   currentPlan = 'basic', 
-  monthlyPrice = 69,
+  monthlyPrice = 89,
   className = '' 
 }: UpgradeButtonProps) {
-  const { user } = useAuth();
+  const { user, artisan } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'premium' | 'premium_plus'>('premium');
-  const [prorata, setProrata] = useState(true);
+  const [prorata, setProrata] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [currentPrice, setCurrentPrice] = useState(monthlyPrice);
 
-  // Déterminer les plans disponibles pour upgrade
+  // Récupérer le prix actuel depuis les données de l'artisan
+  useEffect(() => {
+    if (artisan?.monthlySubscriptionPrice) {
+      setCurrentPrice(artisan.monthlySubscriptionPrice);
+    }
+  }, [artisan]);
+
+  // Déterminer les plans disponibles pour upgrade - seulement Top Artisan
   const availablePlans = Object.entries(PLANS).filter(([key, plan]) => {
-    return plan.price > monthlyPrice;
+    return key === 'premium' && plan.price > currentPrice;
   });
 
   // Si déjà au plan le plus élevé, ne pas afficher le bouton
@@ -86,7 +97,7 @@ export default function UpgradeButton({
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          plan: selectedPlan,
+          plan: 'premium',
           prorata
         })
       });
@@ -97,7 +108,7 @@ export default function UpgradeButton({
         throw new Error(data.error || 'Erreur lors de l\'upgrade');
       }
 
-      // Succès
+      // Succès - rediriger vers Ma fiche
       console.log(
         prorata 
           ? `Upgrade réussi ! Facturation immédiate de ${PLANS[selectedPlan].price - monthlyPrice}€`
@@ -105,9 +116,7 @@ export default function UpgradeButton({
       );
 
       setIsDialogOpen(false);
-      
-      // Recharger la page pour mettre à jour les données
-      router.refresh();
+      router.push('/dashboard/fiche'); // Rediriger vers la fiche données
 
     } catch (error: any) {
       console.error('Erreur upgrade:', error);
@@ -138,44 +147,19 @@ export default function UpgradeButton({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Sélection du plan */}
-          <div className="space-y-3">
-            <Label className="text-base font-medium">Choisir votre plan</Label>
-            <Select value={selectedPlan} onValueChange={(value: 'premium' | 'premium_plus') => setSelectedPlan(value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {availablePlans.map(([key, plan]) => (
-                  <SelectItem key={key} value={key}>
-                    <div className="flex items-center justify-between w-full">
-                      <span>{plan.name}</span>
-                      <Badge className={plan.color}>
-                        {plan.price}€/mois
-                      </Badge>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Aperçu du plan sélectionné */}
+          {/* Aperçu du plan Top Artisan */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>{PLANS[selectedPlan].name}</span>
-                <Badge className={PLANS[selectedPlan].color}>
-                  {PLANS[selectedPlan].price}€/mois
+                <span>{PLANS.premium.name}</span>
+                <Badge className={PLANS.premium.color}>
+                  {PLANS.premium.price}€/mois
                 </Badge>
               </CardTitle>
-              <CardDescription>
-                Fonctionnalités incluses dans ce plan
-              </CardDescription>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2">
-                {PLANS[selectedPlan].features.map((feature, index) => (
+                {PLANS.premium.features.map((feature, index) => (
                   <li key={index} className="flex items-center gap-2">
                     <Check className="h-4 w-4 text-green-600" />
                     <span className="text-sm">{feature}</span>
@@ -213,17 +197,17 @@ export default function UpgradeButton({
           <div className="bg-gray-50 p-4 rounded-lg space-y-2">
             <div className="flex justify-between text-sm">
               <span>Plan actuel:</span>
-              <span>{PLANS[currentPlan].name} - {monthlyPrice}€/mois</span>
+              <span>Basic - {currentPrice}€/mois</span>
             </div>
             <div className="flex justify-between text-sm">
               <span>Nouveau plan:</span>
-              <span>{PLANS[selectedPlan].name} - {PLANS[selectedPlan].price}€/mois</span>
+              <span>{PLANS.premium.name} - {PLANS.premium.price}€/mois</span>
             </div>
             {prorata && (
               <div className="flex justify-between text-sm font-medium border-t pt-2">
                 <span>À payer maintenant:</span>
                 <span className="text-green-600">
-                  {PLANS[selectedPlan].price - monthlyPrice}€
+                  {PLANS.premium.price - currentPrice}€
                 </span>
               </div>
             )}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import FicheEntreprise from "@/components/FicheEntreprise";
 import { uploadCoverPhoto, uploadLogoPhoto, updateArtisanDescription, updateArtisanPrestations, updateArtisanQuoteRange, updateArtisanCertifications, addArtisanProject, getArtisanProjects, updateProjectVisibility, deleteArtisanProject, updateArtisanProject, addPremiumBannerPhoto, uploadPremiumBannerPhotos } from "@/lib/storage";
+import UpgradeButton from "@/components/UpgradeButton";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc, query, where, collection, getDocs, onSnapshot } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -49,6 +50,38 @@ export default function MaFichePage() {
             const artisanDoc = querySnapshot.docs[0];
             const artisanData = artisanDoc.data();
             
+            // Debug des données premium
+            console.log('Données artisan complètes:', artisanData);
+            console.log('Premium features:', artisanData.premiumFeatures);
+            console.log('hasPremiumSite:', artisanData.hasPremiumSite);
+            console.log('subscriptionStatus:', artisanData.subscriptionStatus);
+            
+            // CORRECTION AUTOMATIQUE DES DONNÉES PREMIUM MANQUANTES
+            if (artisanData.premiumFeatures?.isPremium && !artisanData.premiumFeatures?.showTopArtisanBadge) {
+              console.log('🔧 Correction automatique des données premium...');
+              
+              try {
+                const token = await user.getIdToken();
+                const response = await fetch('/api/fix-premium', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  }
+                });
+                
+                const result = await response.json();
+                console.log('✅ Correction premium:', result);
+                
+                if (result.success) {
+                  // Recharger la page pour voir les changements
+                  window.location.reload();
+                }
+              } catch (error) {
+                console.error('❌ Erreur correction premium:', error);
+              }
+            }
+            
             // Transformer les données Firestore en format attendu par le composant
             setEntreprise({
               id: artisanDoc.id, // L'ID réel du document artisan
@@ -68,7 +101,8 @@ export default function MaFichePage() {
               zoneIntervention: artisanData.city ? [artisanData.city] : [],
               averageQuoteMin: artisanData.averageQuoteMin || undefined,
               averageQuoteMax: artisanData.averageQuoteMax || undefined,
-              premiumFeatures: artisanData.premiumFeatures || null
+              premiumFeatures: artisanData.premiumFeatures || null,
+              hasPremiumSite: artisanData.hasPremiumSite || false
             });
 
             // Charger les projets de l'artisan
@@ -441,6 +475,7 @@ export default function MaFichePage() {
             Prévisualisez et gérez votre fiche entreprise
           </p>
         </div>
+        
         <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-3">
           <div className="flex items-center space-x-2">
             <Button variant="outline" size="sm" onClick={handleShare}>

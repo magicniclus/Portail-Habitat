@@ -17,7 +17,9 @@ import {
   Loader2,
   Key,
   Mail,
-  Globe
+  Globe,
+  Crown,
+  X
 } from "lucide-react";
 import { onAuthStateChanged, updatePassword, updateEmail, reauthenticateWithCredential, EmailAuthProvider, signOut } from "firebase/auth";
 import { doc, getDoc, updateDoc, query, where, collection, getDocs } from "firebase/firestore";
@@ -57,6 +59,8 @@ export default function ParametresPage() {
     showEmail: false,
     allowDirectContact: true
   });
+
+  const [isCanceling, setIsCanceling] = useState(false);
 
   // Récupérer l'utilisateur connecté et ses données
   useEffect(() => {
@@ -215,6 +219,61 @@ export default function ParametresPage() {
     }
     setSaving(false);
     setTimeout(() => setSaveMessage(null), 3000);
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!currentUser || !artisanData?.stripeSubscriptionId) return;
+    
+    const confirmed = window.confirm(
+      'Êtes-vous sûr de vouloir revenir à l\'abonnement Basic ?\n\n' +
+      'Votre abonnement Top Artisan restera actif jusqu\'à la fin de la période en cours, ' +
+      'puis basculera automatiquement vers Basic (69€/mois) au prochain cycle de facturation.\n\n' +
+      'Cette action ne peut pas être annulée.'
+    );
+    
+    if (!confirmed) return;
+    
+    setIsCanceling(true);
+    try {
+      const token = await currentUser.getIdToken();
+      
+      const response = await fetch('/api/cancel-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      
+      console.log('Response status:', response.status);
+      console.log('Response data:', data);
+
+      if (!response.ok) {
+        console.error('Erreur API cancel-subscription:', data);
+        throw new Error(data.error || 'Erreur lors de l\'annulation');
+      }
+
+      setSaveMessage({ 
+        type: 'success', 
+        text: 'Downgrade programmé avec succès. Votre abonnement Top Artisan restera actif jusqu\'à la fin de la période, puis basculera vers Basic.' 
+      });
+      
+      // Recharger les données de l'artisan pour refléter les changements
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+      
+    } catch (error: any) {
+      console.error('Erreur annulation:', error);
+      setSaveMessage({ 
+        type: 'error', 
+        text: error.message || 'Erreur lors de l\'annulation de l\'abonnement' 
+      });
+    }
+    setIsCanceling(false);
+    setTimeout(() => setSaveMessage(null), 5000);
   };
 
 
@@ -533,14 +592,140 @@ export default function ParametresPage() {
                 </div>
               )}
 
-              <div>
-                <Label>Site premium</Label>
-                <div className="mt-1">
-                  <Badge variant={artisanData.hasPremiumSite ? 'default' : 'secondary'}>
-                    {artisanData.hasPremiumSite ? 'Activé' : 'Non activé'}
-                  </Badge>
+              {/* Site premium - seulement si vraiment premium */}
+              {artisanData.premiumFeatures?.isPremium && (
+                <div>
+                  <Label>Site premium</Label>
+                  <div className="mt-1">
+                    <Badge variant={artisanData.hasPremiumSite ? 'default' : 'secondary'}>
+                      {artisanData.hasPremiumSite ? 'Activé' : 'Non activé'}
+                    </Badge>
+                  </div>
                 </div>
+              )}
+
+              {/* Sections premium - seulement si isPremium = true */}
+              {artisanData.premiumFeatures?.isPremium && (
+                <>
+                  <div className="border-t pt-4">
+                    <Label className="text-yellow-600">🏆 Fonctionnalités Top Artisan</Label>
+                  </div>
+                  
+                  <div>
+                    <Label>Badge Top Artisan</Label>
+                    <div className="mt-1">
+                      <Badge variant={artisanData.premiumFeatures?.showTopArtisanBadge ? 'default' : 'secondary'}>
+                        {artisanData.premiumFeatures?.showTopArtisanBadge ? 'Activé' : 'Désactivé'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Photos de bannière</Label>
+                    <p className="text-sm text-gray-600">
+                      {artisanData.premiumFeatures?.bannerPhotos?.length || 0} / 5 photos
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label>Avantages Premium</Label>
+                    <div className="mt-1 space-y-1">
+                      {artisanData.premiumFeatures?.premiumBenefits?.map((benefit: string, index: number) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-sm text-gray-600">
+                            {benefit === 'multiple_banners' && 'Jusqu\'à 5 photos de bannière'}
+                            {benefit === 'video_banner' && 'Vidéo de présentation'}
+                            {benefit === 'top_badge' && 'Badge "Top Artisan"'}
+                            {benefit === 'priority_listing' && 'Priorité d\'affichage'}
+                          </span>
+                        </div>
+                      )) || []}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Message si abonnement annulé */}
+              {artisanData.subscriptionStatus === 'canceled' && artisanData.cancelAtPeriodEnd && (
+                <div className="flex items-center gap-2 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="text-orange-600">
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-orange-800">Abonnement annulé</p>
+                    <p className="text-xs text-orange-600">Votre abonnement Top Artisan restera actif jusqu'à la fin de la période en cours.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* BOUTON DE TEST - RESET PREMIUM */}
+              <div className="flex items-center justify-between pt-2 border-t border-red-200">
+                <div>
+                  <Label className="text-red-600">🧪 Mode Test</Label>
+                  <p className="text-xs text-red-500">Reset complet pour revenir à l'état Basic et tester l'upgrade</p>
+                </div>
+                <Button 
+                  variant="destructive"
+                  size="sm"
+                  onClick={async () => {
+                    if (window.confirm('⚠️ ATTENTION : Ceci va complètement reset votre statut premium pour les tests.\n\nVoulez-vous continuer ?')) {
+                      try {
+                        const user = auth.currentUser;
+                        if (!user) return;
+                        
+                        const token = await user.getIdToken();
+                        const response = await fetch('/api/reset-premium', {
+                          method: 'POST',
+                          headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                          }
+                        });
+                        
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                          alert('✅ Reset premium terminé ! Rechargement de la page...');
+                          window.location.reload();
+                        } else {
+                          alert('❌ Erreur: ' + result.error);
+                        }
+                      } catch (error) {
+                        console.error('Erreur reset:', error);
+                        alert('❌ Erreur lors du reset');
+                      }
+                    }
+                  }}
+                >
+                  🔄 Reset Premium
+                </Button>
               </div>
+              
+              {/* Downgrade vers Basic - seulement si premium actif ET pas déjà annulé */}
+              {artisanData.premiumFeatures?.isPremium && artisanData.hasPremiumSite && artisanData.subscriptionStatus !== 'canceled' && !artisanData.cancelAtPeriodEnd && (
+                <div className="flex items-center justify-between pt-2">
+                  <div>
+                    <Label>Revenir au Basic</Label>
+                    <p className="text-xs text-gray-500">Changement vers Basic (69€/mois) à la fin de la période</p>
+                  </div>
+                  <Button 
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelSubscription}
+                    disabled={isCanceling}
+                    className="text-gray-600 hover:text-gray-800"
+                  >
+                    {isCanceling ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      "Annuler"
+                    )}
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>

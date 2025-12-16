@@ -128,8 +128,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     setIsMounted(true);
   }, []);
 
-  // Vérifier si l'artisan n'est pas premium
-  const isNotPremium = artisan && !artisan.premiumFeatures?.isPremium;
+  // Vérifier si l'artisan n'est pas du tout premium (pas premium ET pas d'abonnement annulé en cours)
+  const isNotPremium = artisan && !artisan.premiumFeatures?.isPremium && artisan.subscriptionStatus !== 'canceled';
+  
+  // Debug pour voir les valeurs
+  console.log('Debug bouton navigation:', {
+    artisan: !!artisan,
+    isPremium: artisan?.premiumFeatures?.isPremium,
+    subscriptionStatus: artisan?.subscriptionStatus,
+    isNotPremium: isNotPremium
+  });
 
   const handleLogout = async () => {
     try {
@@ -200,7 +208,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                         >
                           <Link href="/dashboard/premium">
                             <Crown className="h-4 w-4 text-yellow-600" />
-                            <span>Devenir Premium</span>
+                            <span>Devenir Top Artisan</span>
                           </Link>
                         </SidebarMenuButton>
                       </SidebarMenuItem>

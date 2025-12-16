@@ -35,9 +35,9 @@ export function isPremiumActive(artisan: ArtisanWithPremium): boolean {
     return true;
   }
 
-  // Vérifier la date d'expiration pour les autres types
+  // Si pas de date d'expiration, considérer comme actif (nouveau comportement)
   if (!artisan.premiumFeatures.premiumEndDate) {
-    return false;
+    return true;
   }
 
   const now = new Date();

@@ -273,7 +273,7 @@ export default function OnboardingStep3Content() {
         console.error('Erreur lors de la création du compte artisan');
       }
 
-      // Créer l'URL pour step4 (upsell) avec l'artisanId
+      // Créer l'URL pour la page de fin (success) avec l'artisanId
       const params = new URLSearchParams({
         artisanId: artisanId || "",
         firstName: prospectData.firstName,
@@ -286,8 +286,8 @@ export default function OnboardingStep3Content() {
         selectedZoneRadius: prospectData.selectedZoneRadius?.toString() || "30"
       });
 
-      // Rediriger vers step4 (upsell)
-      router.push(`/onboarding/step4?${params.toString()}`);
+      // Rediriger vers la page de fin (success) au lieu de step4
+      router.push(`/onboarding/success?${params.toString()}`);
       
     } catch (error) {
       console.error("Erreur lors du paiement:", error);

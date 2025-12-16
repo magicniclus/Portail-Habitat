@@ -46,9 +46,9 @@ async function createPremiumPrices() {
         description: 'Abonnement de base'
       },
       {
-        id: 'price_premium_129',
-        name: 'Premium - 129€/mois', 
-        amount: 12900, // 129€ en centimes
+        id: 'price_premium_99',
+        name: 'Premium - 99€/mois', 
+        amount: 9900, // 99€ en centimes
         interval: 'month',
         description: 'Abonnement premium avec fonctionnalités avancées'
       },
