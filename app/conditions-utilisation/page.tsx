@@ -190,7 +190,7 @@ export default function ConditionsUtilisation() {
         </ul>
         <p>
           Pour plus d'informations, consultez notre 
-          <a href="/politique-confidentialite" className="text-blue-600 hover:underline"> politique de confidentialité</a>.
+          <a href="/politique-de-confidentialite" className="text-blue-600 hover:underline"> politique de confidentialité</a>.
         </p>
       </div>
 
