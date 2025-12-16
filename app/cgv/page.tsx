@@ -195,7 +195,7 @@ export default function CGV() {
         Portail Habitat s'engage à protéger les données personnelles conformément au RGPD. 
         Les données collectées sont utilisées uniquement dans le cadre de la mise en relation 
         et de la gestion des services. Pour plus d'informations, consultez notre 
-        <a href="/politique-confidentialite" className="text-blue-600 hover:underline"> politique de confidentialité</a>.
+        <a href="/politique-de-confidentialite" className="text-blue-600 hover:underline"> politique de confidentialité</a>.
       </p>
 
       <h2 className="text-2xl font-semibold text-gray-900 mt-8 mb-4">
