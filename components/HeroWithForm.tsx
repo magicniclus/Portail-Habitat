@@ -388,7 +388,7 @@ export default function HeroWithForm() {
                           conditions générales d'utilisation
                         </a>
                         {" "}et la{" "}
-                        <a href="/politique-confidentialite" className="text-gray-600 hover:text-gray-700 underline">
+                        <a href="/politique-de-confidentialite" className="text-gray-600 hover:text-gray-700 underline">
                           politique de confidentialité
                         </a>
                       </Label>
