@@ -324,7 +324,7 @@ export default function OnboardingStep2Content() {
               disabled={!selectedCity}
               className="px-6 py-3 font-semibold bg-orange-600 hover:bg-orange-700 disabled:bg-gray-300"
             >
-              RÉSERVER
+              ACCÉDER
             </Button>
           </div>
         </div>
@@ -387,7 +387,7 @@ export default function OnboardingStep2Content() {
                       <div className="flex items-center space-x-2">
                         <MapPin className="w-8 h-8 flex-shrink-0 text-blue-600" />
                         <span className="font-semibold text-gray-900">
-                          Choisissez votre zone d'intervention – {getProfessionLabel(profession)}
+                          Voici les demandes disponibles pour votre activité dans cette zone
                         </span>
                       </div>
                     </div>
@@ -408,7 +408,7 @@ export default function OnboardingStep2Content() {
                                 </>
                               ) : (
                                 <>
-                                  <strong>Environ {estimatedSearches} recherches</strong> ces dernières 24h pour un {getProfessionLabel(profession).toLowerCase()} sur {selectedCity}
+                                  <strong>Environ {estimatedSearches} particuliers recherchent actuellement</strong> un {getProfessionLabel(profession).toLowerCase()} dans cette zone
                                   <br />
                                   <span className="text-sm text-orange-600 font-medium">Zone très active en ce moment</span>
                                 </>
@@ -426,7 +426,7 @@ export default function OnboardingStep2Content() {
                           <div className="flex items-center space-x-3">
                             <CheckCircle className="w-8 h-8 flex-shrink-0 text-orange-600" />
                             <span className="text-lg text-gray-700">
-                              <strong>12 demandes de devis proposées hier</strong>
+                              <strong>12 demandes de devis réelles ont été générées dans cette zone hier</strong>
                             </span>
                           </div>
                           
@@ -455,11 +455,11 @@ export default function OnboardingStep2Content() {
                       disabled={!selectedCity}
                       className="w-full py-4 text-xl font-semibold bg-orange-600 hover:bg-orange-700 disabled:bg-gray-300"
                     >
-                      RÉSERVER CETTE ZONE →
+                      Accéder aux demandes de cette zone →
                     </Button>
 
                     <p className="text-xs text-gray-400 text-center">
-                      Zone disponible aujourd'hui • Plus de 64 000 demandes mensuelles sur le portail
+                      Zone disponible aujourd'hui • des demandes sont déjà actives dans votre secteur
                     </p>
 
                     {/* Message d'anti-vente */}

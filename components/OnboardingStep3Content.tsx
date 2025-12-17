@@ -338,7 +338,7 @@ export default function OnboardingStep3Content() {
             {/* Récapitulatif mobile */}
             <Card className="bg-white border border-gray-200">
               <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-gray-900 ">Vous êtes à 30 secondes de recevoir vos premières demandes</h2>
+                <h2 className="text-xl font-bold text-gray-900 ">Vous êtes à 30 secondes d'être visible et de recevoir vos premières demandes</h2>
                 <p className="text-sm text-gray-600 mb-6">Votre fiche est prête. Dès l'activation, vous apparaissez dans votre zone et recevez gratuitement les demandes des particuliers qui vous contactent directement. L'accès aux demandes ciblées à 35 € est entièrement facultatif.</p>
                 
                 <div className="space-y-6">
@@ -351,7 +351,10 @@ export default function OnboardingStep3Content() {
                   {/* Demandes estimées */}
                   <div className="pb-4 border-b border-gray-100 border-l-4 border-l-orange-500 pl-3">
                     <h3 className="text-gray-600 text-sm font-medium mb-2">Demandes estimées dans votre secteur :</h3>
-                    <p className="font-semibold text-sm">jusqu'à 150 demandes de devis chaque mois sur le portail</p>
+                    <div>
+                      <p className="font-semibold text-sm">Des demandes de devis sont déjà générées chaque mois dans votre zone et votre métier</p>
+                      <p className="text-xs text-gray-500 mt-1">Le volume dépend de la demande locale et de votre réactivité.</p>
+                    </div>
                   </div>
                   
                   {/* Vos avantages inclus */}
@@ -372,7 +375,7 @@ export default function OnboardingStep3Content() {
                       </div>
                       <div className="flex items-start space-x-2">
                         <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Vous ne payez que les demandes que vous acceptez</span>
+                        <span className="text-xs text-gray-700">Accès aux demandes ciblées — vous restez libre de répondre ou non</span>
                       </div>
                       <div className="flex items-start space-x-2">
                         <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -590,6 +593,11 @@ export default function OnboardingStep3Content() {
                     {!isProcessing && <ArrowRight className="h-6 w-6" />}
                   </Button>
 
+                  {/* Texte de réassurance sous le bouton */}
+                  <div className="text-center mt-4">
+                    <p className="text-sm font-medium text-gray-700">🔒 Essai sans risque — résiliation en 1 clic depuis votre espace</p>
+                  </div>
+
                   {/* Textes sous le bouton */}
                   <div className="text-center space-y-1 mt-4">
                     <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
@@ -604,10 +612,10 @@ export default function OnboardingStep3Content() {
                   {/* Badges sécurité */}
                   <PaymentSecurityBadges />
                   
-                  {/* Texte légal */}
+                  {/* Texte de réassurance final */}
                   <div className="mt-6 pt-4 border-t border-gray-100">
                     <p className="text-xs text-gray-400 leading-relaxed">
-                      Vous activez votre visibilité professionnelle à 69 €/mois, sans engagement. Vous pouvez arrêter à tout moment depuis votre espace.
+                      Vous ne payez pas pour des promesses, mais pour être visible auprès de particuliers qui cherchent activement un artisan comme vous.
                     </p>
                   </div>
                 </form>
@@ -621,7 +629,7 @@ export default function OnboardingStep3Content() {
             {/* Colonne gauche - Récapitulatif */}
             <Card className="bg-white border border-gray-200">
               <CardContent className="p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Vous êtes à 30 secondes de recevoir vos premières demandes</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">Vous êtes à 30 secondes d'être visible et de recevoir vos premières demandes</h2>
                 <p className="text-base text-gray-600 mb-8">Votre fiche est prête. Dès l'activation, vous apparaissez dans votre zone et recevez gratuitement les demandes des particuliers qui vous contactent directement.</p>
                 
                 <div className="space-y-8">
@@ -634,7 +642,10 @@ export default function OnboardingStep3Content() {
                   {/* Demandes estimées */}
                   <div className="pb-6 border-b border-gray-100 border-l-4 border-l-orange-500 pl-4">
                     <h3 className="text-gray-600 text-base font-medium mb-3">Demandes estimées dans votre secteur :</h3>
-                    <p className="font-semibold text-base">jusqu'à 150 demandes de devis chaque mois sur le portail</p>
+                    <div>
+                      <p className="font-semibold text-base">Des demandes de devis sont déjà générées chaque mois dans votre zone et votre métier</p>
+                      <p className="text-sm text-gray-500 mt-1">Le volume dépend de la demande locale et de votre réactivité.</p>
+                    </div>
                   </div>
                   
                   {/* Vos avantages inclus */}
@@ -655,7 +666,7 @@ export default function OnboardingStep3Content() {
                       </div>
                       <div className="flex items-start space-x-3">
                         <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Vous ne payez que les demandes que vous acceptez</span>
+                        <span className="text-sm text-gray-700">Accès aux demandes ciblées — vous restez libre de répondre ou non</span>
                       </div>
                       <div className="flex items-start space-x-3">
                         <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -860,6 +871,11 @@ export default function OnboardingStep3Content() {
                     {!isProcessing && <ArrowRight className="h-7 w-7" />}
                   </Button>
 
+                  {/* Texte de réassurance sous le bouton */}
+                  <div className="text-center mt-4">
+                    <p className="text-sm font-medium text-gray-700">🔒 Essai sans risque — résiliation en 1 clic depuis votre espace</p>
+                  </div>
+
                   {/* Textes sous le bouton */}
                   <div className="text-center space-y-2 mt-6">
                     <div className="flex items-center justify-center gap-3 text-sm text-gray-600">
@@ -874,10 +890,10 @@ export default function OnboardingStep3Content() {
                   {/* Badges sécurité */}
                   <PaymentSecurityBadges />
                   
-                  {/* Texte légal */}
+                  {/* Texte de réassurance final */}
                   <div className="mt-6 pt-4 border-t border-gray-100">
                     <p className="text-xs text-gray-400 leading-relaxed">
-                      Vous activez votre visibilité professionnelle à 69 €/mois, sans engagement. Vous pouvez arrêter à tout moment depuis votre espace.
+                      Vous ne payez pas pour des promesses, mais pour être visible auprès de particuliers qui cherchent activement un artisan comme vous.
                     </p>
                   </div>
                 </form>

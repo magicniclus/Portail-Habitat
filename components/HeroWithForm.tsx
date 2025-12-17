@@ -53,7 +53,7 @@ export default function HeroWithForm() {
   }, []);
 
   const advantages = [
-    "Demandes clients GRATUITES depuis votre fiche",
+    "Accès gratuit aux demandes – vous décidez lesquelles accepter",
     "Vous choisissez quels chantiers accepter",
     "Aucun engagement — résiliable à tout moment",
     "Activation immédiate",
@@ -210,11 +210,11 @@ export default function HeroWithForm() {
 
 
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Des particuliers vous contactent directement dans votre zone
+            Recevez des demandes de travaux qualifiées dans votre zone
             </h1>
             
             <p className="text-xl text-gray-100 mb-8">
-             Vous êtes visible localement - Les clients peuvent vous contacter gratuitement depuis votre fiche - Prenez des projets partagés par des particuliers
+             Des projets réels issus de demandes locales, triés et accessibles immédiatement
             </p>
 
             <div className="space-y-4">
@@ -398,7 +398,7 @@ export default function HeroWithForm() {
                   </div>
 
                   <Button type="submit" className="w-full text-lg py-3 bg-orange-600 hover:bg-orange-700">
-                    <span className="hidden sm:inline">Voir les demandes dans ma zone</span>
+                    <span className="hidden sm:inline">Voir les demandes disponibles dans ma zone</span>
                     <span className="sm:hidden">Voir les demandes</span>
                   </Button>
 
