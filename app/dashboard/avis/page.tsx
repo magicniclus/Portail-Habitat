@@ -236,7 +236,7 @@ Cordialement,`
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Avis clients</h1>
           <p className="text-muted-foreground">
@@ -409,50 +409,50 @@ Cordialement,`
 
       {/* Modale pour envoyer un email */}
       <Dialog open={isEmailModalOpen} onOpenChange={setIsEmailModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Demander un avis client</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="w-[90vw] max-w-[500px] max-h-[90vh] flex flex-col">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="text-lg">Demander un avis client</DialogTitle>
+            <DialogDescription className="text-sm">
               Envoyez un email à vos clients pour leur demander de laisser un avis
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="flex-1 overflow-y-auto space-y-4 py-4">
             <div>
-              <Label htmlFor="email-to">Email du client</Label>
+              <Label htmlFor="email-to" className="text-sm">Email du client</Label>
               <Input
                 id="email-to"
                 type="email"
                 value={emailForm.to}
                 onChange={(e) => setEmailForm({...emailForm, to: e.target.value})}
                 placeholder="client@exemple.com"
-                className="mt-1"
+                className="mt-1 w-full"
               />
             </div>
             
             <div>
-              <Label htmlFor="email-subject">Objet</Label>
+              <Label htmlFor="email-subject" className="text-sm">Objet</Label>
               <Input
                 id="email-subject"
                 value={emailForm.subject}
                 onChange={(e) => setEmailForm({...emailForm, subject: e.target.value})}
-                className="mt-1"
+                className="mt-1 w-full"
               />
             </div>
             
             <div>
-              <Label htmlFor="email-content">Message</Label>
+              <Label htmlFor="email-content" className="text-sm">Message</Label>
               <Textarea
                 id="email-content"
                 value={emailForm.content}
                 onChange={(e) => setEmailForm({...emailForm, content: e.target.value})}
-                className="mt-1 min-h-[200px]"
+                className="mt-1 min-h-[120px] sm:min-h-[150px] w-full resize-none"
                 placeholder="Votre message..."
               />
             </div>
 
             {emailMessage && (
-              <div className={`p-3 rounded-lg ${
+              <div className={`p-3 rounded-lg text-sm break-words ${
                 emailMessage.type === 'success' 
                   ? 'bg-green-50 border border-green-200 text-green-800' 
                   : 'bg-red-50 border border-red-200 text-red-800'
@@ -462,11 +462,11 @@ Cordialement,`
             )}
           </div>
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEmailModalOpen(false)}>
+          <DialogFooter className="flex-shrink-0 flex-col sm:flex-row gap-2 sm:gap-0 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsEmailModalOpen(false)} className="w-full sm:w-auto">
               Annuler
             </Button>
-            <Button onClick={handleSubmitEmail} disabled={isSubmitting}>
+            <Button onClick={handleSubmitEmail} disabled={isSubmitting} className="w-full sm:w-auto">
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

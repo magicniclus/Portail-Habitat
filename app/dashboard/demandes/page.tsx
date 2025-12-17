@@ -451,7 +451,7 @@ export default function DemandesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Mes demandes</h1>
           <p className="text-muted-foreground">
@@ -653,11 +653,13 @@ export default function DemandesPage() {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="generated" className="flex items-center gap-2">
             <Mail className="h-4 w-4" />
-            Demandes générées ({leads.length})
+            <span className="hidden sm:inline">Demandes générées ({leads.length})</span>
+            <span className="sm:hidden">Demandes ({leads.length})</span>
           </TabsTrigger>
           <TabsTrigger value="bought" className="flex items-center gap-2">
             <Package className="h-4 w-4" />
-            Appels d'offres ({boughtLeads.length})
+            <span className="hidden sm:inline">Appels d'offres ({boughtLeads.length})</span>
+            <span className="sm:hidden">Appels ({boughtLeads.length})</span>
           </TabsTrigger>
         </TabsList>
 

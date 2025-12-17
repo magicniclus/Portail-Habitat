@@ -298,8 +298,13 @@ export default function MarketplaceBoard({
             )}
           </p>
         </div>
-        <Button onClick={loadLeads} variant="outline" disabled={isLoading}>
+        <Button onClick={loadLeads} variant="outline" disabled={isLoading} className="hidden sm:flex">
           {isLoading ? "Actualisation..." : "Actualiser"}
+        </Button>
+        <Button onClick={loadLeads} variant="outline" disabled={isLoading} size="sm" className="sm:hidden p-2">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
         </Button>
       </div>
 
@@ -356,7 +361,7 @@ export default function MarketplaceBoard({
             </div>
 
             {/* Sélecteur de rayon */}
-            <div className="w-full md:w-40 space-y-2">
+            <div className="flex-1 md:w-40 space-y-2">
               <label className="text-sm font-medium text-gray-700">
                 Rayon
               </label>
@@ -485,7 +490,7 @@ export default function MarketplaceBoard({
             return (
               <Card key={lead.id} className="hover:shadow-lg transition-shadow duration-200">
                 <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                     <div className="flex-1">
                       <CardTitle className="text-lg font-semibold text-gray-900 mb-1">
                         {lead.projectType}
@@ -500,10 +505,19 @@ export default function MarketplaceBoard({
                           <span className="text-blue-600 font-medium">• {lead.distance}km</span>
                         )}
                       </div>
+                      {/* Badge urgence sous la ville sur mobile */}
+                      <div className="sm:hidden mt-2">
+                        <Badge className={`${getTimelineColor(lead.timeline)} text-xs`}>
+                          {formatTimeline(lead.timeline)}
+                        </Badge>
+                      </div>
                     </div>
-                    <Badge className={`${getTimelineColor(lead.timeline)} text-xs`}>
-                      {formatTimeline(lead.timeline)}
-                    </Badge>
+                    {/* Badge urgence à droite sur desktop */}
+                    <div className="hidden sm:block">
+                      <Badge className={`${getTimelineColor(lead.timeline)} text-xs`}>
+                        {formatTimeline(lead.timeline)}
+                      </Badge>
+                    </div>
                   </div>
                 </CardHeader>
 
@@ -548,8 +562,19 @@ export default function MarketplaceBoard({
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center justify-between pt-2 border-t">
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-2 border-t gap-2">
+                    <Button 
+                      size="sm" 
+                      className="bg-blue-600 hover:bg-blue-700 sm:order-2"
+                      asChild
+                    >
+                      <Link href={`/dashboard/marketplace/purchase/${lead.id}`}>
+                        <ShoppingCart className="h-4 w-4 mr-1" />
+                        Répondre
+                      </Link>
+                    </Button>
+
+                    <div className="flex items-center gap-4 text-xs text-gray-500 sm:order-1">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         <span>
@@ -560,17 +585,6 @@ export default function MarketplaceBoard({
                         </span>
                       </div>
                     </div>
-
-                    <Button 
-                      size="sm" 
-                      className="bg-blue-600 hover:bg-blue-700"
-                      asChild
-                    >
-                      <Link href={`/dashboard/marketplace/purchase/${lead.id}`}>
-                        <ShoppingCart className="h-4 w-4 mr-1" />
-                        Répondre
-                      </Link>
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -583,11 +597,14 @@ export default function MarketplaceBoard({
       {!isLoading && leads.length > 0 && (
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <CheckCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+            <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+              <div className="sm:hidden flex justify-center">
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+              </div>
+              <CheckCircle className="hidden sm:block h-5 w-5 text-blue-600 mt-0.5" />
               <div className="flex-1">
                 <div className="text-sm text-blue-800">
-                  <p className="font-medium mb-1">Comment ça marche ?</p>
+                  <p className="font-medium mb-1 text-center sm:text-left">Comment ça marche ?</p>
                   <ul className="space-y-1 text-blue-700">
                     <li>• Cliquez sur "Répondre" pour voir plus de détails et acheter le contact</li>
                     <li>• Une fois acheté, vous recevrez les coordonnées complètes du client</li>

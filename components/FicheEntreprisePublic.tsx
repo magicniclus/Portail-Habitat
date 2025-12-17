@@ -388,7 +388,7 @@ export default function FicheEntreprisePublic({
       </div>
 
       {/* Contenu principal */}
-      <div className="relative px-6 pb-6">
+      <div className="relative px-2 md:px-6 pb-6">
         {/* Logo entreprise (chevauchant la bannière) */}
         <div className="relative -mt-12 mb-6">
           <div className="w-24 h-24 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center relative">
@@ -420,16 +420,16 @@ export default function FicheEntreprisePublic({
         </div>
 
         {/* Layout principal */}
-        <div ref={containerRef} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div ref={containerRef} className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-[780px]:gap-4">
           {/* Partie gauche - Informations entreprise */}
-          <div className="lg:col-span-2 space-y-10">
+          <div className="lg:col-span-2 space-y-10 max-[780px]:space-y-6">
             {/* Nom et spécialités */}
             <div className="space-y-3">
               <div className="flex flex-col space-y-4 sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-gray-900 max-[780px]:text-2xl">
                   {entreprise.nom}
                 </h1>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 max-[780px]:space-x-1">
                   <Button variant="outline" size="sm" onClick={() => {
                     const url = window.location.href;
                     if (navigator.share) {
@@ -443,49 +443,49 @@ export default function FicheEntreprisePublic({
                         alert('Lien copié dans le presse-papier !');
                       }).catch(() => {});
                     }
-                  }}>
-                    <Share2 className="h-4 w-4 mr-2" />
+                  }} className="max-[780px]:text-xs max-[780px]:px-2">
+                    <Share2 className="h-4 w-4 mr-2 max-[780px]:h-3 max-[780px]:w-3 max-[780px]:mr-1" />
                     Partager
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => {
                     const url = window.location.href;
                     const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
                     window.open(facebookUrl, '_blank', 'width=600,height=400');
-                  }} className="text-blue-600 hover:bg-blue-50">
-                    <FacebookIcon className="h-4 w-4" />
+                  }} className="text-blue-600 hover:bg-blue-50 max-[780px]:px-2">
+                    <FacebookIcon className="h-4 w-4 max-[780px]:h-3 max-[780px]:w-3" />
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => {
                     const url = window.location.href;
                     const text = `Découvrez la fiche de ${entreprise.nom} - Artisan professionnel`;
                     const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
                     window.open(xUrl, '_blank', 'width=600,height=400');
-                  }} className="text-black hover:bg-gray-50">
-                    <XIcon className="h-4 w-4" />
+                  }} className="text-black hover:bg-gray-50 max-[780px]:px-2">
+                    <XIcon className="h-4 w-4 max-[780px]:h-3 max-[780px]:w-3" />
                   </Button>
                 </div>
               </div>
               
               <div className="flex flex-wrap gap-2 items-center">
                 {entreprise.specialites.map((specialite, index) => (
-                  <Badge key={index} variant="secondary" className="text-sm">
+                  <Badge key={index} variant="secondary" className="text-sm max-[780px]:text-xs">
                     {specialite}
                   </Badge>
                 ))}
               </div>
 
-              {/* Bannière publicitaire (si activée) */}
+              {/* Bannière publicitaire responsive (si activée) */}
               {showPromoBanner && (
-                <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-8 mt-6 border border-orange-100">
-                  <div className="flex items-center justify-between">
+                <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-8 mt-6 border border-orange-100 max-[780px]:p-4 max-[780px]:mt-4">
+                  <div className="flex flex-col max-[780px]:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0">
                     <div className="flex-1">
-                      <h3 className="text-xl font-bold mb-3 text-orange-900">Votre publicité ici !</h3>
-                      <p className="text-orange-800 text-base">
+                      <h3 className="text-xl font-bold mb-3 text-orange-900 max-[780px]:text-lg max-[780px]:mb-2">Votre publicité ici !</h3>
+                      <p className="text-orange-800 text-base max-[780px]:text-sm">
                         Développez votre visibilité et attirez plus de clients avec nos solutions publicitaires.
                       </p>
                     </div>
-                    <div className="ml-6">
+                    <div className="lg:ml-6">
                       <Link href="/devenir-pro">
-                        <Button className="bg-orange-600 hover:bg-orange-700 text-white">
+                        <Button className="bg-orange-600 hover:bg-orange-700 text-white w-full max-[780px]:w-full lg:w-auto">
                           En savoir plus
                         </Button>
                       </Link>
@@ -503,18 +503,12 @@ export default function FicheEntreprisePublic({
                       Découvrez les retours de nos clients satisfaits
                     </p>
                   </div>
-                  {entreprise.nombreAvis === 0 ? (
-                    <div className="text-sm text-gray-500">
-                      Soyez le premier à laisser votre avis
-                    </div>
-                  ) : (
-                    <Link href={`/avis/${entreprise.id}`}>
-                      <Button variant="outline" size="sm">
-                        <Star className="h-4 w-4 mr-2" />
-                        Laisser un avis
-                      </Button>
-                    </Link>
-                  )}
+                  <div className="flex items-center space-x-1">
+                    {getStarRating(entreprise.note)}
+                    <span className="ml-2 text-sm font-medium text-gray-700">
+                      {entreprise.note}/5 ({entreprise.nombreAvis} avis)
+                    </span>
+                  </div>
                 </div>
                 
                 <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
@@ -667,6 +661,124 @@ export default function FicheEntreprisePublic({
                 </div>
               )}
 
+              {/* Formulaire de contact mobile - après les certifications */}
+              {showContactForm && (
+                <div className="lg:hidden">
+                  <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6 max-[780px]:p-4">
+                    {isFormSubmitted ? (
+                      <div className="text-center space-y-4">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                          <CheckCircle className="h-8 w-8 text-green-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            Demande envoyée !
+                          </h3>
+                          <p className="text-gray-600 text-sm">
+                            Votre demande a été transmise à {entreprise.nom}. 
+                            Vous devriez recevoir une réponse sous 24h.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="mb-6">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            Demander un devis
+                          </h3>
+                          <p className="text-gray-600 text-sm">
+                            Contactez {entreprise.nom} pour votre projet
+                          </p>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                          <div className="grid grid-cols-2 gap-3">
+                            <Input
+                              name="prenom"
+                              placeholder="Prénom *"
+                              value={formData.prenom}
+                              onChange={handleInputChange}
+                              required
+                              disabled={isSubmittingForm}
+                            />
+                            <Input
+                              name="nom"
+                              placeholder="Nom *"
+                              value={formData.nom}
+                              onChange={handleInputChange}
+                              required
+                              disabled={isSubmittingForm}
+                            />
+                          </div>
+                          
+                          <Input
+                            name="email"
+                            type="email"
+                            placeholder="Email *"
+                            value={formData.email}
+                            onChange={handleInputChange}
+                            required
+                            disabled={isSubmittingForm}
+                          />
+                          
+                          <Input
+                            name="telephone"
+                            type="tel"
+                            placeholder="Téléphone *"
+                            value={formData.telephone}
+                            onChange={handleInputChange}
+                            required
+                            disabled={isSubmittingForm}
+                          />
+                          
+                          <Input
+                            name="codePostal"
+                            placeholder="Code postal *"
+                            value={formData.codePostal}
+                            onChange={handleInputChange}
+                            required
+                            disabled={isSubmittingForm}
+                          />
+                          
+                          <Textarea
+                            name="description"
+                            placeholder="Décrivez votre projet..."
+                            value={formData.description}
+                            onChange={handleInputChange}
+                            disabled={isSubmittingForm}
+                            rows={4}
+                          />
+
+                          {formErrorMessage && (
+                            <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
+                              {formErrorMessage}
+                            </div>
+                          )}
+
+                          <Button 
+                            type="submit" 
+                            className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                            disabled={isSubmittingForm}
+                          >
+                            {isSubmittingForm ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Envoi en cours...
+                              </>
+                            ) : (
+                              <>
+                                <Send className="h-4 w-4 mr-2" />
+                                Envoyer ma demande
+                              </>
+                            )}
+                          </Button>
+                        </form>
+                      </>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Projets */}
               {projects && projects.length > 0 && (
                 <div className="space-y-6">
@@ -744,9 +856,9 @@ export default function FicheEntreprisePublic({
             </div>
           </div>
 
-          {/* Partie droite - Formulaire de contact */}
+          {/* Partie droite - Formulaire de contact (desktop uniquement) */}
           {showContactForm && (
-            <div className="lg:col-span-1">
+            <div className="lg:col-span-1 hidden lg:block">
               <div
                 ref={cardRef}
                 className={`bg-white border border-gray-200 rounded-lg shadow-sm p-6 transition-all duration-300 ${

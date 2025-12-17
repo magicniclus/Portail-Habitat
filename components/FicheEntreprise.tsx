@@ -547,7 +547,7 @@ export default function FicheEntreprise({
   };
 
   return (
-    <div className="w-full h-full bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="w-full h-full bg-white rounded-lg md:shadow-lg overflow-hidden">
       {/* Input files cachés */}
       <input
         ref={coverInputRef}
@@ -594,7 +594,7 @@ export default function FicheEntreprise({
 
         {/* Badge Top Artisan en haut à droite de la bannière */}
         {shouldShowTopBadge && (
-          <div className="absolute top-8 right-8 z-20">
+          <div className="absolute top-4 md:top-8 right-4 md:right-8 z-20">
             <TopArtisanBadge 
               size="md" 
               variant="default"
@@ -614,7 +614,7 @@ export default function FicheEntreprise({
       </div>
 
       {/* Contenu principal */}
-      <div className="relative px-6 pb-6">
+      <div className="relative px-0 md:px-6 pb-6">
         {/* Logo entreprise (chevauchant la bannière) */}
         <div className="relative -mt-12 mb-6">
           <div 
@@ -718,22 +718,22 @@ export default function FicheEntreprise({
 
               {/* Note et avis */}
               <div className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-lg p-6 mt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Avis clients</h3>
-                    <p className="text-sm text-gray-600">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
+                  <div className="mb-4 sm:mb-0">
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">Avis clients</h3>
+                    <p className="text-sm text-gray-600 mb-3 sm:mb-0">
                       Découvrez les retours de nos clients satisfaits
                     </p>
                   </div>
                   {entreprise.nombreAvis === 0 && (
-                    <div className="text-sm text-gray-500">
+                    <div className="text-sm text-gray-500 sm:mt-0">
                       Soyez le premier à laisser votre avis
                     </div>
                   )}
                 </div>
                 
                 <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-                  <div className="flex items-center space-x-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
                     <div className="flex items-center">
                       {getStarRating(entreprise.note)}
                       <span className="font-medium ml-2 text-lg">{entreprise.note}/5</span>
@@ -1129,7 +1129,8 @@ export default function FicheEntreprise({
                               ) : (
                                 <>
                                   <Send className="h-4 w-4 mr-2" />
-                                  Envoyer ma demande
+                                  <span className="hidden sm:inline">Envoyer ma demande</span>
+                                  <span className="sm:hidden">Envoyer</span>
                                 </>
                               )}
                             </Button>
@@ -1143,7 +1144,12 @@ export default function FicheEntreprise({
                                 onClick={() => setShowPhone(!showPhone)}
                               >
                                 <Phone className="h-4 w-4 mr-2" />
-                                {showPhone ? entreprise.telephone : "Voir le numéro de téléphone"}
+                                {showPhone ? entreprise.telephone : (
+                                  <>
+                                    <span className="hidden sm:inline">Voir le numéro de téléphone</span>
+                                    <span className="sm:hidden">Voir le numéro</span>
+                                  </>
+                                )}
                               </Button>
                             </div>
                           )}
@@ -1236,10 +1242,10 @@ export default function FicheEntreprise({
               {reviews.length > 0 && (
                 <div className="space-y-6 mt-8">
                   <div className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">Avis clients</h3>
-                        <p className="text-sm text-gray-600">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-4">
+                      <div className="mb-4 sm:mb-0">
+                        <h3 className="text-xl font-bold text-gray-900 mb-1">Avis clients</h3>
+                        <p className="text-sm text-gray-600 mb-3 sm:mb-0">
                           Découvrez les retours de nos clients satisfaits
                         </p>
                       </div>
@@ -1262,9 +1268,9 @@ export default function FicheEntreprise({
 
                     <div className="space-y-4">
                       {reviews.slice(0, 6).map((review) => (
-                        <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center space-x-3">
+                        <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-4 relative">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-3">
+                            <div className="flex items-center space-x-3 mb-2 sm:mb-0">
                               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                                 <span className="text-sm font-medium text-blue-600">
                                   {review.clientName.charAt(0).toUpperCase()}
@@ -1286,7 +1292,7 @@ export default function FicheEntreprise({
                                 </div>
                               </div>
                             </div>
-                            <span className="text-sm text-gray-500">
+                            <span className="hidden sm:block text-sm text-gray-500">
                               {review.createdAt?.toDate?.()?.toLocaleDateString('fr-FR', {
                                 year: 'numeric',
                                 month: 'long',
@@ -1294,9 +1300,18 @@ export default function FicheEntreprise({
                               }) || 'Date inconnue'}
                             </span>
                           </div>
-                          <p className="text-gray-700 text-sm leading-relaxed">
+                          <p className="text-gray-700 text-sm leading-relaxed mb-2 sm:mb-0">
                             {review.comment}
                           </p>
+                          {/* Date en bas à droite sur mobile uniquement */}
+                          <div className="sm:hidden absolute bottom-2 right-2">
+                            <span className="text-xs text-gray-500">
+                              {review.createdAt?.toDate?.()?.toLocaleDateString('fr-FR', {
+                                day: 'numeric',
+                                month: 'short'
+                              }) || 'Date inconnue'}
+                            </span>
+                          </div>
                         </div>
                       ))}
                       
@@ -1430,7 +1445,8 @@ export default function FicheEntreprise({
                       ) : (
                         <>
                           <Send className="h-4 w-4 mr-2" />
-                          Envoyer ma demande
+                          <span className="hidden sm:inline">Envoyer ma demande</span>
+                          <span className="sm:hidden">Envoyer</span>
                         </>
                       )}
                     </Button>
@@ -1443,7 +1459,12 @@ export default function FicheEntreprise({
                             onClick={handlePhoneClick}
                           >
                             <Phone className="h-4 w-4 mr-2" />
-                            {showPhone ? entreprise.telephone : "Voir le numéro de téléphone"}
+                            {showPhone ? entreprise.telephone : (
+                              <>
+                                <span className="hidden sm:inline">Voir le numéro de téléphone</span>
+                                <span className="sm:hidden">Voir le numéro</span>
+                              </>
+                            )}
                           </Button>
                         )}
                       </form>

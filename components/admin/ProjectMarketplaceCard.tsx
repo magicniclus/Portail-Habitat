@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { doc, updateDoc, serverTimestamp, collection, addDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import PrestationsModal from "@/components/admin/PrestationsModal";
 import { getMarketplaceStats, initializeMarketplaceStructure, syncAssignmentsToMarketplace } from "@/lib/marketplace-utils";
 import { generateLeadPurchaseLink } from "@/lib/lead-links";
+import { useAuth } from "@/hooks/useAuth";
 import { 
   Globe,
   Eye,
@@ -40,6 +41,7 @@ export default function ProjectMarketplaceCard({
   onUpdate, 
   disabled = false 
 }: ProjectMarketplaceCardProps) {
+  const { user } = useAuth();
   const [isPublished, setIsPublished] = useState(estimation.isPublished || false);
   const [marketplacePrice, setMarketplacePrice] = useState(estimation.marketplacePrice || 35);
   const [maxSales, setMaxSales] = useState(estimation.maxSales || 3);
@@ -99,6 +101,25 @@ export default function ProjectMarketplaceCard({
     setHasChanges(hasChanged);
   }, [isPublished, marketplacePrice, maxSales, marketplaceDescription, selectedPrestations, estimation]);
 
+  // Fonction pour déclencher les notifications artisans
+  const triggerArtisanNotifications = async (estimation: any) => {
+    try {
+      // Créer un document dans la collection de surveillance
+      await addDoc(collection(db, '_estimationPublications'), {
+        estimationId: estimation.id,
+        coordinates: estimation.location?.coordinates || estimation.coordinates || null, // {lat: X, lng: Y}
+        workType: estimation.project?.prestationType || estimation.workType,
+        city: estimation.location?.city || estimation.city,
+        publishedAt: serverTimestamp(),
+        publishedBy: user?.uid || null
+      });
+      
+      console.log('✅ Artisans automatiquement notifiés');
+    } catch (error) {
+      console.error('❌ Erreur notification artisans:', error);
+    }
+  };
+
   const handleSave = async () => {
     if (!hasChanges || disabled) return;
 
@@ -137,6 +158,14 @@ export default function ProjectMarketplaceCard({
         } catch (syncError) {
           console.log("Erreur synchronisation assignations:", syncError);
         }
+      }
+
+      // NOUVEAU : Déclencher les notifications artisans si on publie
+      if (finalIsPublished && !estimation.isPublished) {
+        await triggerArtisanNotifications({
+          ...estimation,
+          ...updateData
+        });
       }
 
       // Mettre à jour l'état local via le callback parent

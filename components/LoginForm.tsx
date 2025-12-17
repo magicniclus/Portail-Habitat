@@ -179,7 +179,8 @@ export default function LoginForm({
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            {/* Desktop: côte à côte, Mobile: empilé */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
               <div className="flex items-center space-x-2">
                 <Checkbox 
                   id="remember" 
@@ -191,7 +192,7 @@ export default function LoginForm({
                 </Label>
               </div>
 
-              <Link href="/mot-de-passe-oublie" className={`text-sm ${linkClass}`}>
+              <Link href="/mot-de-passe-oublie" className={`text-sm ${linkClass} sm:text-right`}>
                 Mot de passe oublié ?
               </Link>
             </div>

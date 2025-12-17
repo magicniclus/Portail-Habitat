@@ -104,7 +104,7 @@ export default function MobileAppSection() {
           <div className="flex justify-center lg:justify-end">
             <div className="relative">
               {/* Mockup de téléphone */}
-              <div className="relative w-80 h-[600px] bg-gray-900 rounded-[3rem] p-2 shadow-2xl">
+              <div className="relative w-64 sm:w-72 lg:w-80 h-[480px] sm:h-[540px] lg:h-[600px] bg-gray-900 rounded-[3rem] p-2 shadow-2xl">
                 <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
                   
                   {/* Barre de statut */}

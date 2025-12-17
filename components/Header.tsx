@@ -270,13 +270,6 @@ export default function Header() {
                     </div>
                   </div>
 
-                  <Link 
-                    href="/trouver-pro" 
-                    className="block text-gray-600 hover:text-gray-900 font-semibold text-lg py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Trouver Pro
-                  </Link>
 
                   <Link 
                     href="/avis" 

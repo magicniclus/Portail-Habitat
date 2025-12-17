@@ -87,9 +87,9 @@ export default function TipsSection() {
           {/* Articles secondaires - 1/3 de la largeur */}
           <div className="space-y-6">
             {sideTips.map((tip, index) => (
-              <div key={index} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group rounded-lg bg-white flex flex-col h-48">
+              <div key={index} className="overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 group rounded-lg bg-white flex flex-col h-64 sm:h-72 lg:h-48">
                 <Link href={tip.link} className="flex flex-col h-full">
-                  <div className="relative flex-1">
+                  <div className="relative h-40 sm:h-48 lg:flex-1">
                     <Image
                       src={tip.image}
                       alt={tip.title}

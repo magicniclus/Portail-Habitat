@@ -296,8 +296,8 @@ export default function ArtisanPage() {
       <Header />
       
       <div className="flex-1">
-        <div className="container mx-auto px-4 py-8">
-          <div className="space-y-6">
+        <div className="container mx-auto px-4 py-8 max-[780px]:px-2 max-[780px]:py-4">
+          <div className="space-y-6 max-[780px]:space-y-4">
             {/* Header */}
             <div className="flex items-center space-x-4">
               <Link href="/artisans">

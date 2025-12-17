@@ -7,6 +7,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import { getFilteredSuggestions, getPopularSuggestions } from '@/lib/renovation-suggestions'
+import MobileMenu from '@/components/MobileMenu'
 
 export default function SimulatorHero() {
   const [projectInput, setProjectInput] = useState('')
@@ -116,8 +117,8 @@ export default function SimulatorHero() {
             </span>
           </div>
 
-          {/* Boutons à droite */}
-          <div className="flex items-center space-x-4">
+          {/* Boutons desktop à droite */}
+          <div className="hidden lg:flex items-center space-x-4">
             <Link href="/connexion">
               <Button variant="outline" className="bg-white/10 border-white/20 text-white hover:bg-white/20">
                 Connexion
@@ -128,6 +129,11 @@ export default function SimulatorHero() {
                 S'inscrire en tant que professionnel
               </Button>
             </Link>
+          </div>
+
+          {/* Menu mobile hamburger */}
+          <div className="lg:hidden">
+            <MobileMenu />
           </div>
         </div>
       </nav>

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Progress } from '@/components/ui/progress'
+import MobileMenu from '@/components/MobileMenu'
 
 interface SimulatorTemplateProps {
   children: React.ReactNode
@@ -45,8 +46,10 @@ export default function SimulatorTemplate({
               </span>
             </div>
 
-            {/* Espace vide pour équilibrer le layout */}
-            <div></div>
+            {/* Menu mobile avec hamburger uniquement */}
+            <div className="lg:hidden">
+              <MobileMenu />
+            </div>
           </div>
 
           {/* Barre de progression - masquée sur la page de résultats */}

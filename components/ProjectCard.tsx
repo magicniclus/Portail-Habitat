@@ -178,16 +178,18 @@ export default function ProjectCard({
               {project.city}
             </div>
           )}
-          <div className="flex items-center text-xs text-gray-500">
+          <div className="hidden sm:flex items-center text-xs text-gray-500">
             <Calendar className="h-3 w-3 mr-1" />
             {formatDate(project.createdAt)}
           </div>
         </div>
 
-        {/* Statistiques */}
-        <div className="flex items-center space-x-4 text-xs text-gray-500 pt-2 border-t">
-          <span>{project.likesCount} j'aime</span>
-          <span>{project.commentsCount} commentaires</span>
+        {/* Date en bas à droite sur mobile uniquement */}
+        <div className="sm:hidden flex justify-end pt-2 border-t">
+          <div className="flex items-center text-xs text-gray-500">
+            <Calendar className="h-3 w-3 mr-1" />
+            {formatDate(project.createdAt)}
+          </div>
         </div>
       </CardContent>
 

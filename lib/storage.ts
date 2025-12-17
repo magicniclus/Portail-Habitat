@@ -588,8 +588,22 @@ export async function replacePremiumBannerPhoto(artisanId: string, photoIndex: n
     const artisanDoc = await getDoc(artisanRef);
     const existingPhotos = artisanDoc.data()?.premiumFeatures?.bannerPhotos || [];
 
+    // Debug pour comprendre le problème
+    console.log('Debug replacePremiumBannerPhoto:', {
+      photoIndex,
+      existingPhotosLength: existingPhotos.length,
+      existingPhotos
+    });
+
+    // Si le tableau est vide et qu'on essaie d'ajouter la première photo (index 0)
+    if (existingPhotos.length === 0 && photoIndex === 0) {
+      console.log('Ajout de la première photo premium (tableau vide)');
+      // Utiliser addPremiumBannerPhoto au lieu de replace
+      return await addPremiumBannerPhoto(artisanId, file);
+    }
+
     if (photoIndex < 0 || photoIndex >= existingPhotos.length) {
-      throw new Error('Index de photo invalide');
+      throw new Error(`Index de photo invalide: ${photoIndex}, photos disponibles: ${existingPhotos.length}`);
     }
 
     // Créer la référence selon le schéma Storage (même nom de fichier)

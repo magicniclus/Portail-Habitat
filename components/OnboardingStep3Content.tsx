@@ -260,7 +260,8 @@ export default function OnboardingStep3Content() {
           postalCode: prospectData.postalCode,
           profession: prospectData.profession,
           selectedCity: prospectData.selectedCity,
-          selectedZoneRadius: prospectData.selectedZoneRadius
+          selectedZoneRadius: prospectData.selectedZoneRadius,
+          coordinates: prospectData.coordinates
         }),
       });
 

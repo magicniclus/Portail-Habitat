@@ -171,20 +171,20 @@ export default function SimulatorProfessionsSection() {
                 Fourchettes de prix moyennes par m²
               </h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Peinture</span>
+                <div className="flex flex-col items-center text-center">
+                  <span className="text-gray-600 mb-1">Peinture</span>
                   <span className="font-semibold text-gray-900">25-45€/m²</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Carrelage</span>
+                <div className="flex flex-col items-center text-center">
+                  <span className="text-gray-600 mb-1">Carrelage</span>
                   <span className="font-semibold text-gray-900">40-80€/m²</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Parquet</span>
+                <div className="flex flex-col items-center text-center">
+                  <span className="text-gray-600 mb-1">Parquet</span>
                   <span className="font-semibold text-gray-900">50-120€/m²</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Isolation</span>
+                <div className="flex flex-col items-center text-center">
+                  <span className="text-gray-600 mb-1">Isolation</span>
                   <span className="font-semibold text-gray-900">20-50€/m²</span>
                 </div>
               </div>

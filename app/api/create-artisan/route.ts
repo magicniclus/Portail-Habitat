@@ -87,7 +87,7 @@ function createWelcomeEmailTemplate(firstName: string, lastName: string, email: 
         </div>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="https://portail-habitat.fr/connexion-pro" 
+          <a href="https://portail-habitat.fr/dashboard/marketplace" 
              style="background: #16a34a; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
             Accéder à mon espace pro
           </a>
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const extractedData = body;
     prospectId = extractedData.prospectId;
-    const { firstName, lastName, email, phone, postalCode, profession, selectedCity, selectedZoneRadius } = extractedData;
+    const { firstName, lastName, email, phone, postalCode, profession, selectedCity, selectedZoneRadius, coordinates } = extractedData;
 
     if (!prospectId || !firstName || !lastName || !email || !profession) {
       return NextResponse.json(
@@ -279,7 +279,7 @@ export async function POST(request: NextRequest) {
       city: selectedCity || '',
       postalCode: postalCode || '', // Code postal du formulaire
       fullAddress: '', // À compléter par l'artisan
-      coordinates: { lat: 0, lng: 0 }, // À compléter par l'artisan
+      coordinates: coordinates || { lat: 0, lng: 0 }, // Utiliser les coordonnées de l'onboarding ou 0,0 par défaut
       profession,
       professions: [profession], // Peut avoir plusieurs professions
       description: '', // À compléter par l'artisan

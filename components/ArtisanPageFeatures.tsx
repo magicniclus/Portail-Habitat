@@ -97,7 +97,8 @@ export default function ArtisanPageFeatures() {
                   className="w-full sm:w-auto px-8 py-4 text-lg font-semibold bg-orange-600 hover:bg-orange-700 mb-3"
                   onClick={scrollToForm}
                 >
-                  Voir les demandes gratuites dans ma zone
+                  <span className="hidden sm:inline">Voir les demandes gratuites dans ma zone</span>
+                  <span className="sm:hidden">Voir les demandes</span>
                 </Button>
                 <p className="text-sm text-gray-500">
                   Les demandes reçues depuis votre fiche sont gratuites

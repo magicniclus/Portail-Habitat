@@ -198,11 +198,13 @@ export default function HeroWithForm() {
           <div>
             {/* Badge de confiance */}
             <div className="mb-6">
-              <div className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
+              <div className="inline-flex items-start px-4 py-2 rounded-full text-sm font-medium bg-orange-100 text-orange-800 max-w-xs sm:max-w-none">
+                <svg className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
                 </svg>
-                Plus de&nbsp;<span className="font-bold">3 200 artisans</span>&nbsp;nous font confiance
+                <span className="leading-tight">
+                  Plus de&nbsp;<span className="font-bold">3 200 artisans</span>&nbsp;nous font confiance
+                </span>
               </div>
             </div>
 
@@ -240,7 +242,7 @@ export default function HeroWithForm() {
               </CardHeader>
               <CardContent>
                 <form className="space-y-6" onSubmit={handleSubmit}>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="prenom">Prénom</Label>
                       <Input 
@@ -275,7 +277,7 @@ export default function HeroWithForm() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="phone">Téléphone</Label>
                       <Input 
@@ -396,7 +398,8 @@ export default function HeroWithForm() {
                   </div>
 
                   <Button type="submit" className="w-full text-lg py-3 bg-orange-600 hover:bg-orange-700">
-                    Voir les demandes dans ma zone
+                    <span className="hidden sm:inline">Voir les demandes dans ma zone</span>
+                    <span className="sm:hidden">Voir les demandes</span>
                   </Button>
 
                   <div className="text-center space-y-1">

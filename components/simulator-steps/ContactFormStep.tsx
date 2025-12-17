@@ -409,7 +409,7 @@ L'équipe Portail-habitat.fr
             </div>
 
             {/* Boutons */}
-            <div className="flex flex-col-reverse lg:flex-row lg:justify-between space-y-reverse space-y-3 lg:space-y-0 pt-4">
+            <div className="flex flex-col lg:flex-row lg:justify-between space-y-3 lg:space-y-0 pt-4">
               <Button
                 type="submit"
                 size="lg"

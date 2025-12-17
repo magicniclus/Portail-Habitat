@@ -71,18 +71,18 @@ export default function AppSection() {
 
 
             {/* Stats */}
-            <div className="flex items-center gap-8 mt-8 pt-8 border-t border-gray-200">
-              <div>
-                <div className="text-2xl font-bold text-gray-900">4.8</div>
-                <div className="text-sm text-gray-600">Note moyenne</div>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:flex lg:items-center lg:gap-8 mt-8 pt-8 border-t border-gray-200">
+              <div className="text-center lg:text-left">
+                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">4.8</div>
+                <div className="text-xs sm:text-sm text-gray-600">Note moyenne</div>
               </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">2K+</div>
-                <div className="text-sm text-gray-600">Téléchargements</div>
+              <div className="text-center lg:text-left">
+                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">2K+</div>
+                <div className="text-xs sm:text-sm text-gray-600">Téléchargements</div>
               </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">500+</div>
-                <div className="text-sm text-gray-600">Artisans actifs</div>
+              <div className="text-center lg:text-left">
+                <div className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">500+</div>
+                <div className="text-xs sm:text-sm text-gray-600">Artisans actifs</div>
               </div>
             </div>
 

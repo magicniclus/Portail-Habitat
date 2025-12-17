@@ -41,7 +41,7 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
 
   return (
     <>
-      <header className="border-b bg-white relative z-50">
+      <header className="border-b bg-white relative z-40">
         <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -119,7 +119,7 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
 
         {/* Menu Mobile */}
         {isMenuOpen && (
-          <div className="xl:hidden bg-white fixed inset-0 top-0 z-50 overflow-y-auto">
+          <div className="xl:hidden bg-white fixed inset-0 top-0 z-[60] overflow-y-auto">
             {/* Header du menu mobile */}
             <div className="border-b px-4 py-4 flex items-center justify-between">
               <Link href={isDashboard ? "/dashboard" : "/devenir-pro"} className="relative" onClick={() => setIsMenuOpen(false)}>
@@ -187,7 +187,7 @@ export default function HeaderPro({ isDashboard = false }: HeaderProProps) {
                     {/* Navigation simplifiée */}
                   </div>
                   
-                  <div className="border-t pt-6 space-y-4">
+                  <div className="pt-6 space-y-4">
                     <Link 
                       href="/" 
                       className="block text-center text-gray-600 hover:text-gray-900 py-5"

@@ -157,6 +157,13 @@ export default function AdminLoginForm() {
         </Button>
       </div>
 
+      {/* Mot de passe oublié - affiché sous le bouton sur mobile */}
+      <div className="text-center sm:hidden">
+        <a href="/mot-de-passe-oublie" className="text-sm text-orange-600 hover:text-orange-500">
+          Mot de passe oublié ?
+        </a>
+      </div>
+
       <div className="text-center">
         <p className="text-xs text-gray-500">
           Accès réservé aux administrateurs autorisés

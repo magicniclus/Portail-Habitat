@@ -296,49 +296,49 @@ export default function ResultsStep({ simulatorData }: ResultsStepProps) {
       {/* Récapitulatif du projet */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Wrench className="h-5 w-5 mr-2" />
-            Récapitulatif de votre projet
+          <CardTitle className="flex flex-col items-center space-y-2">
+            <Wrench className="h-5 w-5" />
+            <span>Récapitulatif de votre projet</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2 text-gray-500" />
+              <div className="flex flex-col items-center space-y-1">
+                <MapPin className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Localisation :</span>
-                <span className="ml-2 font-medium">{simulatorData.city} ({simulatorData.postalCode})</span>
+                <span className="font-medium text-center break-words">{simulatorData.city} ({simulatorData.postalCode})</span>
               </div>
               
-              <div className="flex items-center">
-                <Wrench className="h-4 w-4 mr-2 text-gray-500" />
+              <div className="flex flex-col items-center space-y-1">
+                <Wrench className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Type de bien :</span>
-                <span className="ml-2 font-medium">{simulatorData.propertyType}</span>
+                <span className="font-medium text-center break-words">{simulatorData.propertyType}</span>
               </div>
 
               {simulatorData.projectDetails?.surface && (
-                <div className="flex items-center">
+                <div className="flex flex-col items-center space-y-1">
                   <span className="text-sm text-gray-600">Surface :</span>
-                  <span className="ml-2 font-medium">{simulatorData.projectDetails.surface} m²</span>
+                  <span className="font-medium">{simulatorData.projectDetails.surface} m²</span>
                 </div>
               )}
             </div>
 
             <div className="space-y-3">
-              <div className="flex items-center">
+              <div className="flex flex-col items-center space-y-1">
                 <span className="text-sm text-gray-600">Niveau :</span>
-                <span className="ml-2 font-medium">{getLevelLabel(simulatorData.prestationLevel)}</span>
+                <span className="font-medium text-center break-words">{getLevelLabel(simulatorData.prestationLevel)}</span>
               </div>
               
-              <div className="flex items-center">
+              <div className="flex flex-col items-center space-y-1">
                 <span className="text-sm text-gray-600">État existant :</span>
-                <span className="ml-2 font-medium">{getStateLabel(simulatorData.existingState)}</span>
+                <span className="font-medium text-center break-words">{getStateLabel(simulatorData.existingState)}</span>
               </div>
 
-              <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+              <div className="flex flex-col items-center space-y-1">
+                <Calendar className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-600">Délai :</span>
-                <span className="ml-2 font-medium">{getTimelineLabel(simulatorData.timeline)}</span>
+                <span className="font-medium text-center break-words">{getTimelineLabel(simulatorData.timeline)}</span>
               </div>
             </div>
           </div>
@@ -348,19 +348,19 @@ export default function ResultsStep({ simulatorData }: ResultsStepProps) {
       {/* Information sur les entreprises */}
       <Card className="border-blue-200 bg-blue-50">
         <CardContent className="pt-6">
-          <div className="flex items-start space-x-4">
+          <div className="flex flex-col items-center space-y-4">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
               <Users className="h-6 w-6 text-blue-600" />
             </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-blue-900 mb-2">
+            <div className="flex-1 w-full">
+              <h3 className="font-semibold text-blue-900 mb-2 text-center">
                 Prochaines étapes
               </h3>
               <div className="space-y-2 text-sm text-blue-800">
-                <p>✅ Votre estimation a été envoyée par email à <strong>{clientInfo?.email}</strong></p>
-                <p>📧 Des artisans qualifiés de votre région vont recevoir votre demande</p>
-                <p>📨 Vous recevrez entre 1 à 3 propositions par email dans les prochains jours</p>
-                <p>💡 Vous pourrez comparer leurs offres et choisir celle qui vous convient le mieux</p>
+                <p className="break-words">✅ Votre estimation a été envoyée par email à <strong className="break-all">{clientInfo?.email}</strong></p>
+                <p className="break-words">📧 Des artisans qualifiés de votre région vont recevoir votre demande</p>
+                <p className="break-words">📨 Vous recevrez entre 1 à 3 propositions par email dans les prochains jours</p>
+                <p className="break-words">💡 Vous pourrez comparer leurs offres et choisir celle qui vous convient le mieux</p>
               </div>
             </div>
           </div>
@@ -392,58 +392,64 @@ export default function ResultsStep({ simulatorData }: ResultsStepProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {nearbyArtisans.map((artisan) => (
                   <div key={artisan.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900 mb-1">
-                          {artisan.companyName || artisan.name}
-                        </h3>
-                        <div className="flex items-center text-sm text-gray-600 mb-2">
-                          <MapPin className="h-4 w-4 mr-1" />
-                          {artisan.city} ({artisan.postalCode})
+                    <div className="flex flex-col space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 mb-1 truncate" title={artisan.companyName || artisan.name}>
+                            {artisan.companyName || artisan.name}
+                          </h3>
+                          <div className="flex items-center text-sm text-gray-600 mb-2">
+                            <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+                            <span className="truncate" title={`${artisan.city} (${artisan.postalCode})`}>
+                              {artisan.city} ({artisan.postalCode})
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                      {artisan.rating && (
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                          <span className="text-sm text-gray-600 ml-1">
-                            {artisan.rating}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {artisan.specialties && artisan.specialties.length > 0 && (
-                      <div className="mb-3">
-                        <div className="flex flex-wrap gap-1">
-                          {artisan.specialties.slice(0, 2).map((specialty: string, index: number) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {specialty}
-                            </Badge>
-                          ))}
-                          {artisan.specialties.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{artisan.specialties.length - 2}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-gray-600">
-                        {artisan.experience && (
-                          <span>{artisan.experience} ans d'expérience</span>
+                        {artisan.rating && (
+                          <div className="flex items-center flex-shrink-0 ml-2">
+                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                            <span className="text-sm text-gray-600 ml-1">
+                              {artisan.rating}
+                            </span>
+                          </div>
                         )}
                       </div>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => window.open(`/artisan/${artisan.slug || artisan.id}`, '_blank')}
-                        className="text-xs"
-                      >
-                        Voir profil
-                        <ExternalLink className="h-3 w-3 ml-1" />
-                      </Button>
+                      
+                      {artisan.specialties && artisan.specialties.length > 0 && (
+                        <div>
+                          <div className="flex flex-wrap gap-1">
+                            {artisan.specialties.slice(0, 2).map((specialty: string, index: number) => (
+                              <Badge key={index} variant="secondary" className="text-xs truncate max-w-[120px]" title={specialty}>
+                                {specialty}
+                              </Badge>
+                            ))}
+                            {artisan.specialties.length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{artisan.specialties.length - 2}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-600 flex-1 min-w-0">
+                          {artisan.experience && (
+                            <span className="truncate" title={`${artisan.experience} ans d'expérience`}>
+                              {artisan.experience} ans d'expérience
+                            </span>
+                          )}
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => window.open(`/artisan/${artisan.slug || artisan.id}`, '_blank')}
+                          className="text-xs flex-shrink-0 ml-2"
+                        >
+                          Voir profil
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -484,26 +490,26 @@ export default function ResultsStep({ simulatorData }: ResultsStepProps) {
       {/* Contact */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Phone className="h-5 w-5 mr-2" />
-            Vos coordonnées
+          <CardTitle className="flex flex-col items-center space-y-2">
+            <Phone className="h-5 w-5" />
+            <span>Vos coordonnées</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-lg space-y-2">
                 <span className="text-sm text-gray-600">Prénom :</span>
-                <span className="font-medium">{clientInfo?.firstName}</span>
+                <span className="font-medium text-center break-words w-full" title={clientInfo?.firstName}>{clientInfo?.firstName}</span>
               </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-lg space-y-2">
                 <span className="text-sm text-gray-600">Téléphone :</span>
-                <span className="font-medium">{clientInfo?.phone}</span>
+                <span className="font-medium text-center break-words w-full" title={clientInfo?.phone}>{clientInfo?.phone}</span>
               </div>
             </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex flex-col items-center justify-center p-3 bg-gray-50 rounded-lg space-y-2">
               <span className="text-sm text-gray-600">Email :</span>
-              <span className="font-medium text-blue-600">{clientInfo?.email}</span>
+              <span className="font-medium text-blue-600 text-center break-all w-full" title={clientInfo?.email}>{clientInfo?.email}</span>
             </div>
           </div>
         </CardContent>

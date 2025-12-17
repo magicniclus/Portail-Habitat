@@ -22,13 +22,23 @@ export default function FinalCTA() {
         
         <Button 
           size="lg" 
-          className="px-12 py-4 text-lg font-semibold"
+          className="px-12 py-4 text-lg font-semibold md:flex hidden mx-auto"
           style={{backgroundColor: '#16a34a'}} 
           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803d'} 
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
           onClick={scrollToForm}
         >
           Commencer maintenant
+        </Button>
+        <Button 
+          size="lg" 
+          className="px-12 py-4 text-lg font-semibold md:hidden flex mx-auto"
+          style={{backgroundColor: '#16a34a'}} 
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#15803d'} 
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#16a34a'}
+          onClick={scrollToForm}
+        >
+          Commencer 
         </Button>
         
         <p className="text-sm text-gray-400 mt-4">

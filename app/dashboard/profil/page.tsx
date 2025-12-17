@@ -105,15 +105,55 @@ export default function ProfilPage() {
     
     setIsSaving(true);
     try {
-      const artisanRef = doc(db, 'artisans', artisanData.id);
-      await updateDoc(artisanRef, {
+      const updateData: any = {
         [field]: formData[field as keyof typeof formData],
         updatedAt: new Date()
-      });
+      };
+
+      // Si on modifie l'adresse, la ville ou le code postal, géocoder automatiquement
+      if (['fullAddress', 'city', 'postalCode'].includes(field)) {
+        try {
+          const { getCoordinatesFromLocation } = await import('@/lib/geo-utils');
+          
+          // Construire l'adresse complète pour le géocodage
+          let locationToGeocode = '';
+          if (field === 'fullAddress') {
+            locationToGeocode = formData.fullAddress;
+          } else if (field === 'city') {
+            locationToGeocode = `${formData.city}, ${formData.postalCode || ''}`.trim().replace(/,$/, '');
+          } else if (field === 'postalCode') {
+            locationToGeocode = `${formData.city || ''} ${formData.postalCode}`.trim();
+          }
+          
+          if (locationToGeocode) {
+            console.log(`🌍 Géocodage automatique pour: ${locationToGeocode}`);
+            const geoResult = await getCoordinatesFromLocation(locationToGeocode);
+            
+            if (geoResult?.coordinates) {
+              updateData.location = {
+                coordinates: {
+                  lat: geoResult.coordinates.lat,
+                  lng: geoResult.coordinates.lng
+                },
+                city: formData.city || geoResult.city,
+                fullAddress: formData.fullAddress || geoResult.fullAddress
+              };
+              console.log(`✅ Coordonnées mises à jour:`, geoResult.coordinates);
+            }
+          }
+        } catch (geoError) {
+          console.error('Erreur lors du géocodage:', geoError);
+          // Ne pas faire échouer la sauvegarde si le géocodage échoue
+        }
+      }
+
+      const artisanRef = doc(db, 'artisans', artisanData.id);
+      await updateDoc(artisanRef, updateData);
       
       setArtisanData((prev: any) => ({
         ...prev,
-        [field]: formData[field as keyof typeof formData]
+        [field]: formData[field as keyof typeof formData],
+        ...(updateData.location && { location: updateData.location })
       }));
       
       setIsEditing(null);
