@@ -37,7 +37,7 @@ export default function SimulatorSection() {
           {/* Contenu à gauche */}
           <div>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 text-left">
-              Notre simulateur de devis IA
+              Notre simulateur de devis
             </h2>
             
             <p className="text-lg text-gray-600 mb-8 text-left">

@@ -587,8 +587,10 @@ export default function ArtisansClient() {
 
   // Gestion intelligente des filtres et pagination
   const hasActiveFilters = useMemo(() => {
-    return !!(secteurSearch.trim() || prestationSearch.trim() || selectedSecteur || selectedPrestation);
-  }, [secteurSearch, prestationSearch, selectedSecteur, selectedPrestation]);
+    // IMPORTANT: on ne considère pas la saisie secteurSearch comme un filtre actif.
+    // Le filtrage géographique ne s'applique que lorsque l'utilisateur a sélectionné une suggestion (selectedSecteur).
+    return !!(prestationSearch.trim() || selectedSecteur || selectedPrestation);
+  }, [prestationSearch, selectedSecteur, selectedPrestation]);
 
   // Charger plus d'artisans quand on change de page
   const loadMoreArtisans = async () => {
@@ -616,7 +618,7 @@ export default function ArtisansClient() {
       });
     }
     setCurrentPage(1);
-  }, [secteurSearch, prestationSearch, selectedSecteur, selectedPrestation]);
+  }, [hasActiveFilters, prestationSearch, selectedSecteur, selectedPrestation]);
 
   // Utiliser le nouvel algorithme de filtrage et tri
   const filteredResult = useMemo(() => {

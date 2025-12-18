@@ -8,6 +8,7 @@ interface Artisan {
   phone: string;
   email: string;
   city: string;
+  coordinates?: { lat: number; lng: number };
   profession: string;
   professions: string[];
   description: string;
@@ -186,41 +187,64 @@ function applyBasicFilters(artisans: Artisan[], criteria: FilterCriteria): Artis
   }
   
   // Filtrage par ville/secteur
-  if (criteria.secteurSearch.trim() || criteria.selectedSecteur) {
+  // IMPORTANT: on ne filtre PAS sur la simple saisie texte (secteurSearch).
+  // Le filtrage ne s'applique que lorsque l'utilisateur a sélectionné une suggestion (selectedSecteur).
+  if (criteria.selectedSecteur) {
     const villeTerm = criteria.secteurSearch.toLowerCase();
-    
-    filtered = filtered.filter(artisan => {
-      if (!artisan.city) return false;
-      
-      const cityLower = artisan.city.toLowerCase();
-      
-      // Si on a une ville sélectionnée avec un nom, on l'utilise pour la correspondance exacte
-      if (criteria.selectedSecteur?.name) {
-        const selectedCityLower = criteria.selectedSecteur.name.toLowerCase();
-        // Correspondance exacte avec la ville sélectionnée
-        if (cityLower === selectedCityLower) return true;
-        // Correspondance partielle avec la ville sélectionnée
-        if (cityLower.includes(selectedCityLower)) return true;
-        // Normalisation des accents
+
+    if (criteria.selectedSecteur?.lat != null && criteria.selectedSecteur?.lng != null) {
+      const selectedCityLower = (criteria.selectedSecteur?.name || '').toLowerCase();
+      const withinRadius = filterArtisansByDistance(
+        filtered,
+        criteria.selectedSecteur.lat,
+        criteria.selectedSecteur.lng,
+        75
+      ) as Artisan[];
+
+      filtered = withinRadius.filter((artisan: any) => {
+        if (artisan.distance == null) {
+          if (!selectedCityLower) return false;
+          const cityLower = (artisan.city || '').toLowerCase();
+          const normalizedCity = cityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          const normalizedSelected = selectedCityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          return cityLower === selectedCityLower || normalizedCity === normalizedSelected;
+        }
+        return artisan.distance <= 75;
+      });
+    } else {
+      filtered = filtered.filter(artisan => {
+        if (!artisan.city) return false;
+        
+        const cityLower = artisan.city.toLowerCase();
+        
+        // Si on a une ville sélectionnée avec un nom, on l'utilise pour la correspondance exacte
+        if (criteria.selectedSecteur?.name) {
+          const selectedCityLower = criteria.selectedSecteur.name.toLowerCase();
+          // Correspondance exacte avec la ville sélectionnée
+          if (cityLower === selectedCityLower) return true;
+          // Correspondance partielle avec la ville sélectionnée
+          if (cityLower.includes(selectedCityLower)) return true;
+          // Normalisation des accents
+          const normalizedCity = cityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          const normalizedSelected = selectedCityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          if (normalizedCity.includes(normalizedSelected)) return true;
+        }
+        
+        // Sinon, recherche partielle sur le texte saisi
+        // Correspondance exacte
+        if (cityLower === villeTerm) return true;
+        
+        // Correspondance partielle
+        if (cityLower.includes(villeTerm)) return true;
+        
+        // Correspondance sans accents
         const normalizedCity = cityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        const normalizedSelected = selectedCityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        if (normalizedCity.includes(normalizedSelected)) return true;
-      }
-      
-      // Sinon, recherche partielle sur le texte saisi
-      // Correspondance exacte
-      if (cityLower === villeTerm) return true;
-      
-      // Correspondance partielle
-      if (cityLower.includes(villeTerm)) return true;
-      
-      // Correspondance sans accents
-      const normalizedCity = cityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      const normalizedTerm = villeTerm.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      if (normalizedCity.includes(normalizedTerm)) return true;
-      
-      return false;
-    });
+        const normalizedTerm = villeTerm.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (normalizedCity.includes(normalizedTerm)) return true;
+        
+        return false;
+      });
+    }
   }
   
   console.log(`🔍 FILTRAGE: ${artisans.length} → ${filtered.length} artisans`);
