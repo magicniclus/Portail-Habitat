@@ -578,28 +578,32 @@ export default function OnboardingStep3Content() {
                     />
                   </div>
 
-                  {/* Texte au-dessus du bouton */}
-                  <div className="text-center mb-4">
-                    <p className="text-sm font-medium text-gray-700">Vous ne risquez rien: vous payez seulement l'accès, pas les chantiers.</p>
-                  </div>
-
                   {/* Bouton énorme */}
                   <Button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full text-xl py-6 font-bold bg-orange-700 hover:bg-orange-800 text-white flex items-center justify-center space-x-3"
+                    className="w-full text-xl py-6 font-bold bg-orange-700 hover:bg-orange-800 text-white md:flex hidden items-center justify-center space-x-3"
                   >
-                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Activer ma visibilité maintenant – 69 €"}</span>
+                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Recevoir des demandes – 69 €"}</span>
                     {!isProcessing && <ArrowRight className="h-6 w-6" />}
                   </Button>
 
+    <Button
+                    type="submit"
+                    disabled={isProcessing}
+                    className="w-full text-xl py-6 font-bold bg-orange-700 hover:bg-orange-800 text-white flex md:hidden items-center justify-center space-x-3"
+                  >
+                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Mes demandes – 69 €"}</span>
+                    {!isProcessing && <ArrowRight className="h-6 w-6" />}
+                  </Button>
+                  
                   {/* Texte de réassurance sous le bouton */}
                   <div className="text-center mt-4">
                     <p className="text-sm font-medium text-gray-700">🔒 Essai sans risque — résiliation en 1 clic depuis votre espace</p>
                   </div>
 
                   {/* Textes sous le bouton */}
-                  <div className="text-center space-y-1 mt-4">
+                  <div className="text-center space-y-1 mt-4 md:block hidden">
                     <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
                       <span>Résiliation en 1 clic</span>
                       <span>•</span>
@@ -614,7 +618,7 @@ export default function OnboardingStep3Content() {
                   
                   {/* Texte de réassurance final */}
                   <div className="mt-6 pt-4 border-t border-gray-100">
-                    <p className="text-xs text-gray-400 leading-relaxed">
+                    <p className="text-xs text-gray-400 leading-relaxed md:text-base text-center">
                       Vous ne payez pas pour des promesses, mais pour être visible auprès de particuliers qui cherchent activement un artisan comme vous.
                     </p>
                   </div>
@@ -856,18 +860,23 @@ export default function OnboardingStep3Content() {
                     />
                   </div>
 
-                  {/* Texte au-dessus du bouton */}
-                  <div className="text-center mb-6">
-                    <p className="text-base font-medium text-gray-700">Vous ne risquez rien: vous payez seulement l'accès, pas les chantiers.</p>
-                  </div>
-
-                  {/* Bouton énorme */}
+                  {/* Bouton desktop */}
                   <Button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full text-2xl py-8 font-bold bg-orange-700 hover:bg-orange-800 text-white flex items-center justify-center space-x-4 rounded-lg"
+                    className="w-full text-2xl py-8 font-bold bg-orange-700 hover:bg-orange-800 text-white hidden md:flex items-center justify-center space-x-4 rounded-lg"
                   >
                     <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Activer ma visibilité maintenant – 69 €"}</span>
+                    {!isProcessing && <ArrowRight className="h-7 w-7" />}
+                  </Button>
+
+                  {/* Bouton mobile */}
+                  <Button
+                    type="submit"
+                    disabled={isProcessing}
+                    className="w-full text-2xl py-8 font-bold bg-orange-700 hover:bg-orange-800 text-white flex md:hidden items-center justify-center space-x-4 rounded-lg"
+                  >
+                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Mes Demandes – 69 €"}</span>
                     {!isProcessing && <ArrowRight className="h-7 w-7" />}
                   </Button>
 
