@@ -1,5 +1,59 @@
 # Index Firebase Firestore requis
 
+## Index pour la collection `temporaryPremiums` (URGENT)
+
+### Erreur rencontrée :
+```
+FirebaseError: The query requires an index. You can create it here: 
+https://console.firebase.google.com/v1/r/project/portail-habitat-2ac32/firestore/indexes?create_composite=Cl9wcm9qZWN0cy9wb3J0YWlsLWhhYml0YXQtMmFjMzIvZGF0YWJhc2VzLyhkZWZhdWx0KS9jb2xsZWN0aW9uR3JvdXBzL3RlbXBvcmFyeVByZW1pdW1zL2luZGV4ZXMvXxABGg0KCWFydGlzYW5JZBABGgoKBnN0YXR1cxABGg0KCWV4cGlyZXNBdBABGgwKCF9fbmFtZV9fEAE
+```
+
+### ⚠️ ACTION IMMÉDIATE REQUISE :
+
+### Index requis :
+**Collection :** `temporaryPremiums`
+
+**Champs :**
+1. `artisanId` (Ascending)
+2. `status` (Ascending) 
+3. `expiresAt` (Ascending)
+4. `__name__` (Ascending)
+
+### Utilisation :
+Cet index est utilisé pour la requête dans `getActiveTemporaryPremium()` :
+```typescript
+const activeQuery = query(
+  collection(db, 'temporaryPremiums'),
+  where('artisanId', '==', artisanId),
+  where('status', '==', 'active'),
+  where('expiresAt', '>', Timestamp.now())
+);
+```
+
+### Création de l'index :
+
+#### Option 1 : Via le lien direct (RECOMMANDÉ)
+**Cliquez sur ce lien pour créer automatiquement l'index :**
+https://console.firebase.google.com/v1/r/project/portail-habitat-2ac32/firestore/indexes?create_composite=Cl9wcm9qZWN0cy9wb3J0YWlsLWhhYml0YXQtMmFjMzIvZGF0YWJhc2VzLyhkZWZhdWx0KS9jb2xsZWN0aW9uR3JvdXBzL3RlbXBvcmFyeVByZW1pdW1zL2luZGV4ZXMvXxABGg0KCWFydGlzYW5JZBABGgoKBnN0YXR1cxABGg0KCWV4cGlyZXNBdBABGgwKCF9fbmFtZV9fEAE
+
+**Instructions :**
+1. Cliquez sur le lien ci-dessus
+2. La page Firebase s'ouvrira avec l'index pré-configuré
+3. Cliquez sur "Create Index" 
+4. Attendez quelques minutes que l'index soit créé
+5. L'erreur disparaîtra automatiquement
+
+#### Option 2 : Via la console Firebase manuellement
+1. Aller sur : https://console.firebase.google.com/project/portail-habitat-2ac32/firestore/indexes
+2. Cliquer sur "Create Index"
+3. Collection : `temporaryPremiums`
+4. Ajouter les champs dans l'ordre :
+   - `artisanId` : Ascending
+   - `status` : Ascending
+   - `expiresAt` : Ascending
+
+---
+
 ## Index pour la collection `leads` (sous-collection de `artisans`)
 
 ### Erreur rencontrée :

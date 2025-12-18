@@ -30,6 +30,7 @@ import {
   togglePremiumFeature
 } from "@/lib/admin-premium";
 import { toast } from "@/hooks/useToast";
+import TemporaryPremiumForm from "./TemporaryPremiumForm";
 
 interface PremiumSwitchProps {
   artisanId: string;
@@ -156,6 +157,49 @@ export default function PremiumSwitch({
               onCheckedChange={handleTogglePremium}
               disabled={disabled || loading}
             />
+          </div>
+        </div>
+
+        {/* Switch Premium Temporaire */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div>
+              <Label className="text-base font-medium">Premium temporaire</Label>
+              <p className="text-sm text-gray-600">
+                Activer un premium avec date d'expiration
+              </p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Badge variant={statusDisplay.isTemporary ? "default" : "secondary"}>
+              {statusDisplay.isTemporary ? "Temporaire" : "Inactif"}
+            </Badge>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  disabled={disabled || loading}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Configurer
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-blue-500" />
+                    Premium Temporaire
+                  </DialogTitle>
+                </DialogHeader>
+                <TemporaryPremiumForm 
+                  artisanId={artisanId}
+                  onUpdate={onUpdate}
+                  disabled={disabled}
+                />
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 

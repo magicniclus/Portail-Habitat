@@ -5,11 +5,32 @@ export interface PremiumFeatures {
   isPremium: boolean;
   premiumStartDate?: Timestamp;
   premiumEndDate?: Timestamp;
-  premiumType?: 'monthly' | 'yearly' | 'lifetime';
+  premiumType?: 'monthly' | 'yearly' | 'lifetime' | 'temporary';
   bannerPhotos: string[];
   bannerVideo?: string;
   showTopArtisanBadge: boolean;
   premiumBenefits: PremiumBenefit[];
+}
+
+// Interface pour les premiums temporaires
+export interface TemporaryPremium {
+  id: string;
+  artisanId: string;
+  activatedBy: string; // ID de l'admin
+  activatedAt: Timestamp;
+  expiresAt: Timestamp;
+  status: 'active' | 'expired' | 'cancelled';
+  grantedFeatures: {
+    showTopArtisanBadge: boolean;
+    bannerPhotos: boolean;
+    bannerVideo: boolean;
+    priorityListing: boolean;
+  };
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  cancelledAt?: Timestamp;
+  cancelledBy?: string;
+  adminNotes?: string;
 }
 
 export type PremiumBenefit = 
@@ -24,10 +45,22 @@ export interface ArtisanWithPremium {
   [key: string]: any;
 }
 
-// Vérifier si un artisan a un statut premium actif
+// Vérifier si un artisan a un statut premium actif (permanent OU temporaire)
 export function isPremiumActive(artisan: ArtisanWithPremium): boolean {
   if (!artisan.premiumFeatures?.isPremium) {
     return false;
+  }
+
+  // Si c'est un premium temporaire, vérifier dans la collection séparée
+  if (artisan.premiumFeatures.premiumType === 'temporary') {
+    // Note: Pour une vérification complète, utiliser hasActiveTemporaryPremium()
+    // Cette fonction fait une vérification basique sur les données de l'artisan
+    if (!artisan.premiumFeatures.premiumEndDate) {
+      return false;
+    }
+    const now = new Date();
+    const endDate = artisan.premiumFeatures.premiumEndDate.toDate();
+    return now < endDate;
   }
 
   // Si c'est un abonnement à vie, toujours actif
@@ -130,9 +163,10 @@ export function getDaysRemaining(artisan: ArtisanWithPremium): number | null {
 
 // Obtenir le statut premium formaté pour l'affichage
 export function getPremiumStatusDisplay(artisan: ArtisanWithPremium): {
-  status: 'active' | 'expired' | 'none';
+  status: 'active' | 'expired' | 'none' | 'temporary';
   label: string;
   daysRemaining?: number;
+  isTemporary?: boolean;
 } {
   if (!artisan.premiumFeatures?.isPremium) {
     return {
@@ -145,6 +179,17 @@ export function getPremiumStatusDisplay(artisan: ArtisanWithPremium): {
     return {
       status: 'expired',
       label: 'Premium expiré'
+    };
+  }
+
+  // Si c'est un premium temporaire
+  if (artisan.premiumFeatures.premiumType === 'temporary') {
+    const daysRemaining = getDaysRemaining(artisan);
+    return {
+      status: 'temporary',
+      label: 'Premium temporaire',
+      daysRemaining: daysRemaining || 0,
+      isTemporary: true
     };
   }
 

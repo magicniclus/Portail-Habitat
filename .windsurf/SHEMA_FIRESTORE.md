@@ -59,7 +59,7 @@ artisans
     │   ├── isPremium: false         ← statut premium de l'artisan (boolean)
     │   ├── premiumStartDate         ← date de début du premium (timestamp, optionnel)
     │   ├── premiumEndDate           ← date de fin du premium (timestamp, optionnel)
-    │   ├── premiumType              ← type d'offre premium ("monthly" | "yearly" | "lifetime")
+    │   ├── premiumType              ← type d'offre premium ("monthly" | "yearly" | "lifetime" | "temporary")
     │   ├── bannerPhotos []          ← URLs des photos de bannière premium (max 5)
     │   ├── bannerVideo              ← URL de la vidéo de bannière (optionnel)
     │   ├── showTopArtisanBadge: false ← afficher le badge "Top Artisan" (boolean)
@@ -395,3 +395,30 @@ estimations (collection - toutes les estimations générées par le simulateur)
             ├── details {}          ← détails spécifiques à l'interaction
             ├── success             ← succès de l'action (boolean)
             └── timestamp           ← moment de l'interaction
+
+temporaryPremiums (collection - gestion des premiums temporaires)
+└── {temporaryPremiumId}
+    ├── artisanId               ← référence vers l'artisan (string)
+    ├── activatedBy             ← ID de l'admin qui a activé (string)
+    ├── activatedAt             ← date d'activation (timestamp)
+    ├── expiresAt               ← date d'expiration (timestamp)
+    ├── status                  ← "active" | "expired" | "cancelled"
+    ├── grantedFeatures {       ← fonctionnalités accordées
+    │   ├── showTopArtisanBadge ← accès au badge Top Artisan (boolean)
+    │   ├── bannerPhotos        ← accès aux photos multiples (boolean)
+    │   ├── bannerVideo         ← accès à la vidéo (boolean)
+    │   └── priorityListing     ← priorité d'affichage (boolean)
+    │   }
+    ├── createdAt               ← création du premium temporaire (timestamp)
+    ├── updatedAt               ← dernière modification (timestamp)
+    ├── cancelledAt             ← date d'annulation (timestamp, optionnel)
+    ├── cancelledBy             ← ID de l'admin qui a annulé (string, optionnel)
+    └── adminNotes              ← notes de l'admin (string, optionnel)
+
+    NOTES IMPORTANTES:
+    - Collection séparée pour gérer les premiums temporaires
+    - Permet un suivi précis des activations/annulations par admin
+    - Expiration automatique via triggers Firebase ou tâches cron
+    - Interface admin pour activer/prolonger/annuler
+    - Artisan marqué avec premiumType: "temporary" pendant la durée
+    - Gestion automatique de l'expiration sans intervention manuelle
