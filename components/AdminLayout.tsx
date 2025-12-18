@@ -72,6 +72,11 @@ const navigation = [
         subPaths: ["/admin/utilisateurs", "/admin/artisans"], // Inclure les deux chemins
       },
       {
+        title: "Artisans Demo",
+        url: "/admin/artisans-demo",
+        icon: UserCheck,
+      },
+      {
         title: "Demandes",
         url: "/admin/demandes",
         icon: UserCheck,

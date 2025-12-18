@@ -54,3 +54,21 @@ scripts/test-stats-config.js
 scripts/README-migrate-stats.md
 scripts/test-stats.js
 admin-creator.js
+
+# Scripts d'artisans demo - NE PAS COMMITER (temporairement commenté pour correction)
+# scripts/generate-demo-artisans.ts
+# scripts/generate-demo-artisans-openai.ts
+# scripts/run-demo-generation.js
+# scripts/run-demo-generation-openai.js
+# scripts/cleanup-demo-system.ts
+# README-ARTISANS-DEMO.md
+
+# Composants admin demo artisans
+components/admin/DemoArtisanManager.tsx
+app/admin/artisans-demo/
+
+# Utilitaires demo artisans
+lib/demo-artisan-utils.ts
+
+# Page de contact demo
+app/contact-artisan/

@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate-demo": "node scripts/run-demo-generation-openai.js",
+    "generate-demo:cleanup": "node scripts/run-demo-generation-openai.js cleanup",
+    "generate-demo-old": "node scripts/run-demo-generation.js",
+    "cleanup-demo-system": "npx ts-node scripts/cleanup-demo-system.ts remove",
+    "demo-stats": "npx ts-node scripts/cleanup-demo-system.ts stats"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -37,6 +42,7 @@
     "lucide-react": "^0.555.0",
     "mapbox-gl": "^3.16.0",
     "next": "16.0.6",
+    "openai": "^6.14.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
     "recharts": "^3.5.1",

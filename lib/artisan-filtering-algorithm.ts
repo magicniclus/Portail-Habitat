@@ -27,8 +27,11 @@ interface Artisan {
     premiumStartDate?: any;
     premiumEndDate?: any;
   };
+  hasPremiumSite?: boolean;
+  subscriptionStatus?: string;
   isPromo?: boolean;
   distance?: number;
+  accountType?: string;
 }
 
 interface FilterCriteria {
@@ -48,9 +51,9 @@ interface FilterResult {
  * Algorithme complexe de filtrage et tri des artisans
  * 
  * Règles :
- * 1. Maximum 10 artisans par page
+ * 1. Maximum 11 artisans par page
  * 2. Si aucune ville : tri par prestation (si filtrée) ou aléatoire
- * 3. Toujours 2 artisans premium aléatoires en positions 1 et 2
+ * 3. Toujours 3 artisans Top Artisan en positions 1, 2 et 3
  * 4. Filtrage selon les critères sélectionnés
  */
 export function filterAndSortArtisans(
@@ -60,40 +63,101 @@ export function filterAndSortArtisans(
   itemsPerPage: number = 10
 ): FilterResult {
   
-  // Étape 1: Filtrage de base selon les critères
-  let filteredArtisans = applyBasicFilters(allArtisans, criteria);
+  // 1. APPLIQUER LES FILTRES D'ABORD
+  const filteredArtisans = applyBasicFilters(allArtisans, criteria);
   
-  // Étape 2: Séparation premium/standard
-  const { premiumArtisans, standardArtisans } = separatePremiumArtisans(filteredArtisans);
+  // 2. Séparer VRAIS artisans et DEMO artisans
+  // Un artisan est VRAI si accountType n'est pas défini OU différent de 'demo'
+  const realArtisans = filteredArtisans.filter(a => !a.accountType || a.accountType !== 'demo');
+  const demoArtisans = filteredArtisans.filter(a => a.accountType === 'demo');
   
-  // Étape 3: Sélection de 2 artisans premium aléatoires
-  const randomPremiumArtisans = selectRandomPremiumArtisans(premiumArtisans, 2);
+  console.log('🔍 SÉPARATION VRAIS/DEMOS:', {
+    total: filteredArtisans.length,
+    vrais: realArtisans.length,
+    demos: demoArtisans.length,
+    vrai_ids: realArtisans.map(a => ({ id: a.id, name: a.companyName, accountType: a.accountType })),
+    demo_ids: demoArtisans.map(a => ({ id: a.id, name: a.companyName, accountType: a.accountType }))
+  });
   
-  // Étape 4: Tri des artisans restants selon les critères
-  const sortedStandardArtisans = sortArtisans(standardArtisans, criteria);
-  const sortedRemainingPremium = sortArtisans(
-    premiumArtisans.filter(a => !randomPremiumArtisans.includes(a)), 
-    criteria
+  // 3. Séparer Top Artisans et Standard pour les VRAIS artisans
+  const realTopArtisans = realArtisans.filter(a => 
+    a.premiumFeatures?.isPremium === true && 
+    (a.premiumFeatures as any)?.showTopArtisanBadge === true
   );
   
-  // Calculer le nombre total d'artisans filtrés (pour la pagination)
-  const totalFilteredCount = premiumArtisans.length + standardArtisans.length;
-  
-  // Étape 5: Construction de la liste finale (limitée par page)
-  const finalList = buildFinalArtisanList(
-    randomPremiumArtisans,
-    sortedRemainingPremium,
-    sortedStandardArtisans,
-    itemsPerPage
+  const realStandardArtisans = realArtisans.filter(a => 
+    !(a.premiumFeatures?.isPremium === true && 
+      (a.premiumFeatures as any)?.showTopArtisanBadge === true)
   );
   
-  // Étape 6: Pagination
-  const paginatedResult = paginateResults(finalList, page, itemsPerPage);
+  // 4. Séparer Top Artisans et Standard pour les DEMO artisans
+  const demoTopArtisans = demoArtisans.filter(a => 
+    a.premiumFeatures?.isPremium === true && 
+    (a.premiumFeatures as any)?.showTopArtisanBadge === true
+  );
+  
+  const demoStandardArtisans = demoArtisans.filter(a => 
+    !(a.premiumFeatures?.isPremium === true && 
+      (a.premiumFeatures as any)?.showTopArtisanBadge === true)
+  );
+  
+  // 5. Trier chaque groupe
+  const sortedRealTopArtisans = sortArtisans(realTopArtisans, criteria);
+  const sortedDemoTopArtisans = sortArtisans(demoTopArtisans, criteria);
+  const sortedRealStandardArtisans = sortArtisans(realStandardArtisans, criteria);
+  const sortedDemoStandardArtisans = sortArtisans(demoStandardArtisans, criteria);
+  
+  // 6. DISTRIBUTION INTELLIGENTE : 3 Top Artisans minimum par page
+  // PRIORITÉ : Vrais artisans d'abord, puis demos en complément
+  const topArtisansPerPage = 3;
+  const topArtisansForThisPage: Artisan[] = [];
+  
+  // Randomiser les vrais Top Artisans et demos
+  const shuffledRealTop = [...sortedRealTopArtisans].sort(() => Math.random() - 0.5);
+  const shuffledDemoTop = [...sortedDemoTopArtisans].sort(() => Math.random() - 0.5);
+  
+  // Sélectionner 3 Top Artisans DIFFÉRENTS : priorité absolue aux vrais
+  // D'abord, prendre tous les vrais disponibles (jusqu'à 3)
+  const realTopToTake = Math.min(shuffledRealTop.length, topArtisansPerPage);
+  for (let i = 0; i < realTopToTake; i++) {
+    topArtisansForThisPage.push(shuffledRealTop[i]);
+  }
+  
+  // Ensuite, compléter avec des demos si besoin (pour atteindre 3)
+  const demosNeeded = topArtisansPerPage - topArtisansForThisPage.length;
+  for (let i = 0; i < demosNeeded && i < shuffledDemoTop.length; i++) {
+    topArtisansForThisPage.push(shuffledDemoTop[i]);
+  }
+  
+  // 7. Remplir la page avec le RESTE des artisans (Top ou non), sans doublons.
+  // Sinon, si (presque) tout le monde est Top Artisan, la liste "standard" est vide et on n'affiche que 3 cartes.
+  const remainingSlots = Math.max(itemsPerPage - topArtisansForThisPage.length, 0);
+  const remainingStartIndex = (page - 1) * remainingSlots;
+  const selectedIds = new Set(topArtisansForThisPage.map(a => a.id));
+
+  // Reste des artisans : priorité aux vrais, puis demos. On réutilise le tri existant par groupe.
+  const remainingReal = [...sortedRealTopArtisans, ...sortedRealStandardArtisans].filter(a => !selectedIds.has(a.id));
+  // IMPORTANT: après la première ligne, on ne veut pas remonter les Top Artisans DEMO.
+  // Donc on place les DEMO non-top avant les DEMO top.
+  const remainingDemo = [...sortedDemoStandardArtisans, ...sortedDemoTopArtisans].filter(a => !selectedIds.has(a.id));
+  const remainingArtisans = [...remainingReal, ...remainingDemo];
+
+  const paginatedRemaining = remainingArtisans.slice(remainingStartIndex, remainingStartIndex + remainingSlots);
+
+  // 8. Combiner : 3 Top Artisans EN PREMIER, puis le reste
+  const paginatedArtisans = [...topArtisansForThisPage, ...paginatedRemaining];
+
+  const realTopCount = topArtisansForThisPage.filter(a => !a.accountType || a.accountType !== 'demo').length;
+  const demoTopCount = topArtisansForThisPage.filter(a => a.accountType === 'demo').length;
+  const realRemainingCount = paginatedRemaining.filter(a => !a.accountType || a.accountType !== 'demo').length;
+  const demoRemainingCount = paginatedRemaining.filter(a => a.accountType === 'demo').length;
+
+  console.log(`📄 PAGE ${page}: Top (${realTopCount} vrais + ${demoTopCount} demos), Reste (${realRemainingCount} vrais + ${demoRemainingCount} demos)`);
   
   return {
-    artisans: paginatedResult,
-    totalCount: totalFilteredCount, // Nombre total d'artisans filtrés, pas seulement ceux affichés
-    hasRandomPremium: randomPremiumArtisans.length > 0
+    artisans: paginatedArtisans,
+    totalCount: filteredArtisans.length,
+    hasRandomPremium: realTopArtisans.length > 0 || demoTopArtisans.length > 0
   };
 }
 
@@ -101,43 +165,65 @@ export function filterAndSortArtisans(
  * Applique les filtres de base (ville, prestation)
  */
 function applyBasicFilters(artisans: Artisan[], criteria: FilterCriteria): Artisan[] {
-  let filtered = artisans.filter(artisan => artisan.privacy?.profileVisible !== false);
+  let filtered = [...artisans];
   
-  // Filtre par secteur/ville
-  if (criteria.secteurSearch.trim() || criteria.selectedSecteur) {
-    const searchTerm = criteria.secteurSearch.trim().toLowerCase();
-    
-    if (criteria.selectedSecteur) {
-      // Filtrage géographique avec distance
-      filtered = filterArtisansByDistance(
-        filtered,
-        criteria.selectedSecteur.lat,
-        criteria.selectedSecteur.lng,
-        50 // 50km de rayon
-      );
-    } else if (searchTerm) {
-      // Filtrage par nom de ville
-      filtered = filtered.filter(artisan =>
-        artisan.city?.toLowerCase().includes(searchTerm)
-      );
-    }
-  }
-  
-  // Filtre par prestation
+  // Filtrage par prestation
   if (criteria.prestationSearch.trim() || criteria.selectedPrestation) {
     const prestationTerm = (criteria.selectedPrestation || criteria.prestationSearch).toLowerCase();
     
     filtered = filtered.filter(artisan => {
-      const professionMatch = artisan.profession?.toLowerCase().includes(prestationTerm);
-      const professionsMatch = artisan.professions?.some(p => 
-        p.toLowerCase().includes(prestationTerm)
-      );
-      const descriptionMatch = artisan.description?.toLowerCase().includes(prestationTerm);
+      // Vérifier profession principale
+      if (artisan.profession?.toLowerCase().includes(prestationTerm)) return true;
       
-      return professionMatch || professionsMatch || descriptionMatch;
+      // Vérifier professions secondaires
+      if (artisan.professions?.some(p => p.toLowerCase().includes(prestationTerm))) return true;
+      
+      // Vérifier description
+      if (artisan.description?.toLowerCase().includes(prestationTerm)) return true;
+      
+      return false;
     });
   }
   
+  // Filtrage par ville/secteur
+  if (criteria.secteurSearch.trim() || criteria.selectedSecteur) {
+    const villeTerm = criteria.secteurSearch.toLowerCase();
+    
+    filtered = filtered.filter(artisan => {
+      if (!artisan.city) return false;
+      
+      const cityLower = artisan.city.toLowerCase();
+      
+      // Si on a une ville sélectionnée avec un nom, on l'utilise pour la correspondance exacte
+      if (criteria.selectedSecteur?.name) {
+        const selectedCityLower = criteria.selectedSecteur.name.toLowerCase();
+        // Correspondance exacte avec la ville sélectionnée
+        if (cityLower === selectedCityLower) return true;
+        // Correspondance partielle avec la ville sélectionnée
+        if (cityLower.includes(selectedCityLower)) return true;
+        // Normalisation des accents
+        const normalizedCity = cityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const normalizedSelected = selectedCityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (normalizedCity.includes(normalizedSelected)) return true;
+      }
+      
+      // Sinon, recherche partielle sur le texte saisi
+      // Correspondance exacte
+      if (cityLower === villeTerm) return true;
+      
+      // Correspondance partielle
+      if (cityLower.includes(villeTerm)) return true;
+      
+      // Correspondance sans accents
+      const normalizedCity = cityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const normalizedTerm = villeTerm.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      if (normalizedCity.includes(normalizedTerm)) return true;
+      
+      return false;
+    });
+  }
+  
+  console.log(`🔍 FILTRAGE: ${artisans.length} → ${filtered.length} artisans`);
   return filtered;
 }
 
@@ -213,17 +299,37 @@ function sortArtisans(artisans: Artisan[], criteria: FilterCriteria): Artisan[] 
     return shuffleArray(sorted);
   }
   
-  // Si ville sélectionnée : tri par distance puis rating
-  if (criteria.selectedSecteur) {
+  // Si ville sélectionnée : tri par correspondance exacte d'abord, puis distance/rating
+  if (criteria.selectedSecteur || criteria.secteurSearch.trim()) {
+    const villeTerm = criteria.secteurSearch.toLowerCase();
+    const selectedCityName = criteria.selectedSecteur?.name?.toLowerCase() || villeTerm;
+    
     return sorted.sort((a, b) => {
-      // Tri par distance d'abord
+      const aCityLower = a.city?.toLowerCase() || '';
+      const bCityLower = b.city?.toLowerCase() || '';
+      
+      // Priorité 1 : Correspondance exacte avec la ville sélectionnée ou recherchée
+      const aExactMatch = aCityLower === selectedCityName;
+      const bExactMatch = bCityLower === selectedCityName;
+      
+      if (aExactMatch && !bExactMatch) return -1;
+      if (!aExactMatch && bExactMatch) return 1;
+      
+      // Priorité 2 : Correspondance partielle
+      const aPartialMatch = aCityLower.includes(selectedCityName);
+      const bPartialMatch = bCityLower.includes(selectedCityName);
+      
+      if (aPartialMatch && !bPartialMatch) return -1;
+      if (!aPartialMatch && bPartialMatch) return 1;
+      
+      // Priorité 3 : Distance (si disponible)
       if (a.distance !== undefined && b.distance !== undefined) {
         if (a.distance !== b.distance) {
           return a.distance - b.distance;
         }
       }
       
-      // Puis par rating
+      // Priorité 4 : Rating
       return (b.averageRating || 0) - (a.averageRating || 0);
     });
   }
@@ -282,7 +388,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 /**
- * Construit la liste finale avec premium en tête
+ * Construit la liste finale complète (tous les artisans filtrés)
  */
 function buildFinalArtisanList(
   randomPremium: Artisan[],
@@ -290,35 +396,79 @@ function buildFinalArtisanList(
   standardArtisans: Artisan[],
   maxItems: number
 ): Artisan[] {
-  const finalList: Artisan[] = [];
-  
-  // Ajouter les 2 premium aléatoires en premier
-  finalList.push(...randomPremium);
-  
-  // Calculer combien d'artisans on peut encore ajouter
-  const remainingSlots = maxItems - finalList.length;
-  
-  if (remainingSlots <= 0) {
-    return finalList.slice(0, maxItems);
-  }
-  
-  // Mélanger premium restants et standard
-  const remainingArtisans = [...remainingPremium, ...standardArtisans];
-  
-  // Ajouter jusqu'à atteindre la limite
-  finalList.push(...remainingArtisans.slice(0, remainingSlots));
-  
-  return finalList;
+  // Retourner tous les artisans filtrés (pas de limite ici)
+  // La pagination se fera après
+  return [...remainingPremium, ...standardArtisans];
 }
 
 /**
- * Applique la pagination
+ * Applique la pagination avec Top Artisans prioritaires
  */
 function paginateResults(artisans: Artisan[], page: number, itemsPerPage: number): Artisan[] {
-  const startIndex = (page - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
+  // Séparer les artisans premium et standard
+  const topArtisans = artisans.filter(a => 
+    a.premiumFeatures?.isPremium === true || 
+    a.hasPremiumSite === true ||
+    a.subscriptionStatus === 'active'
+  );
+  const standardArtisans = artisans.filter(a => 
+    !(a.premiumFeatures?.isPremium === true || 
+      a.hasPremiumSite === true ||
+      a.subscriptionStatus === 'active')
+  );
   
-  return artisans.slice(startIndex, endIndex);
+  console.log(`🔍 SÉPARATION PREMIUM/STANDARD:`);
+  artisans.forEach((artisan, index) => {
+    const isTop = artisan.premiumFeatures?.isPremium === true || 
+                  artisan.hasPremiumSite === true ||
+                  artisan.subscriptionStatus === 'active';
+    console.log(`${index + 1}. ${artisan.companyName || `${artisan.firstName} ${artisan.lastName}`} - TOP: ${isTop ? '✅' : '❌'}`);
+    console.log(`   isPremium: ${artisan.premiumFeatures?.isPremium}, hasPremiumSite: ${artisan.hasPremiumSite}, subscription: ${artisan.subscriptionStatus}`);
+  });
+  
+  
+  // LOGIQUE INTELLIGENTE : Top Artisans prioritaires mais pas obligatoires
+  let pageTopArtisans: Artisan[] = [];
+  
+  if (topArtisans.length >= 3) {
+    // Cas idéal : 3+ Top Artisans disponibles
+    const shuffledTop = [...topArtisans].sort(() => 0.5 - Math.random());
+    pageTopArtisans = shuffledTop.slice(0, 3);
+  } else if (topArtisans.length > 0) {
+    // Cas partiel : Moins de 3 Top Artisans, prendre tous ceux disponibles
+    pageTopArtisans = [...topArtisans];
+  } else {
+    // Cas aucun : Pas de Top Artisans, fonctionnement normal
+  }
+  
+  // Calculer combien d'artisans standard on a besoin pour compléter la page
+  const neededStandard = itemsPerPage - pageTopArtisans.length;
+  
+  // Pour la pagination des artisans standard, on doit tenir compte des Top Artisans déjà pris
+  let standardStartIndex = 0;
+  if (pageTopArtisans.length < 3) {
+    // Si on n'a pas 3 Top Artisans, on prend les standard normalement pour cette page
+    standardStartIndex = (page - 1) * neededStandard;
+  } else {
+    // Si on a 3 Top Artisans, on ajuste l'index pour les standard
+    standardStartIndex = (page - 1) * (itemsPerPage - 3);
+  }
+  
+  const pageStandardArtisans = standardArtisans.slice(standardStartIndex, standardStartIndex + neededStandard);
+  
+  // TOUJOURS commencer par les Top Artisans
+  const result = [...pageTopArtisans, ...pageStandardArtisans];
+  
+  console.log(`🔍 DEBUG ALGORITHME - Page ${page}:`);
+  console.log(`- Artisans reçus: ${artisans.length}`);
+  console.log(`- Top Artisans trouvés: ${topArtisans.length}`);
+  console.log(`- Standard Artisans: ${standardArtisans.length}`);
+  console.log(`- Page Top sélectionnés: ${pageTopArtisans.length}`);
+  console.log(`- Page Standard ajoutés: ${pageStandardArtisans.length}`);
+  console.log(`- Résultat final: ${result.length}`);
+  console.log(`- Artisans dans le résultat:`, result.map(a => a.companyName || `${a.firstName} ${a.lastName}`));
+  
+  return result.slice(0, itemsPerPage);
 }
 
 /**

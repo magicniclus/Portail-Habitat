@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { collection, getDocs, query, orderBy, where } from "firebase/firestore";
+import { collection, getDocs, query, orderBy, where, limit, startAfter } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import Header from "@/components/Header";
@@ -41,16 +41,17 @@ interface Artisan {
     allowDirectContact: boolean;
   };
   // Propriétés ajoutées pour corriger les erreurs TypeScript
+  accountType?: string;
   isPromo?: boolean;
   distance?: number;
   premiumFeatures?: {
     isPremium: boolean;
     premiumStartDate?: any;
     premiumEndDate?: any;
+    showTopArtisanBadge?: boolean;
     premiumType?: 'monthly' | 'yearly' | 'lifetime';
     bannerPhotos?: string[];
     bannerVideo?: string;
-    showTopArtisanBadge?: boolean;
     premiumBenefits?: string[];
   };
 }
@@ -58,6 +59,7 @@ interface Artisan {
 export default function ArtisansClient() {
   const [artisans, setArtisans] = useState<Artisan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paginationLoading, setPaginationLoading] = useState(false);
   const [secteurSearch, setSecteurSearch] = useState("");
   const [prestationSearch, setPrestationSearch] = useState("");
   const [selectedSecteur, setSelectedSecteur] = useState<{name: string, lat: number, lng: number, type?: string} | null>(null);
@@ -70,7 +72,7 @@ export default function ArtisansClient() {
   const [isArtisan, setIsArtisan] = useState(false);
   const [authLoading, setAuthLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 11;
   const [hasUrlParams, setHasUrlParams] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
@@ -189,8 +191,15 @@ export default function ArtisansClient() {
 
   // Sélectionner un secteur
   const selectSecteur = (secteur: {name: string, lat: number, lng: number, type?: string}) => {
+    // Extraire uniquement le nom de la ville (première partie avant la virgule)
+    // Ex: "Rennes, Ille-et-Vilaine, France" -> "Rennes"
+    const cityName = secteur.name.split(',')[0].trim();
+    
     setSecteurSearch(secteur.name);
-    setSelectedSecteur(secteur);
+    setSelectedSecteur({
+      ...secteur,
+      name: cityName // Utiliser uniquement le nom de la ville pour le filtrage
+    });
     setShowSecteurSuggestions(false);
   };
 
@@ -294,17 +303,11 @@ export default function ArtisansClient() {
 
   // Composant étoile SVG personnalisé
   const StarIcon = ({ filled }: { filled: boolean }) => (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill={filled ? "#fbbf24" : "#d1d5db"}
-      stroke={filled ? "#fbbf24" : "#d1d5db"}
-      strokeWidth="1"
-      className="inline-block"
-    >
-      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
-    </svg>
+    <Star
+      className={`h-4 w-4 ${
+        filled ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+      }`}
+    />
   );
 
   // Fonction pour afficher les étoiles selon la note
@@ -319,19 +322,18 @@ export default function ArtisansClient() {
     return words.slice(0, 2).map(word => word[0]).join('').toUpperCase();
   };
 
+
   const renderStars = (rating: number) => {
     const safeRating = rating || 0;
-    const fullStars = Math.floor(safeRating);
     
-    return (
-      <div className="flex items-center">
-        <StarIcon filled={fullStars > 0} />
-        <StarIcon filled={fullStars > 1} />
-        <StarIcon filled={fullStars > 2} />
-        <StarIcon filled={fullStars > 3} />
-        <StarIcon filled={fullStars > 4} />
-      </div>
-    );
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`h-4 w-4 ${
+          i < safeRating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+        }`}
+      />
+    ));
   };
 
   // Vérifier l'authentification et si l'utilisateur est un artisan
@@ -360,72 +362,261 @@ export default function ArtisansClient() {
     return () => unsubscribe();
   }, []);
 
-  // Récupérer 20 artisans aléatoires au chargement
-  useEffect(() => {
-    const fetchArtisans = async () => {
-      try {
-        setLoading(true);
-        
-        // Récupérer tous les artisans visibles
-        const artisansRef = collection(db, "artisans");
-        const q = query(artisansRef, orderBy("createdAt", "desc"));
-        const querySnapshot = await getDocs(q);
-        
-        const allArtisans: Artisan[] = [];
-        
-        for (const doc of querySnapshot.docs) {
-          const data = doc.data();
-          // Filtrer seulement les artisans avec profil visible
-          if (data.privacy?.profileVisible) {
-            // Récupérer les reviews pour calculer la vraie moyenne
-            try {
-              const reviewsRef = collection(db, "artisans", doc.id, "reviews");
-              const reviewsSnapshot = await getDocs(reviewsRef);
-              
-              let totalRating = 0;
-              let reviewCount = 0;
-              
-              reviewsSnapshot.forEach((reviewDoc) => {
-                const reviewData = reviewDoc.data();
-                if (reviewData.rating && reviewData.displayed !== false) {
-                  totalRating += reviewData.rating;
-                  reviewCount++;
-                }
-              });
-              
-              const calculatedAverageRating = reviewCount > 0 ? totalRating / reviewCount : 0;
-              
-              allArtisans.push({
-                id: doc.id,
-                ...data,
-                averageRating: calculatedAverageRating,
-                reviewCount: reviewCount
-              } as Artisan);
-            } catch (reviewError) {
-              console.error("Erreur lors de la récupération des reviews:", reviewError);
-              // Fallback sur les données originales
-              allArtisans.push({
-                id: doc.id,
-                ...data
-              } as Artisan);
-            }
-          }
-        }
+  // Système de pagination fluide et intelligent
+  const [allArtisansCache, setAllArtisansCache] = useState<Artisan[]>([]);
+  const [hasMoreArtisans, setHasMoreArtisans] = useState(true);
+  const [lastVisible, setLastVisible] = useState<any>(null);
+  const [totalArtisansCount, setTotalArtisansCount] = useState<number>(0);
+  const [countLoaded, setCountLoaded] = useState(false);
 
-        // Mélanger et prendre 20 artisans aléatoires
-        const shuffled = allArtisans.sort(() => 0.5 - Math.random());
-        const randomArtisans = shuffled.slice(0, 20);
+  // Fonction pour charger les artisans par batch de 10
+  const loadArtisansBatch = async (isFirstLoad = false, withFilters = false) => {
+    try {
+      if (isFirstLoad) {
+        setLoading(true);
+        setArtisans([]);
+        setAllArtisansCache([]);
+        setLastVisible(null);
+        setHasMoreArtisans(true);
+      }
+
+      const artisansRef = collection(db, "artisans");
+      let q;
+
+      if (withFilters) {
+        // Avec filtres : ordre random (pas de orderBy pour permettre le random)
+        q = query(
+          artisansRef,
+          limit(100) // Charger plus pour pouvoir randomiser et avoir assez d'artisans
+        );
+      } else {
+        // Sans filtres : ordre général (par date de création)
+        if (lastVisible && !isFirstLoad) {
+          q = query(
+            artisansRef,
+            orderBy("createdAt", "desc"),
+            startAfter(lastVisible),
+            limit(50) // Charger plus d'artisans
+          );
+        } else {
+          q = query(
+            artisansRef,
+            orderBy("createdAt", "desc"),
+            limit(50) // Charger plus d'artisans au premier chargement
+          );
+        }
+      }
+
+      const querySnapshot = await getDocs(q);
+      
+      if (querySnapshot.empty) {
+        setHasMoreArtisans(false);
+        return [];
+      }
+
+      console.log(`📦 ${querySnapshot.docs.length} artisans chargés depuis Firestore`);
+      const batchArtisans: Artisan[] = [];
+      
+      for (const doc of querySnapshot.docs) {
+        const data = doc.data();
         
-        setArtisans(randomArtisans);
-      } catch (error) {
-        console.error("Erreur lors de la récupération des artisans:", error);
-      } finally {
+        console.log(`🔎 Artisan chargé: ${data.companyName || data.firstName} - accountType: ${data.accountType || 'undefined'}`);
+
+        // Règle stricte : ne pas afficher les profils non visibles
+        if (data.privacy?.profileVisible !== true) {
+          continue;
+        }
+        
+        // Vérifier si c'est un artisan demo expiré
+        const isDemo = data.accountType === 'demo';
+        const isExpired = isDemo && data.demoConfig?.expiresAt && 
+          new Date() > new Date(data.demoConfig.expiresAt.toDate ? data.demoConfig.expiresAt.toDate() : data.demoConfig.expiresAt);
+        
+        // Exclure les artisans demo expirés
+        if (isExpired) {
+          console.log(`❌ Artisan demo expiré exclu: ${data.companyName}`);
+          continue;
+        }
+        
+        // Filtrer seulement les artisans avec profil visible === true ET abonnement actif
+        // Pour les VRAIS artisans (non-demo), on est plus permissif
+        const isRealArtisan = !data.accountType || data.accountType !== 'demo';
+        
+        let shouldInclude = false;
+        if (isRealArtisan) {
+          // Pour les vrais artisans : toujours inclure (ils sont rares et précieux)
+          shouldInclude = true;
+        } else {
+          // Pour les demos : vérifier les conditions
+          const hasActiveSubscription = data.subscriptionStatus === 'active';
+          const isProfileVisible = data.privacy?.profileVisible === true;
+          shouldInclude = isProfileVisible && hasActiveSubscription;
+        }
+        
+        if (shouldInclude) {
+          const artisan = {
+            id: doc.id,
+            ...data,
+            averageRating: data.averageRating || 0,
+            reviewCount: data.reviewCount || 0
+          } as Artisan;
+          
+          // Log pour déboguer
+          if (!isDemo) {
+            console.log('✅ VRAI ARTISAN chargé:', {
+              id: doc.id,
+              name: data.companyName,
+              accountType: data.accountType,
+              subscriptionStatus: data.subscriptionStatus,
+              profileVisible: data.privacy?.profileVisible
+            });
+          }
+          
+          batchArtisans.push(artisan);
+        }
+      }
+
+      // Fallback : si on ne récupère que des demos (ex: tri par createdAt desc) on tente un 2e fetch
+      // sans orderBy pour augmenter les chances de récupérer les vrais artisans (accountType absent).
+      const hasAnyReal = batchArtisans.some(a => !a.accountType || a.accountType !== 'demo');
+      if (!withFilters && isFirstLoad && !hasAnyReal) {
+        try {
+          const fallbackSnapshot = await getDocs(query(artisansRef, limit(250)));
+          const fallbackArtisans: Artisan[] = [];
+
+          for (const doc of fallbackSnapshot.docs) {
+            const data = doc.data();
+
+            // Règle stricte : ne pas afficher les profils non visibles
+            if (data.privacy?.profileVisible !== true) {
+              continue;
+            }
+            const isDemo = data.accountType === 'demo';
+            const isExpired = isDemo && data.demoConfig?.expiresAt &&
+              new Date() > new Date(data.demoConfig.expiresAt.toDate ? data.demoConfig.expiresAt.toDate() : data.demoConfig.expiresAt);
+            if (isExpired) continue;
+
+            const artisan = {
+              id: doc.id,
+              ...data,
+              averageRating: data.averageRating || 0,
+              reviewCount: data.reviewCount || 0
+            } as Artisan;
+
+            fallbackArtisans.push(artisan);
+          }
+
+          const byId = new Map<string, Artisan>();
+          for (const a of batchArtisans) byId.set(a.id, a);
+          for (const a of fallbackArtisans) {
+            if (!byId.has(a.id)) byId.set(a.id, a);
+          }
+
+          const merged = Array.from(byId.values());
+          const mergedHasAnyReal = merged.some(a => !a.accountType || a.accountType !== 'demo');
+          console.log('🧩 Fallback merge artisans:', {
+            initial: batchArtisans.length,
+            fallback: fallbackArtisans.length,
+            merged: merged.length,
+            hasAnyRealBefore: hasAnyReal,
+            hasAnyRealAfter: mergedHasAnyReal
+          });
+
+          // Remplacer le batch par le batch enrichi
+          batchArtisans.splice(0, batchArtisans.length, ...merged);
+        } catch (e) {
+          console.warn('⚠️ Fallback fetch artisans failed:', e);
+        }
+      }
+
+      // Mettre à jour lastVisible pour la pagination
+      if (!withFilters && querySnapshot.docs.length > 0) {
+        setLastVisible(querySnapshot.docs[querySnapshot.docs.length - 1]);
+      }
+
+      if (withFilters) {
+        // Avec filtres : randomiser les résultats
+        const shuffled = batchArtisans.sort(() => 0.5 - Math.random());
+        return shuffled;
+      } else {
+        // Sans filtres : ordre naturel
+        return batchArtisans;
+      }
+
+    } catch (error) {
+      console.error("Erreur lors du chargement des artisans:", error);
+      return [];
+    } finally {
+      if (isFirstLoad) {
         setLoading(false);
       }
-    };
+    }
+  };
 
-    fetchArtisans();
+  // Fonction pour compter le total d'artisans (optimisée)
+  const countTotalArtisans = async () => {
+    try {
+      const artisansRef = collection(db, "artisans");
+      // Utiliser getCountFromServer pour compter sans charger les documents
+      const snapshot = await getDocs(query(artisansRef, limit(1000)));
+      
+      // Estimation rapide basée sur les documents chargés
+      setTotalArtisansCount(snapshot.size);
+      setCountLoaded(true);
+    } catch (error) {
+      console.error("Erreur lors du comptage des artisans:", error);
+      setTotalArtisansCount(100); // Valeur par défaut
+      setCountLoaded(true);
+    }
+  };
+
+  // Chargement initial avec comptage
+  useEffect(() => {
+    const initializeData = async () => {
+      // Compter le total d'artisans en parallèle
+      countTotalArtisans();
+      
+      // Charger le premier batch d'artisans
+      const initialArtisans = await loadArtisansBatch(true, false);
+      setArtisans(initialArtisans);
+      setAllArtisansCache(initialArtisans);
+    };
+    
+    initializeData();
   }, []);
+
+  // Gestion intelligente des filtres et pagination
+  const hasActiveFilters = useMemo(() => {
+    return !!(secteurSearch.trim() || prestationSearch.trim() || selectedSecteur || selectedPrestation);
+  }, [secteurSearch, prestationSearch, selectedSecteur, selectedPrestation]);
+
+  // Charger plus d'artisans quand on change de page
+  const loadMoreArtisans = async () => {
+    if (!hasMoreArtisans || loading) return;
+    
+    const newArtisans = await loadArtisansBatch(false, hasActiveFilters);
+    if (newArtisans.length > 0) {
+      setAllArtisansCache(prev => [...prev, ...newArtisans]);
+    }
+  };
+
+  // Recharger quand les filtres changent
+  useEffect(() => {
+    if (hasActiveFilters) {
+      // Avec filtres : recharger avec randomisation
+      loadArtisansBatch(true, true).then(filteredArtisans => {
+        setArtisans(filteredArtisans);
+        setAllArtisansCache(filteredArtisans);
+      });
+    } else {
+      // Sans filtres : revenir au chargement normal
+      loadArtisansBatch(true, false).then(initialArtisans => {
+        setArtisans(initialArtisans);
+        setAllArtisansCache(initialArtisans);
+      });
+    }
+    setCurrentPage(1);
+  }, [secteurSearch, prestationSearch, selectedSecteur, selectedPrestation]);
 
   // Utiliser le nouvel algorithme de filtrage et tri
   const filteredResult = useMemo(() => {
@@ -435,17 +626,76 @@ export default function ArtisansClient() {
       selectedSecteur,
       selectedPrestation
     };
+    
+    console.log(`🔍 AVANT ALGORITHME:`);
+    console.log(`- allArtisansCache.length: ${allArtisansCache.length}`);
+    console.log(`- criteria:`, criteria);
+    console.log(`- currentPage: ${currentPage}`);
+    console.log(`- itemsPerPage: ${itemsPerPage}`);
+    
+    const result = filterAndSortArtisans(
+      allArtisansCache,
+      criteria,
+      currentPage,
+      itemsPerPage
+    );
+    
+    console.log(`🔍 APRÈS ALGORITHME:`);
+    console.log(`- result.artisans.length: ${result.artisans.length}`);
+    console.log(`- result.totalCount: ${result.totalCount}`);
+    
+    return result;
+  }, [allArtisansCache, secteurSearch, prestationSearch, selectedSecteur, selectedPrestation, currentPage, itemsPerPage]);
 
-    return filterAndSortArtisans(artisans, criteria, currentPage, itemsPerPage);
-  }, [artisans, secteurSearch, prestationSearch, selectedSecteur, selectedPrestation, currentPage, itemsPerPage]);
+  const displayedArtisans = filteredResult.artisans;
+  
+  // Calculer le nombre total de pages basé sur le vrai count d'artisans
+  const totalPages = useMemo(() => {
+    if (!countLoaded) return 0;
+    
+    if (hasActiveFilters) {
+      // Avec filtres : utiliser le count filtré
+      return Math.ceil(filteredResult.totalCount / itemsPerPage);
+    } else {
+      // Sans filtres : utiliser le count total de la DB
+      return Math.ceil(totalArtisansCount / itemsPerPage);
+    }
+  }, [countLoaded, hasActiveFilters, filteredResult.totalCount, totalArtisansCount, itemsPerPage]);
+
+  // Charger plus d'artisans si on arrive en fin de cache
+  useEffect(() => {
+    const currentCacheSize = allArtisansCache.length;
+    const neededSize = currentPage * itemsPerPage;
+    
+    if (!hasActiveFilters && neededSize > currentCacheSize - 11 && hasMoreArtisans) {
+      loadMoreArtisans();
+    }
+  }, [currentPage, allArtisansCache.length, hasActiveFilters, hasMoreArtisans]);
+
+  // Fonction pour gérer le changement de page avec loader
+  const handlePageChange = async (newPage: number) => {
+    if (newPage === currentPage || paginationLoading) return;
+    
+    setPaginationLoading(true);
+    
+    // Simuler un délai pour que le loader soit visible
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    setCurrentPage(newPage);
+    
+    // Attendre que les données soient prêtes
+    setTimeout(() => {
+      setPaginationLoading(false);
+    }, 300);
+  };
 
   // Extraire les données du résultat
-  const filteredArtisans = filteredResult.artisans;
-  const totalCount = filteredResult.totalCount;
+  const filteredArtisans = displayedArtisans;
+  const totalCount = hasActiveFilters ? filteredResult.totalCount : totalArtisansCount;
   const hasRandomPremium = filteredResult.hasRandomPremium;
+  
 
   // Pagination basée sur le total count
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
   const paginatedArtisans = filteredArtisans; // Déjà paginé par l'algorithme
 
   // Ajouter une carte promotionnelle si pas de recherche manuelle et pas artisan connecté
@@ -602,10 +852,12 @@ export default function ArtisansClient() {
           </div>
 
           {/* Résultats */}
-          {loading ? (
+          {(loading || !countLoaded) ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
-              <span className="ml-2 text-gray-600">Chargement des artisans...</span>
+              <span className="ml-2 text-gray-600">
+                {!countLoaded ? "Comptage des artisans..." : "Chargement des artisans..."}
+              </span>
             </div>
           ) : (
             <>
@@ -620,8 +872,16 @@ export default function ArtisansClient() {
                 </p>
               </div>
 
+              {/* Loader de pagination */}
+              {paginationLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
+                  <span className="ml-2 text-gray-600">Chargement de la page {currentPage}...</span>
+                </div>
+              )}
+
               {/* Grille des artisans avec carte promotionnelle intégrée */}
-              {artisansWithPromo.length > 0 ? (
+              {!paginationLoading && artisansWithPromo.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {artisansWithPromo.map((artisan, index) => {
                     // Vérifier si c'est la carte promo
@@ -686,17 +946,17 @@ export default function ArtisansClient() {
                     // C'est un artisan normal
                     return (
                       <Link 
-                        key={artisan.id} 
+                        key={`${artisan.id}-${index}`} 
                         href={`/artisans/${artisan.slug || artisan.id}`}
                         className="group"
                       >
-                        <div className="overflow-hidden hover:shadow-xl transition-shadow duration-300 group rounded-lg bg-white border border-gray-200">
+                        <div className="overflow-hidden hover:shadow-xl transition-shadow duration-300 group rounded-lg bg-white border border-gray-200 h-full flex flex-col">
                           {/* Image de couverture */}
                           <div className="relative h-48 bg-gray-200">
                             
                             {/* Badge Top Artisan en haut à droite */}
-                            {artisan.premiumFeatures?.isPremium && 
-                             (artisan.premiumFeatures as any)?.showTopArtisanBadge && (
+                            {artisan.premiumFeatures?.isPremium === true && 
+                             (artisan.premiumFeatures as any)?.showTopArtisanBadge === true && (
                               <div className="absolute top-2 right-2 z-10">
                                 <TopArtisanBadge 
                                   size="sm" 
@@ -735,7 +995,7 @@ export default function ArtisansClient() {
                             )}
                           </div>
 
-                          <div className="p-4">
+                          <div className="p-4 flex-1 flex flex-col">
                             
                             {/* Nom de l'entreprise */}
                             <h3 className="font-bold text-lg text-gray-900 mb-1 group-hover:text-orange-600 transition-colors">
@@ -767,16 +1027,23 @@ export default function ArtisansClient() {
                               )}
                             </div>
 
-                            {/* Note et avis */}
-                            {(artisan.reviewCount > 0 || artisan.averageRating > 0) && (
-                              <div className="flex items-center text-sm text-gray-600 mb-3">
-                                <div className="mr-2">
-                                  {renderStars(artisan.averageRating || 0)}
-                                </div>
-                                <span className="font-medium">{(artisan.averageRating || 0).toFixed(1)}</span>
-                                <span className="ml-1">({artisan.reviewCount || 0} avis)</span>
+                            {/* Note et avis - vraies données de la DB */}
+                            <div className="flex items-center text-sm text-gray-600 mb-3 mt-auto">
+                              <div className="flex items-center space-x-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`h-4 w-4 ${
+                                      star <= (artisan.averageRating || 0) 
+                                        ? 'fill-yellow-400 text-yellow-400' 
+                                        : 'fill-gray-300 text-gray-300'
+                                    }`}
+                                  />
+                                ))}
                               </div>
-                            )}
+                              <span className="font-medium ml-2">{(artisan.averageRating || 0).toFixed(1)}/5</span>
+                              <span className="ml-1">({artisan.reviewCount || 0} avis)</span>
+                            </div>
 
                           </div>
                         </div>
@@ -784,24 +1051,24 @@ export default function ArtisansClient() {
                     );
                   })}
                 </div>
-              ) : (
+              ) : !paginationLoading ? (
                 <div className="text-center py-12">
-                  <p className="text-gray-500 text-lg">Aucun artisan trouvé</p>
+                  <p className="text-gray-500 text-lg mb-2">Aucun artisan trouvé</p>
                   {(secteurSearch || prestationSearch) && (
                     <p className="text-gray-400 text-sm mt-2">
                       Essayez de modifier votre recherche ou de supprimer certains filtres
                     </p>
                   )}
                 </div>
-              )}
+              ) : null}
 
               {/* Pagination */}
-              {totalPages > 1 && (
+              {countLoaded && totalPages > 1 && (
                 <div className="flex justify-center items-center gap-2 mt-8">
                   <Button
                     variant="outline"
-                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentPage === 1}
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1 || paginationLoading}
                   >
                     Précédent
                   </Button>
@@ -819,7 +1086,8 @@ export default function ArtisansClient() {
                             key={page}
                             variant={currentPage === page ? "default" : "outline"}
                             size="sm"
-                            onClick={() => setCurrentPage(page)}
+                            onClick={() => handlePageChange(page)}
+                            disabled={paginationLoading}
                             className={currentPage === page ? "bg-yellow-500 hover:bg-yellow-600" : ""}
                           >
                             {page}
@@ -837,8 +1105,8 @@ export default function ArtisansClient() {
                   
                   <Button
                     variant="outline"
-                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                    disabled={currentPage === totalPages}
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages || paginationLoading}
                   >
                     Suivant
                   </Button>

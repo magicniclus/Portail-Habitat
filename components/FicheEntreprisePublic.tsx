@@ -11,6 +11,17 @@ import TopArtisanBadge from "@/components/TopArtisanBadge";
 import { isPremiumActive } from "@/lib/premium-utils";
 import ArtisanBanner from "@/components/ArtisanBanner";
 import { 
+  isDemoArtisan, 
+  isDemoArtisanContactable, 
+  getDisplayPhone, 
+  getDisplayEmail,
+  getPhoneClickAction,
+  getContactFormAction,
+  getContactRedirectUrl,
+  getDemoArtisanMessage,
+  type ArtisanWithDemo 
+} from "@/lib/demo-artisan-utils";
+import { 
   Phone, 
   Mail, 
   MapPin, 
@@ -36,8 +47,7 @@ import { getArtisanPreferencesWithDefaults } from '@/lib/artisan-preferences';
 import ProjectCard from "./ProjectCard";
 
 interface FicheEntreprisePublicProps {
-  entreprise: {
-    id: string;
+  entreprise: ArtisanWithDemo & {
     nom: string;
     logo?: string;
     banniere?: string;
@@ -80,6 +90,15 @@ export default function FicheEntreprisePublic({
 }: FicheEntreprisePublicProps) {
   const [showPhone, setShowPhone] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
+  // Logique demo artisan
+  const isDemo = isDemoArtisan(entreprise);
+  const isContactable = isDemoArtisanContactable(entreprise);
+  const displayPhone = getDisplayPhone(entreprise);
+  const displayEmail = getDisplayEmail(entreprise);
+  const phoneAction = getPhoneClickAction(entreprise);
+  const formAction = getContactFormAction(entreprise);
+  const demoMessage = getDemoArtisanMessage(entreprise);
   const [privacySettings, setPrivacySettings] = useState({
     profileVisible: true,
     showPhone: true,
@@ -121,11 +140,12 @@ export default function FicheEntreprisePublic({
   // Vérifier si l'utilisateur connecté est le propriétaire de la fiche
   const isOwner = currentUser?.uid === entreprise.id;
 
-  // Tracking automatique des vues de pages (seulement si ce n'est pas le propriétaire)
-  // On utilise une logique simple : si c'est pas une preview ET pas le propriétaire
+  // Tracking automatique des vues de pages (seulement si ce n'est pas le propriétaire ET pas un artisan demo)
+  // On utilise une logique simple : si c'est pas une preview ET pas le propriétaire ET pas un demo
   useArtisanTracking({ 
     artisanId: entreprise.id, 
-    autoTrackView: !isPreview && !isOwner
+    autoTrackView: !isPreview && !isOwner,
+    isDemo: entreprise.accountType === 'demo'
   });
 
   // Fonctions de tracking avec logs détaillés
@@ -244,13 +264,24 @@ export default function FicheEntreprisePublic({
   });
 
   const handlePhoneClick = () => {
+    // Gestion spéciale pour les artisans demo
+    if (phoneAction === 'disabled') {
+      return; // Pas d'action possible
+    }
+    
+    if (phoneAction === 'redirect') {
+      window.location.href = getContactRedirectUrl(entreprise, 'phone');
+      return;
+    }
+    
+    // Comportement normal pour les vrais artisans
     if (!showPhone) {
       // Tracker quand l'utilisateur révèle le numéro (plus pertinent)
       trackPhoneClick();
       setShowPhone(true);
     } else {
       // Juste ouvrir l'appel sans tracking supplémentaire
-      window.location.href = `tel:${entreprise.telephone}`;
+      window.location.href = `tel:${displayPhone}`;
     }
   };
 
@@ -259,6 +290,17 @@ export default function FicheEntreprisePublic({
     
     // Reset error message
     setFormErrorMessage("");
+    
+    // Gestion spéciale pour les artisans demo
+    if (formAction === 'disabled') {
+      setFormErrorMessage('Contact non disponible pour cet artisan.');
+      return;
+    }
+    
+    if (formAction === 'redirect') {
+      window.location.href = getContactRedirectUrl(entreprise, 'form');
+      return;
+    }
     
     // Validation des champs requis (tous sauf description)
     if (!formData.nom.trim() || !formData.prenom.trim() || !formData.email.trim() || !formData.telephone.trim() || !formData.codePostal.trim()) {
@@ -592,7 +634,7 @@ export default function FicheEntreprisePublic({
                     {privacySettings.showEmail && (
                       <div className="flex items-center space-x-3 text-gray-600">
                         <Mail className="h-4 w-4" />
-                        <span>{entreprise.email}</span>
+                        <span>{displayEmail}</span>
                       </div>
                     )}
                   </div>
@@ -895,6 +937,13 @@ export default function FicheEntreprisePublic({
                       </p>
                     </div>
 
+                    {/* Message d'information pour les artisans demo */}
+                    {demoMessage && (
+                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                        <p className="text-sm text-blue-800">{demoMessage}</p>
+                      </div>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-4">
                       <div className="grid grid-cols-2 gap-3">
                         <Input
@@ -903,7 +952,7 @@ export default function FicheEntreprisePublic({
                           value={formData.prenom}
                           onChange={handleInputChange}
                           required
-                          disabled={isSubmittingForm}
+                          disabled={isSubmittingForm || formAction === 'disabled'}
                         />
                         <Input
                           name="nom"
@@ -911,7 +960,7 @@ export default function FicheEntreprisePublic({
                           value={formData.nom}
                           onChange={handleInputChange}
                           required
-                          disabled={isSubmittingForm}
+                          disabled={isSubmittingForm || formAction === 'disabled'}
                         />
                       </div>
                       
@@ -922,7 +971,7 @@ export default function FicheEntreprisePublic({
                         value={formData.email}
                         onChange={handleInputChange}
                         required
-                        disabled={isSubmittingForm}
+                        disabled={isSubmittingForm || formAction === 'disabled'}
                       />
                       
                       <Input
@@ -932,7 +981,7 @@ export default function FicheEntreprisePublic({
                         value={formData.telephone}
                         onChange={handleInputChange}
                         required
-                        disabled={isSubmittingForm}
+                        disabled={isSubmittingForm || formAction === 'disabled'}
                       />
                       
                       <Input
@@ -941,7 +990,7 @@ export default function FicheEntreprisePublic({
                         value={formData.codePostal}
                         onChange={handleInputChange}
                         required
-                        disabled={isSubmittingForm}
+                        disabled={isSubmittingForm || formAction === 'disabled'}
                       />
                       
                       <Textarea
@@ -950,7 +999,7 @@ export default function FicheEntreprisePublic({
                         value={formData.description}
                         onChange={handleInputChange}
                         className="min-h-[80px] resize-none"
-                        disabled={isSubmittingForm}
+                        disabled={isSubmittingForm || formAction === 'disabled'}
                       />
 
                       {formErrorMessage && (
@@ -962,12 +1011,17 @@ export default function FicheEntreprisePublic({
                       <Button 
                         type="submit" 
                         className="w-full"
-                        disabled={isSubmittingForm}
+                        disabled={isSubmittingForm || formAction === 'disabled'}
                       >
                         {isSubmittingForm ? (
                           <>
                             <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             Envoi en cours...
+                          </>
+                        ) : formAction === 'redirect' ? (
+                          <>
+                            <Send className="h-4 w-4 mr-2" />
+                            Contacter cet artisan
                           </>
                         ) : (
                           <>
@@ -986,9 +1040,10 @@ export default function FicheEntreprisePublic({
                           variant="outline"
                           className="w-full"
                           onClick={handlePhoneClick}
+                          disabled={phoneAction === 'disabled'}
                         >
                           <Phone className="h-4 w-4 mr-2" />
-                          {showPhone ? entreprise.telephone : 'Voir le numéro'}
+                          {showPhone ? displayPhone : 'Voir le numéro'}
                         </Button>
                       </div>
                     )}

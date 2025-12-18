@@ -9,6 +9,7 @@ import {
 interface UseArtisanTrackingProps {
   artisanId: string;
   autoTrackView?: boolean; // Tracker automatiquement la vue au montage du composant
+  isDemo?: boolean; // Désactiver le tracking pour les artisans demo
 }
 
 interface FormSubmissionData {
@@ -21,7 +22,8 @@ interface FormSubmissionData {
 
 export function useArtisanTracking({ 
   artisanId, 
-  autoTrackView = true 
+  autoTrackView = true,
+  isDemo = false 
 }: UseArtisanTrackingProps) {
   
   // Référence pour éviter le double tracking
@@ -30,6 +32,12 @@ export function useArtisanTracking({
   
   // Tracker automatiquement la vue au montage du composant
   useEffect(() => {
+    // Désactiver complètement le tracking pour les artisans demo
+    if (isDemo) {
+      console.log('🚫 Tracking désactivé pour artisan demo:', artisanId);
+      return;
+    }
+
     // Seulement si autoTrackView est true ET qu'on a un artisanId valide
     if (!autoTrackView || !artisanId) {
       console.log('🚫 Tracking désactivé:', { autoTrackView, artisanId });
@@ -50,36 +58,36 @@ export function useArtisanTracking({
 
   // Fonction pour tracker un clic sur le téléphone
   const handlePhoneClick = useCallback(async () => {
-    if (!artisanId) return;
+    if (!artisanId || isDemo) return;
     
     try {
       await trackPhoneClick(artisanId);
     } catch (error) {
       console.error('Erreur lors du tracking du clic téléphone:', error);
     }
-  }, [artisanId]);
+  }, [artisanId, isDemo]);
 
   // Fonction pour tracker un envoi de formulaire
   const handleFormSubmission = useCallback(async (formData: FormSubmissionData) => {
-    if (!artisanId) return;
+    if (!artisanId || isDemo) return;
     
     try {
       await trackFormSubmission(artisanId, formData);
     } catch (error) {
       console.error('Erreur lors du tracking du formulaire:', error);
     }
-  }, [artisanId]);
+  }, [artisanId, isDemo]);
 
   // Fonction générique pour tracker une vue manuelle
   const handleViewTracking = useCallback(async () => {
-    if (!artisanId) return;
+    if (!artisanId || isDemo) return;
     
     try {
       await trackArtisanView(artisanId);
     } catch (error) {
       console.error('Erreur lors du tracking de la vue:', error);
     }
-  }, [artisanId]);
+  }, [artisanId, isDemo]);
 
   return {
     trackPhoneClick: handlePhoneClick,
