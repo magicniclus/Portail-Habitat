@@ -9,9 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Star, CheckCircle, Loader2, AlertCircle, Briefcase } from "lucide-react";
-import { doc, getDoc, collection, addDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { sendReviewNotificationIfAllowed } from '@/lib/notification-service';
+import { recomputeArtisanReviewStats } from '@/lib/review-stats';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -65,6 +66,7 @@ export default function AvisPage() {
             companyName: data.companyName || '',
             profession: data.profession || '',
             city: data.city || '',
+            email: data.email || '',
             logoUrl: data.logoUrl
           });
         }
@@ -117,16 +119,22 @@ export default function AvisPage() {
       });
 
       // Mettre à jour les statistiques de l'artisan
+      await recomputeArtisanReviewStats(artisanId);
+
       const artisanRef = doc(db, 'artisans', artisanId);
       await updateDoc(artisanRef, {
-        reviewCount: increment(1),
-        // Note: le calcul de la moyenne se fera côté serveur ou lors de la lecture
         updatedAt: new Date()
       });
 
       // Envoyer la notification d'avis à l'artisan (si autorisé par ses préférences)
       try {
         if (artisan) {
+          // Si l'artisan n'a pas d'email, on n'essaie pas d'envoyer de notification
+          if (!artisan.email) {
+            setIsSubmitted(true);
+            return;
+          }
+
           const notificationSent = await sendReviewNotificationIfAllowed(artisanId, {
             artisanEmail: artisan.email || '',
             artisanName: artisan.companyName || `${artisan.firstName} ${artisan.lastName}`,

@@ -3,8 +3,8 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, Mail, Phone, MapPin, Calendar, Wrench, Users, ArrowRight, Loader2, Star, ExternalLink, Search } from 'lucide-react'
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore'
+import { CheckCircle, Mail, Phone, MapPin, Calendar, Wrench, ArrowRight, Loader2 } from 'lucide-react'
+import { collection, query, where, limit, getDocs } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 
 interface ResultsStepProps {
@@ -14,8 +14,6 @@ interface ResultsStepProps {
 export default function ResultsStep({ simulatorData }: ResultsStepProps) {
   const [estimationData, setEstimationData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [nearbyArtisans, setNearbyArtisans] = useState<any[]>([])
-  const [loadingArtisans, setLoadingArtisans] = useState(false)
 
   // Clé pour le localStorage (même que dans le simulateur)
   const STORAGE_KEY = 'simulator-data'
@@ -72,61 +70,6 @@ export default function ResultsStep({ simulatorData }: ResultsStepProps) {
 
     fetchEstimation()
   }, [simulatorData?.contactInfo?.email])
-
-  // Récupérer les artisans du secteur
-  useEffect(() => {
-    const fetchNearbyArtisans = async () => {
-      if (!simulatorData?.postalCode || !simulatorData?.selectedPrestation) {
-        return
-      }
-
-      setLoadingArtisans(true)
-      
-      try {
-        // Extraire le département du code postal
-        const department = simulatorData.postalCode.substring(0, 2)
-        
-        // Chercher les artisans dans le département avec la spécialité correspondante
-        const artisansQuery = query(
-          collection(db, 'artisans'),
-          where('isActive', '==', true),
-          where('department', '==', department),
-          limit(6) // Limiter à 6 artisans
-        )
-        
-        const querySnapshot = await getDocs(artisansQuery)
-        
-        if (!querySnapshot.empty) {
-          const artisans = querySnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }))
-          
-          // Filtrer par spécialité si possible
-          const filteredArtisans = artisans.filter((artisan: any) => {
-            const specialties = artisan.specialties || []
-            const prestationSlug = simulatorData.selectedPrestation?.toLowerCase()
-            
-            // Vérifier si l'artisan a la spécialité correspondante
-            return specialties.some((specialty: string) => 
-              specialty.toLowerCase().includes('cuisine') ||
-              specialty.toLowerCase().includes('renovation') ||
-              specialty.toLowerCase().includes('menuiserie') ||
-              prestationSlug?.includes(specialty.toLowerCase())
-            )
-          })
-          
-          setNearbyArtisans(filteredArtisans.length > 0 ? filteredArtisans : artisans.slice(0, 4))
-        }
-      } catch (error) {
-        console.error('Erreur lors de la récupération des artisans:', error)
-      } finally {
-        setLoadingArtisans(false)
-      }
-    }
-
-    fetchNearbyArtisans()
-  }, [simulatorData?.postalCode, simulatorData?.selectedPrestation])
 
   // Calcul des estimations (simulation basée sur les données)
   const calculateEstimations = () => {
@@ -344,148 +287,6 @@ export default function ResultsStep({ simulatorData }: ResultsStepProps) {
           </div>
         </CardContent>
       </Card>
-
-      {/* Information sur les entreprises */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <Users className="h-6 w-6 text-blue-600" />
-            </div>
-            <div className="flex-1 w-full">
-              <h3 className="font-semibold text-blue-900 mb-2 text-center">
-                Prochaines étapes
-              </h3>
-              <div className="space-y-2 text-sm text-blue-800">
-                <p className="break-words">✅ Votre estimation a été envoyée par email à <strong className="break-all">{clientInfo?.email}</strong></p>
-                <p className="break-words">📧 Des artisans qualifiés de votre région vont recevoir votre demande</p>
-                <p className="break-words">📨 Vous recevrez entre 1 à 3 propositions par email dans les prochains jours</p>
-                <p className="break-words">💡 Vous pourrez comparer leurs offres et choisir celle qui vous convient le mieux</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Entreprises du secteur */}
-      {(nearbyArtisans.length > 0 || (!loadingArtisans && simulatorData?.postalCode)) && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users className="h-5 w-5 mr-2" />
-              {nearbyArtisans.length > 0 ? 'Entreprises du secteur (dans un rayon de 70km)' : 'Rechercher des artisans dans votre secteur'}
-            </CardTitle>
-            <p className="text-sm text-gray-600">
-              {nearbyArtisans.length > 0 
-                ? 'Ces professionnels qualifiés peuvent réaliser votre projet'
-                : 'Aucun artisan trouvé dans votre secteur immédiat'
-              }
-            </p>
-          </CardHeader>
-          <CardContent>
-            {loadingArtisans ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                <span className="text-gray-600">Recherche d'entreprises...</span>
-              </div>
-            ) : nearbyArtisans.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {nearbyArtisans.map((artisan) => (
-                  <div key={artisan.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <div className="flex flex-col space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 mb-1 truncate" title={artisan.companyName || artisan.name}>
-                            {artisan.companyName || artisan.name}
-                          </h3>
-                          <div className="flex items-center text-sm text-gray-600 mb-2">
-                            <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-                            <span className="truncate" title={`${artisan.city} (${artisan.postalCode})`}>
-                              {artisan.city} ({artisan.postalCode})
-                            </span>
-                          </div>
-                        </div>
-                        {artisan.rating && (
-                          <div className="flex items-center flex-shrink-0 ml-2">
-                            <Star className="h-4 w-4 text-yellow-400 fill-current" />
-                            <span className="text-sm text-gray-600 ml-1">
-                              {artisan.rating}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {artisan.specialties && artisan.specialties.length > 0 && (
-                        <div>
-                          <div className="flex flex-wrap gap-1">
-                            {artisan.specialties.slice(0, 2).map((specialty: string, index: number) => (
-                              <Badge key={index} variant="secondary" className="text-xs truncate max-w-[120px]" title={specialty}>
-                                {specialty}
-                              </Badge>
-                            ))}
-                            {artisan.specialties.length > 2 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{artisan.specialties.length - 2}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-600 flex-1 min-w-0">
-                          {artisan.experience && (
-                            <span className="truncate" title={`${artisan.experience} ans d'expérience`}>
-                              {artisan.experience} ans d'expérience
-                            </span>
-                          )}
-                        </div>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => window.open(`/artisan/${artisan.slug || artisan.id}`, '_blank')}
-                          className="text-xs flex-shrink-0 ml-2"
-                        >
-                          Voir profil
-                          <ExternalLink className="h-3 w-3 ml-1" />
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              // Composant affiché quand aucun artisan n'est trouvé
-              <div className="text-center py-8">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                  <Search className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Élargissons la recherche
-                  </h3>
-                  <p className="text-gray-600 mb-4 max-w-md mx-auto">
-                    Nous n'avons pas trouvé d'artisans spécialisés dans votre secteur immédiat. 
-                    Recherchons dans un rayon plus large autour de <strong>{simulatorData?.city || simulatorData?.postalCode}</strong>.
-                  </p>
-                  <Button 
-                    onClick={() => {
-                      const searchParams = new URLSearchParams({
-                        secteur: simulatorData?.postalCode || '',
-                        ville: simulatorData?.city || '',
-                        specialite: simulatorData?.selectedPrestation || ''
-                      })
-                      window.location.href = `/artisans?${searchParams.toString()}`
-                    }}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    <Search className="h-4 w-4 mr-2" />
-                    Rechercher des artisans
-                  </Button>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Contact */}
       <Card>

@@ -396,7 +396,7 @@ export default function ArtisansSection() {
               Besoin d'un professionnel pour vos travaux ?
             </p>
             <Button asChild variant="outline" size="lg">
-              <Link href="/trouver-pro">
+              <Link href="/artisans">
                 Chercher un artisan
               </Link>
             </Button>

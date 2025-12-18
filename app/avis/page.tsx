@@ -30,6 +30,14 @@ export default function AvisPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
+  const normalizeText = (text: string) => {
+    return (text || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .trim();
+  };
+
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
 
@@ -38,33 +46,16 @@ export default function AvisPage() {
     
     try {
       const artisansRef = collection(db, 'artisans');
-      const searchTermLower = searchTerm.toLowerCase();
       const results: Artisan[] = [];
       const seenIds = new Set<string>();
 
-      // Debug: récupérer quelques artisans pour voir la structure
-      console.log('=== DEBUG RECHERCHE ===');
-      console.log('Terme recherché:', searchTerm);
-      
-      try {
-        const debugQuery = query(artisansRef, limit(3));
-        const debugSnapshot = await getDocs(debugQuery);
-        console.log('Nombre d\'artisans trouvés pour debug:', debugSnapshot.size);
-        debugSnapshot.forEach((doc) => {
-          const data = doc.data();
-          console.log('Artisan debug:', {
-            id: doc.id,
-            firstName: data.firstName,
-            lastName: data.lastName,
-            companyName: data.companyName,
-            city: data.city,
-            profession: data.profession,
-            phone: data.phone
-          });
-        });
-      } catch (debugError) {
-        console.error('Erreur debug:', debugError);
-      }
+      const normalizedQuery = normalizeText(searchTerm);
+      const queryTerms = normalizedQuery.split(/\s+/).filter(Boolean);
+
+      // IMPORTANT: Firestore ne peut pas faire de recherche prefixe multi-mots sur un seul champ.
+      // Donc on interroge Firestore mot-par-mot (julia + castera) pour constituer un pool,
+      // puis on filtre côté client pour vérifier que TOUS les mots matchent.
+      const rawTerms = searchTerm.trim().split(/\s+/).filter(Boolean);
 
       // Fonction pour ajouter un résultat unique
       const addResult = (doc: any) => {
@@ -84,99 +75,122 @@ export default function AvisPage() {
         }
       };
 
-      // Recherche avec les deux variantes (minuscule et originale) pour plus de compatibilité
-      const searchVariants = [searchTerm, searchTermLower, searchTerm.charAt(0).toUpperCase() + searchTerm.slice(1).toLowerCase()];
+      for (const term of rawTerms) {
+        const termLower = term.toLowerCase();
+        const termCapitalized = term.charAt(0).toUpperCase() + term.slice(1).toLowerCase();
+        const termVariants = [term, termLower, termCapitalized];
 
-      for (const variant of searchVariants) {
-        // 1. Recherche par nom de famille
-        try {
-          const lastNameQuery = query(
-            artisansRef,
-            where('lastName', '>=', variant),
-            where('lastName', '<=', variant + '\uf8ff'),
-            limit(3)
-          );
-          const lastNameSnapshot = await getDocs(lastNameQuery);
-          lastNameSnapshot.forEach(addResult);
-        } catch (e) {
-          console.log(`Recherche lastName avec "${variant}" échouée:`, e);
-        }
-
-        // 2. Recherche par prénom
-        try {
-          const firstNameQuery = query(
-            artisansRef,
-            where('firstName', '>=', variant),
-            where('firstName', '<=', variant + '\uf8ff'),
-            limit(3)
-          );
-          const firstNameSnapshot = await getDocs(firstNameQuery);
-          firstNameSnapshot.forEach(addResult);
-        } catch (e) {
-          console.log(`Recherche firstName avec "${variant}" échouée:`, e);
-        }
-
-        // 3. Recherche par nom d'entreprise
-        try {
-          const companyQuery = query(
-            artisansRef,
-            where('companyName', '>=', variant),
-            where('companyName', '<=', variant + '\uf8ff'),
-            limit(3)
-          );
-          const companySnapshot = await getDocs(companyQuery);
-          companySnapshot.forEach(addResult);
-        } catch (e) {
-          console.log(`Recherche companyName avec "${variant}" échouée:`, e);
-        }
-
-        // 4. Recherche par ville
-        try {
-          const cityQuery = query(
-            artisansRef,
-            where('city', '>=', variant),
-            where('city', '<=', variant + '\uf8ff'),
-            limit(3)
-          );
-          const citySnapshot = await getDocs(cityQuery);
-          citySnapshot.forEach(addResult);
-        } catch (e) {
-          console.log(`Recherche city avec "${variant}" échouée:`, e);
-        }
-
-        // 5. Recherche par profession
-        try {
-          const professionQuery = query(
-            artisansRef,
-            where('profession', '>=', variant),
-            where('profession', '<=', variant + '\uf8ff'),
-            limit(3)
-          );
-          const professionSnapshot = await getDocs(professionQuery);
-          professionSnapshot.forEach(addResult);
-        } catch (e) {
-          console.log(`Recherche profession avec "${variant}" échouée:`, e);
-        }
-
-        // 6. Recherche par téléphone (seulement avec le terme original)
-        if (variant === searchTerm) {
+        for (const variant of termVariants) {
+          // 1. Recherche par nom de famille
           try {
-            const phoneQuery = query(
+            const lastNameQuery = query(
               artisansRef,
-              where('phone', '>=', variant),
-              where('phone', '<=', variant + '\uf8ff'),
-              limit(5)
+              where('lastName', '>=', variant),
+              where('lastName', '<=', variant + '\uf8ff'),
+              limit(10)
             );
-            const phoneSnapshot = await getDocs(phoneQuery);
-            phoneSnapshot.forEach(addResult);
+            const lastNameSnapshot = await getDocs(lastNameQuery);
+            lastNameSnapshot.forEach(addResult);
           } catch (e) {
-            console.log(`Recherche phone avec "${variant}" échouée:`, e);
+            console.log(`Recherche lastName avec "${variant}" échouée:`, e);
+          }
+
+          // 2. Recherche par prénom
+          try {
+            const firstNameQuery = query(
+              artisansRef,
+              where('firstName', '>=', variant),
+              where('firstName', '<=', variant + '\uf8ff'),
+              limit(10)
+            );
+            const firstNameSnapshot = await getDocs(firstNameQuery);
+            firstNameSnapshot.forEach(addResult);
+          } catch (e) {
+            console.log(`Recherche firstName avec "${variant}" échouée:`, e);
+          }
+
+          // 3. Recherche par nom d'entreprise
+          try {
+            const companyQuery = query(
+              artisansRef,
+              where('companyName', '>=', variant),
+              where('companyName', '<=', variant + '\uf8ff'),
+              limit(10)
+            );
+            const companySnapshot = await getDocs(companyQuery);
+            companySnapshot.forEach(addResult);
+          } catch (e) {
+            console.log(`Recherche companyName avec "${variant}" échouée:`, e);
+          }
+
+          // 4. Recherche par ville
+          try {
+            const cityQuery = query(
+              artisansRef,
+              where('city', '>=', variant),
+              where('city', '<=', variant + '\uf8ff'),
+              limit(10)
+            );
+            const citySnapshot = await getDocs(cityQuery);
+            citySnapshot.forEach(addResult);
+          } catch (e) {
+            console.log(`Recherche city avec "${variant}" échouée:`, e);
+          }
+
+          // 5. Recherche par profession
+          try {
+            const professionQuery = query(
+              artisansRef,
+              where('profession', '>=', variant),
+              where('profession', '<=', variant + '\uf8ff'),
+              limit(10)
+            );
+            const professionSnapshot = await getDocs(professionQuery);
+            professionSnapshot.forEach(addResult);
+          } catch (e) {
+            console.log(`Recherche profession avec "${variant}" échouée:`, e);
           }
         }
       }
 
+      // Recherche téléphone uniquement si la requête est mono-terme
+      if (rawTerms.length === 1) {
+        const term = rawTerms[0];
+        try {
+          const phoneQuery = query(
+            artisansRef,
+            where('phone', '>=', term),
+            where('phone', '<=', term + '\uf8ff'),
+            limit(5)
+          );
+          const phoneSnapshot = await getDocs(phoneQuery);
+          phoneSnapshot.forEach(addResult);
+        } catch (e) {
+          console.log(`Recherche phone avec "${rawTerms[0]}" échouée:`, e);
+        }
+      }
+
+      // Filtre multi-mots côté client:
+      // Firestore ne peut pas faire un "contains" multi-critères sur (firstName + lastName).
+      // On récupère un pool puis on garde les artisans qui matchent TOUS les mots.
+      const filteredResults = results.filter((a) => {
+        const haystack = normalizeText(
+          [
+            a.companyName,
+            a.firstName,
+            a.lastName,
+            `${a.firstName} ${a.lastName}`,
+            a.city,
+            a.profession,
+            a.phone,
+          ].filter(Boolean).join(" ")
+        );
+
+        return queryTerms.every((t) => haystack.includes(t));
+      });
+
       // Limiter à 10 résultats maximum
-      setSearchResults(results.slice(0, 10));
+      setSearchResults(filteredResults.slice(0, 10));
     } catch (error) {
       console.error('Erreur lors de la recherche:', error);
       setSearchResults([]);

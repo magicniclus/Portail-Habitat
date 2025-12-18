@@ -387,7 +387,9 @@ export default function ArtisansClient() {
         // Avec filtres : ordre random (pas de orderBy pour permettre le random)
         q = query(
           artisansRef,
-          limit(100) // Charger plus pour pouvoir randomiser et avoir assez d'artisans
+          // IMPORTANT: avec filtre secteur (rayon) / prestation, un petit échantillon donne des résultats incomplets.
+          // On charge un pool plus large pour que le filtrage côté client puisse fonctionner correctement.
+          limit(600)
         );
       } else {
         // Sans filtres : ordre général (par date de création)
@@ -718,7 +720,7 @@ export default function ArtisansClient() {
   // Reset page quand la recherche change
   useEffect(() => {
     setCurrentPage(1);
-  }, [secteurSearch, prestationSearch]);
+  }, [prestationSearch, selectedSecteur, selectedPrestation]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

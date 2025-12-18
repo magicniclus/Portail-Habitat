@@ -5,6 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { doc, getDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getCurrentAdmin, hasPermission, ADMIN_PERMISSIONS } from "@/lib/admin-auth";
+import { recomputeArtisanReviewStats } from "@/lib/review-stats";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -123,6 +124,8 @@ export default function ReviewModerationPage() {
         moderatedBy: currentAdmin?.email || 'admin',
         updatedAt: new Date()
       });
+
+      await recomputeArtisanReviewStats(artisanId);
       
       setReview({
         ...review,
@@ -148,6 +151,8 @@ export default function ReviewModerationPage() {
       const [artisanId, actualReviewId] = reviewId.split('-');
       
       await deleteDoc(doc(db, "artisans", artisanId, "reviews", actualReviewId));
+
+      await recomputeArtisanReviewStats(artisanId);
       handleReturn();
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);

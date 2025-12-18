@@ -207,7 +207,16 @@ function applyBasicFilters(artisans: Artisan[], criteria: FilterCriteria): Artis
           const cityLower = (artisan.city || '').toLowerCase();
           const normalizedCity = cityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
           const normalizedSelected = selectedCityLower.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-          return cityLower === selectedCityLower || normalizedCity === normalizedSelected;
+          // Fallback permissif: certains profils n'ont pas coordinates mais ont une ville exploitable.
+          // On accepte correspondance exacte OU partielle (avec/sans accents).
+          return (
+            cityLower === selectedCityLower ||
+            normalizedCity === normalizedSelected ||
+            cityLower.includes(selectedCityLower) ||
+            selectedCityLower.includes(cityLower) ||
+            normalizedCity.includes(normalizedSelected) ||
+            normalizedSelected.includes(normalizedCity)
+          );
         }
         return artisan.distance <= 75;
       });
