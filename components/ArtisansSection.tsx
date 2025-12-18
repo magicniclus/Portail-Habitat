@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Star, Phone, Mail, ExternalLink } from "lucide-react";
-import { collection, query, limit, getDocs, where } from "firebase/firestore";
 import { collection, query, limit, getDocs, where, orderBy, startAfter } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
