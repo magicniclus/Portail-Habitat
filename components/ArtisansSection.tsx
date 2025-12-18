@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Star, Phone, Mail, ExternalLink } from "lucide-react";
 import { collection, query, limit, getDocs, where } from "firebase/firestore";
+import { collection, query, limit, getDocs, where, orderBy, startAfter } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
 import Image from "next/image";
@@ -27,6 +28,11 @@ interface Artisan {
   averageRating: number;
   reviewCount: number;
   certifications: string[];
+  accountType?: string;
+  premiumFeatures?: {
+    isPremium?: boolean;
+    showTopArtisanBadge?: boolean;
+  };
   privacy: {
     profileVisible: boolean;
     showPhone: boolean;
@@ -39,48 +45,145 @@ export default function ArtisansSection() {
   const [artisans, setArtisans] = useState<Artisan[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const isReal = (a: Artisan) => !a.accountType || a.accountType !== 'demo';
+  const isTop = (a: Artisan) => a.premiumFeatures?.isPremium === true && a.premiumFeatures?.showTopArtisanBadge === true;
+
+  const shuffle = <T,>(arr: T[]): T[] => {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+  };
+
+  const selectHomeArtisans = (pool: Artisan[], count: number) => {
+    const realTop = pool.filter(a => isReal(a) && isTop(a));
+    const realOther = pool.filter(a => isReal(a) && !isTop(a));
+    const demoOther = pool.filter(a => !isReal(a) && !isTop(a));
+    const demoTop = pool.filter(a => !isReal(a) && isTop(a));
+
+    const ordered = [
+      ...shuffle(realTop),
+      ...shuffle(realOther),
+      ...shuffle(demoOther),
+      ...shuffle(demoTop)
+    ];
+
+    // Dédup par id au cas où
+    const seen = new Set<string>();
+    const result: Artisan[] = [];
+    for (const a of ordered) {
+      if (seen.has(a.id)) continue;
+      seen.add(a.id);
+      result.push(a);
+      if (result.length >= count) break;
+    }
+    return result;
+  };
+
+  const mapDocToArtisan = (doc: any): Artisan => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      companyName: data.companyName || '',
+      slug: data.slug || '',
+      firstName: data.firstName || '',
+      lastName: data.lastName || '',
+      phone: data.phone || '',
+      email: data.email || '',
+      city: data.city || '',
+      profession: data.profession || '',
+      professions: data.professions || [],
+      description: data.description || '',
+      logoUrl: data.logoUrl,
+      coverUrl: data.coverUrl,
+      averageRating: data.averageRating || 0,
+      reviewCount: data.reviewCount || 0,
+      certifications: data.certifications || [],
+      accountType: data.accountType,
+      premiumFeatures: {
+        isPremium: data.premiumFeatures?.isPremium,
+        showTopArtisanBadge: data.premiumFeatures?.showTopArtisanBadge,
+      },
+      privacy: {
+        profileVisible: data.privacy?.profileVisible ?? true,
+        showPhone: data.privacy?.showPhone ?? true,
+        showEmail: data.privacy?.showEmail ?? false,
+        allowDirectContact: data.privacy?.allowDirectContact ?? true,
+      }
+    };
+  };
+
   useEffect(() => {
     const fetchArtisans = async () => {
       try {
         const artisansRef = collection(db, 'artisans');
-        const q = query(
-          artisansRef,
-          where('privacy.profileVisible', '==', true),
-          limit(5)
-        );
-        
-        const querySnapshot = await getDocs(q);
-        const artisansData: Artisan[] = [];
-        
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          artisansData.push({
-            id: doc.id,
-            companyName: data.companyName || '',
-            slug: data.slug || '',
-            firstName: data.firstName || '',
-            lastName: data.lastName || '',
-            phone: data.phone || '',
-            email: data.email || '',
-            city: data.city || '',
-            profession: data.profession || '',
-            professions: data.professions || [],
-            description: data.description || '',
-            logoUrl: data.logoUrl,
-            coverUrl: data.coverUrl,
-            averageRating: data.averageRating || 0,
-            reviewCount: data.reviewCount || 0,
-            certifications: data.certifications || [],
-            privacy: {
-              profileVisible: data.privacy?.profileVisible ?? true,
-              showPhone: data.privacy?.showPhone ?? true,
-              showEmail: data.privacy?.showEmail ?? false,
-              allowDirectContact: data.privacy?.allowDirectContact ?? true,
+        const desiredCount = 5;
+        const batchSize = 100;
+        const maxBatches = 6; // jusqu'à ~600 docs (évite de tout charger)
+
+        let lastDoc: any = null;
+        const pool: Artisan[] = [];
+
+        for (let i = 0; i < maxBatches; i++) {
+          const q = lastDoc
+            ? query(
+                artisansRef,
+                where('privacy.profileVisible', '==', true),
+                orderBy('createdAt', 'desc'),
+                startAfter(lastDoc),
+                limit(batchSize)
+              )
+            : query(
+                artisansRef,
+                where('privacy.profileVisible', '==', true),
+                orderBy('createdAt', 'desc'),
+                limit(batchSize)
+              );
+
+          const snap = await getDocs(q);
+          if (snap.empty) break;
+
+          snap.forEach((doc) => {
+            pool.push(mapDocToArtisan(doc));
+          });
+
+          lastDoc = snap.docs[snap.docs.length - 1];
+
+          const picked = selectHomeArtisans(pool, desiredCount);
+          const pickedRealCount = picked.filter(isReal).length;
+          const poolRealCount = pool.filter(isReal).length;
+
+          // Stop dès qu'on a de quoi remplir avec au moins quelques vrais
+          if (picked.length >= desiredCount && (pickedRealCount >= Math.min(desiredCount, 3) || poolRealCount >= desiredCount)) {
+            break;
+          }
+        }
+
+        // Fallback : si on n'a AUCUN vrai artisan dans ce pool (ex: tri createdAt dominé par des démos),
+        // on fait un fetch sans orderBy pour augmenter les chances de récupérer des vrais profils.
+        if (pool.filter(isReal).length === 0) {
+          const fallbackSnap = await getDocs(
+            query(
+              artisansRef,
+              where('privacy.profileVisible', '==', true),
+              limit(600)
+            )
+          );
+
+          const byId = new Map<string, Artisan>();
+          for (const a of pool) byId.set(a.id, a);
+          fallbackSnap.forEach((doc) => {
+            if (!byId.has(doc.id)) {
+              byId.set(doc.id, mapDocToArtisan(doc));
             }
           });
-        });
-        
-        setArtisans(artisansData);
+
+          pool.splice(0, pool.length, ...Array.from(byId.values()));
+        }
+
+        setArtisans(selectHomeArtisans(pool, 5));
       } catch (error) {
         console.error('Erreur lors du chargement des artisans:', error);
       } finally {
