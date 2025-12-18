@@ -125,44 +125,54 @@ export default function ArtisansSection() {
         let lastDoc: any = null;
         const pool: Artisan[] = [];
 
-        for (let i = 0; i < maxBatches; i++) {
-          const q = lastDoc
-            ? query(
-                artisansRef,
-                where('privacy.profileVisible', '==', true),
-                orderBy('createdAt', 'desc'),
-                startAfter(lastDoc),
-                limit(batchSize)
-              )
-            : query(
-                artisansRef,
-                where('privacy.profileVisible', '==', true),
-                orderBy('createdAt', 'desc'),
-                limit(batchSize)
-              );
+        let orderByFetchOk = true;
+        try {
+          for (let i = 0; i < maxBatches; i++) {
+            const q = lastDoc
+              ? query(
+                  artisansRef,
+                  where('privacy.profileVisible', '==', true),
+                  orderBy('createdAt', 'desc'),
+                  startAfter(lastDoc),
+                  limit(batchSize)
+                )
+              : query(
+                  artisansRef,
+                  where('privacy.profileVisible', '==', true),
+                  orderBy('createdAt', 'desc'),
+                  limit(batchSize)
+                );
 
-          const snap = await getDocs(q);
-          if (snap.empty) break;
+            const snap = await getDocs(q);
+            if (snap.empty) break;
 
-          snap.forEach((doc) => {
-            pool.push(mapDocToArtisan(doc));
-          });
+            snap.forEach((doc) => {
+              pool.push(mapDocToArtisan(doc));
+            });
 
-          lastDoc = snap.docs[snap.docs.length - 1];
+            lastDoc = snap.docs[snap.docs.length - 1];
 
-          const picked = selectHomeArtisans(pool, desiredCount);
-          const pickedRealCount = picked.filter(isReal).length;
-          const poolRealCount = pool.filter(isReal).length;
+            const picked = selectHomeArtisans(pool, desiredCount);
+            const pickedRealCount = picked.filter(isReal).length;
+            const poolRealCount = pool.filter(isReal).length;
 
-          // Stop dès qu'on a de quoi remplir avec au moins quelques vrais
-          if (picked.length >= desiredCount && (pickedRealCount >= Math.min(desiredCount, 3) || poolRealCount >= desiredCount)) {
-            break;
+            // Stop dès qu'on a de quoi remplir avec au moins quelques vrais
+            if (picked.length >= desiredCount && (pickedRealCount >= Math.min(desiredCount, 3) || poolRealCount >= desiredCount)) {
+              break;
+            }
           }
+        } catch (e) {
+          orderByFetchOk = false;
+          // Ne pas laisser la section vide si l'index createdAt/orderBy manque.
+          // On bascule sur un fetch sans orderBy plus bas.
+          console.warn('⚠️ Home artisans: fetch orderBy(createdAt) failed, falling back to non-ordered fetch', e);
         }
 
-        // Fallback : si on n'a AUCUN vrai artisan dans ce pool (ex: tri createdAt dominé par des démos),
+        // Fallback :
+        // - si la requête orderBy(createdAt) a échoué (index manquant / champ absent)
+        // - ou si on n'a AUCUN vrai artisan dans ce pool (tri dominé par des démos)
         // on fait un fetch sans orderBy pour augmenter les chances de récupérer des vrais profils.
-        if (pool.filter(isReal).length === 0) {
+        if (!orderByFetchOk || pool.filter(isReal).length === 0) {
           const fallbackSnap = await getDocs(
             query(
               artisansRef,
