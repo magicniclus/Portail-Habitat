@@ -72,14 +72,6 @@ export function filterAndSortArtisans(
   const realArtisans = filteredArtisans.filter(a => !a.accountType || a.accountType !== 'demo');
   const demoArtisans = filteredArtisans.filter(a => a.accountType === 'demo');
   
-  console.log('🔍 SÉPARATION VRAIS/DEMOS:', {
-    total: filteredArtisans.length,
-    vrais: realArtisans.length,
-    demos: demoArtisans.length,
-    vrai_ids: realArtisans.map(a => ({ id: a.id, name: a.companyName, accountType: a.accountType })),
-    demo_ids: demoArtisans.map(a => ({ id: a.id, name: a.companyName, accountType: a.accountType }))
-  });
-  
   // 3. Séparer Top Artisans et Standard pour les VRAIS artisans
   const realTopArtisans = realArtisans.filter(a => 
     a.premiumFeatures?.isPremium === true && 
@@ -109,25 +101,14 @@ export function filterAndSortArtisans(
   const sortedDemoStandardArtisans = sortArtisans(demoStandardArtisans, criteria);
   
   // 6. DISTRIBUTION INTELLIGENTE : 3 Top Artisans minimum par page
-  // PRIORITÉ : Vrais artisans d'abord, puis demos en complément
+  // IMPORTANT: on ne remonte JAMAIS un artisan demo avant un artisan réel.
   const topArtisansPerPage = 3;
   const topArtisansForThisPage: Artisan[] = [];
-  
-  // Randomiser les vrais Top Artisans et demos
-  const shuffledRealTop = [...sortedRealTopArtisans].sort(() => Math.random() - 0.5);
-  const shuffledDemoTop = [...sortedDemoTopArtisans].sort(() => Math.random() - 0.5);
-  
-  // Sélectionner 3 Top Artisans DIFFÉRENTS : priorité absolue aux vrais
-  // D'abord, prendre tous les vrais disponibles (jusqu'à 3)
-  const realTopToTake = Math.min(shuffledRealTop.length, topArtisansPerPage);
+
+  // On prend jusqu'à 3 Top artisans RÉELS (triés), sans compléter avec des demos.
+  const realTopToTake = Math.min(sortedRealTopArtisans.length, topArtisansPerPage);
   for (let i = 0; i < realTopToTake; i++) {
-    topArtisansForThisPage.push(shuffledRealTop[i]);
-  }
-  
-  // Ensuite, compléter avec des demos si besoin (pour atteindre 3)
-  const demosNeeded = topArtisansPerPage - topArtisansForThisPage.length;
-  for (let i = 0; i < demosNeeded && i < shuffledDemoTop.length; i++) {
-    topArtisansForThisPage.push(shuffledDemoTop[i]);
+    topArtisansForThisPage.push(sortedRealTopArtisans[i]);
   }
   
   // 7. Remplir la page avec le RESTE des artisans (Top ou non), sans doublons.
@@ -148,13 +129,6 @@ export function filterAndSortArtisans(
   // 8. Combiner : 3 Top Artisans EN PREMIER, puis le reste
   const paginatedArtisans = [...topArtisansForThisPage, ...paginatedRemaining];
 
-  const realTopCount = topArtisansForThisPage.filter(a => !a.accountType || a.accountType !== 'demo').length;
-  const demoTopCount = topArtisansForThisPage.filter(a => a.accountType === 'demo').length;
-  const realRemainingCount = paginatedRemaining.filter(a => !a.accountType || a.accountType !== 'demo').length;
-  const demoRemainingCount = paginatedRemaining.filter(a => a.accountType === 'demo').length;
-
-  console.log(`📄 PAGE ${page}: Top (${realTopCount} vrais + ${demoTopCount} demos), Reste (${realRemainingCount} vrais + ${demoRemainingCount} demos)`);
-  
   return {
     artisans: paginatedArtisans,
     totalCount: filteredArtisans.length,
@@ -256,7 +230,6 @@ function applyBasicFilters(artisans: Artisan[], criteria: FilterCriteria): Artis
     }
   }
   
-  console.log(`🔍 FILTRAGE: ${artisans.length} → ${filtered.length} artisans`);
   return filtered;
 }
 
@@ -328,8 +301,12 @@ function sortArtisans(artisans: Artisan[], criteria: FilterCriteria): Artisan[] 
       return sortByPrestationRelevance(sorted, criteria.selectedPrestation || criteria.prestationSearch);
     }
     
-    // Sinon : tri aléatoire
-    return shuffleArray(sorted);
+    // Sinon : tri déterministe (rating puis nombre d'avis)
+    return sorted.sort((a, b) => {
+      const ratingDiff = (b.averageRating || 0) - (a.averageRating || 0);
+      if (ratingDiff !== 0) return ratingDiff;
+      return (b.reviewCount || 0) - (a.reviewCount || 0);
+    });
   }
   
   // Si ville sélectionnée : tri par correspondance exacte d'abord, puis distance/rating

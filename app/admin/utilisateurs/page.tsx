@@ -22,6 +22,7 @@ import {
   Crown
 } from "lucide-react";
 import Link from "next/link";
+import CreateArtisanDialog from "@/components/admin/CreateArtisanDialog";
 
 interface Artisan {
   id: string;
@@ -37,6 +38,7 @@ interface Artisan {
   reviewCount: number;
   createdAt: any;
   totalLeads: number;
+  accountType?: string;
   premiumFeatures?: {
     isPremium: boolean;
     premiumType?: string;
@@ -61,15 +63,35 @@ export default function AdminUtilisateurs() {
       const artisansQuery = query(
         collection(db, "artisans"),
         orderBy("createdAt", "desc"),
-        limit(50)
+        limit(500)
       );
       const artisansSnapshot = await getDocs(artisansQuery);
-      const artisansData = artisansSnapshot.docs.map(doc => ({
+      const artisansData = artisansSnapshot.docs.map((doc) => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
       })) as Artisan[];
 
-      setArtisans(artisansData);
+      // Fallback: si (par hasard) on ne récupère que des comptes demo dans la fenêtre "createdAt desc",
+      // on fait un 2e fetch sans orderBy pour augmenter les chances de récupérer des vrais artisans.
+      const hasAnyNonDemo = artisansData.some((a) => a.accountType !== "demo");
+
+      if (!hasAnyNonDemo) {
+        const fallbackSnapshot = await getDocs(query(collection(db, "artisans"), limit(1000)));
+        const fallbackData = fallbackSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Artisan[];
+
+        const byId = new Map<string, Artisan>();
+        for (const a of artisansData) byId.set(a.id, a);
+        for (const a of fallbackData) {
+          if (!byId.has(a.id)) byId.set(a.id, a);
+        }
+
+        setArtisans(Array.from(byId.values()));
+      } else {
+        setArtisans(artisansData);
+      }
     } catch (error) {
       console.error("Erreur lors du chargement des données:", error);
     } finally {
@@ -91,13 +113,26 @@ export default function AdminUtilisateurs() {
     return <Badge className={config.className}>{config.label}</Badge>;
   };
 
-  const filteredArtisans = artisans.filter(artisan =>
-    artisan.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    artisan.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    artisan.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    artisan.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    artisan.city?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const visibleArtisans = artisans
+    .filter((a) => a.accountType !== "demo")
+    .filter((artisan) => {
+      const term = searchTerm.trim().toLowerCase();
+      if (!term) return true;
+
+      const haystack = [
+        artisan.companyName,
+        artisan.firstName,
+        artisan.lastName,
+        artisan.email,
+        artisan.city,
+        artisan.profession,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(term);
+    });
 
   if (loading) {
     return (
@@ -118,9 +153,12 @@ export default function AdminUtilisateurs() {
           <h1 className="text-3xl font-bold text-gray-900">Artisans</h1>
           <p className="text-gray-600">Gestion des artisans inscrits</p>
         </div>
-        <Button onClick={loadData}>
-          Actualiser
-        </Button>
+        <div className="flex items-center gap-3">
+          <CreateArtisanDialog onCreated={loadData} />
+          <Button onClick={loadData} variant="outline">
+            Actualiser
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -131,7 +169,7 @@ export default function AdminUtilisateurs() {
               <Building2 className="h-4 w-4 text-blue-600" />
               <div className="ml-2">
                 <p className="text-sm font-medium text-gray-600">Total Artisans</p>
-                <p className="text-2xl font-bold">{artisans.length}</p>
+                <p className="text-2xl font-bold">{visibleArtisans.length}</p>
               </div>
             </div>
           </CardContent>
@@ -143,7 +181,7 @@ export default function AdminUtilisateurs() {
               <div className="ml-2">
                 <p className="text-sm font-medium text-gray-600">Actifs</p>
                 <p className="text-2xl font-bold">
-                  {artisans.filter(a => a.subscriptionStatus === 'active').length}
+                  {visibleArtisans.filter(a => a.subscriptionStatus === 'active').length}
                 </p>
               </div>
             </div>
@@ -156,7 +194,7 @@ export default function AdminUtilisateurs() {
               <div className="ml-2">
                 <p className="text-sm font-medium text-gray-600">Total Leads</p>
                 <p className="text-2xl font-bold">
-                  {artisans.reduce((total, a) => total + (a.totalLeads || 0), 0)}
+                  {visibleArtisans.reduce((total, a) => total + (a.totalLeads || 0), 0)}
                 </p>
               </div>
             </div>
@@ -183,11 +221,11 @@ export default function AdminUtilisateurs() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900">
-            Artisans ({filteredArtisans.length})
+            Artisans ({visibleArtisans.length})
           </h2>
         </div>
         
-        {filteredArtisans.map((artisan) => (
+        {visibleArtisans.map((artisan) => (
           <Card key={artisan.id}>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -240,7 +278,7 @@ export default function AdminUtilisateurs() {
           </Card>
         ))}
         
-        {filteredArtisans.length === 0 && (
+        {visibleArtisans.length === 0 && (
           <Card>
             <CardContent className="pt-6">
               <div className="text-center py-8">

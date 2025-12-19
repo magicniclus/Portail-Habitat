@@ -14,6 +14,8 @@ import EditableField from "@/components/admin/EditableField";
 import EditableSelect from "@/components/admin/EditableSelect";
 import PrestationsModal from "@/components/admin/PrestationsModal";
 import PremiumSwitch from "@/components/admin/PremiumSwitch";
+import AdminArtisanMediaManager from "@/components/admin/AdminArtisanMediaManager";
+import CreateArtisanProjectDialog from "@/components/admin/CreateArtisanProjectDialog";
 import { 
   ArrowLeft,
   Building2, 
@@ -563,6 +565,14 @@ export default function UserDetailPage() {
                 </CardContent>
               </Card>
 
+              <AdminArtisanMediaManager
+                artisanId={user.id}
+                logoUrl={user.logoUrl}
+                coverUrl={user.coverUrl}
+                disabled={!canEdit}
+                onUpdated={loadUserData}
+              />
+
               {/* Prestations */}
               <Card>
                 <CardHeader>
@@ -841,6 +851,9 @@ export default function UserDetailPage() {
             <h3 className="text-lg font-semibold">Projets publiés</h3>
             <div className="flex items-center gap-3">
               <Badge variant="outline">{projects.length} projets</Badge>
+              {canEdit && (
+                <CreateArtisanProjectDialog artisanId={userId} disabled={!canEdit} onCreated={loadUserData} />
+              )}
               <Button size="sm" variant="outline" asChild>
                 <Link href={`/admin/utilisateurs/${userId}/projets?returnTo=/admin/utilisateurs/${userId}&tab=projects`}>
                   <ImageIcon className="h-4 w-4 mr-2" />

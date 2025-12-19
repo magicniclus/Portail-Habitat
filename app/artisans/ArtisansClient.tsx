@@ -407,7 +407,7 @@ export default function ArtisansClient() {
           q = query(
             artisansRef,
             orderBy("createdAt", "desc"),
-            limit(50) // Charger plus d'artisans au premier chargement
+            limit(300) // Charger un pool plus large au premier chargement (évite une page 1 dominée par les démos)
           );
         }
       }
@@ -483,10 +483,10 @@ export default function ArtisansClient() {
 
       // Fallback : si on ne récupère que des demos (ex: tri par createdAt desc) on tente un 2e fetch
       // sans orderBy pour augmenter les chances de récupérer les vrais artisans (accountType absent).
-      const hasAnyReal = batchArtisans.some(a => !a.accountType || a.accountType !== 'demo');
-      if (!withFilters && isFirstLoad && !hasAnyReal) {
+      const realCount = batchArtisans.filter(a => !a.accountType || a.accountType !== 'demo').length;
+      if (!withFilters && isFirstLoad && realCount < Math.min(itemsPerPage, 10)) {
         try {
-          const fallbackSnapshot = await getDocs(query(artisansRef, limit(250)));
+          const fallbackSnapshot = await getDocs(query(artisansRef, limit(600)));
           const fallbackArtisans: Artisan[] = [];
 
           for (const doc of fallbackSnapshot.docs) {
@@ -523,7 +523,7 @@ export default function ArtisansClient() {
             initial: batchArtisans.length,
             fallback: fallbackArtisans.length,
             merged: merged.length,
-            hasAnyRealBefore: hasAnyReal,
+            hasAnyRealBefore: realCount > 0,
             hasAnyRealAfter: mergedHasAnyReal
           });
 
@@ -1113,7 +1113,6 @@ export default function ArtisansClient() {
                   >
                     Précédent
                   </Button>
-                  
                   <div className="flex gap-1">
                     {[...Array(totalPages)].map((_, i) => {
                       const page = i + 1;
@@ -1143,7 +1142,6 @@ export default function ArtisansClient() {
                       return null;
                     })}
                   </div>
-                  
                   <Button
                     variant="outline"
                     onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
@@ -1153,13 +1151,11 @@ export default function ArtisansClient() {
                   </Button>
                 </div>
               )}
-
               <Alert className="mt-6">
                 <AlertDescription>
                   <p>Certains comptes artisans sont en cours de création.</p>
                 </AlertDescription>
               </Alert>
-
             </>
           )}
         </div>

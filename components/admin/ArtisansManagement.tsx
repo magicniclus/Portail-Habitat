@@ -23,6 +23,7 @@ import {
 import PremiumSwitch from "./PremiumSwitch";
 import { isPremiumActive } from "@/lib/premium-utils";
 import Link from "next/link";
+import CreateArtisanDialog from "./CreateArtisanDialog";
 
 interface Artisan {
   id: string;
@@ -129,6 +130,8 @@ export default function ArtisansManagement() {
             {filteredArtisans.length} artisan{filteredArtisans.length > 1 ? 's' : ''} trouvé{filteredArtisans.length > 1 ? 's' : ''}
           </p>
         </div>
+
+        <CreateArtisanDialog onCreated={loadArtisans} />
       </div>
 
       {/* Filtres et recherche */}
