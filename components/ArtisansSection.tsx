@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MapPin, Star, Phone, Mail, ExternalLink } from "lucide-react";
 import { collection, query, limit, getDocs, where, orderBy, startAfter } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { getPremiumBannerPhotoUrl } from "@/lib/storage";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -31,6 +33,7 @@ interface Artisan {
   premiumFeatures?: {
     isPremium?: boolean;
     showTopArtisanBadge?: boolean;
+    bannerPhotos?: string[];
   };
   privacy: {
     profileVisible: boolean;
@@ -43,6 +46,7 @@ interface Artisan {
 export default function ArtisansSection() {
   const [artisans, setArtisans] = useState<Artisan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [topBannerUrlById, setTopBannerUrlById] = useState<Record<string, string>>({});
 
   const isReal = (a: Artisan) => !a.accountType || a.accountType !== 'demo';
   const isTop = (a: Artisan) => a.premiumFeatures?.isPremium === true && a.premiumFeatures?.showTopArtisanBadge === true;
@@ -104,6 +108,7 @@ export default function ArtisansSection() {
       premiumFeatures: {
         isPremium: data.premiumFeatures?.isPremium,
         showTopArtisanBadge: data.premiumFeatures?.showTopArtisanBadge,
+        bannerPhotos: data.premiumFeatures?.bannerPhotos || [],
       },
       privacy: {
         profileVisible: data.privacy?.profileVisible ?? true,
@@ -203,6 +208,24 @@ export default function ArtisansSection() {
     fetchArtisans();
   }, []);
 
+  useEffect(() => {
+    const topArtisans = artisans.filter(isTop);
+
+    topArtisans.forEach((a) => {
+      const hasBannerInData = !!a.premiumFeatures?.bannerPhotos?.[0];
+      if (hasBannerInData) return;
+      if (topBannerUrlById[a.id]) return;
+
+      getPremiumBannerPhotoUrl(a.id, 1)
+        .then((url) => {
+          setTopBannerUrlById((prev) => ({ ...prev, [a.id]: url }));
+        })
+        .catch(() => {
+          // fallback coverUrl
+        });
+    });
+  }, [artisans, topBannerUrlById]);
+
   if (loading) {
     return (
       <section className="py-16 lg:py-24 bg-white">
@@ -260,9 +283,13 @@ export default function ArtisansSection() {
                   
                   {/* Image de couverture ou logo */}
                   <div className="lg:w-1/3 h-48 lg:h-auto relative">
-                    {artisan.coverUrl ? (
+                    {(isTop(artisan) ? artisan.premiumFeatures?.bannerPhotos?.[0] || artisan.coverUrl : artisan.coverUrl) ? (
                       <Image
-                        src={artisan.coverUrl}
+                        src={
+                          isTop(artisan)
+                            ? topBannerUrlById[artisan.id] || artisan.premiumFeatures?.bannerPhotos?.[0] || artisan.coverUrl || ""
+                            : artisan.coverUrl || ""
+                        }
                         alt={`Couverture ${artisan.companyName}`}
                         fill
                         className="object-cover"
@@ -307,17 +334,19 @@ export default function ArtisansSection() {
                         </div>
                         
                         {/* Note et avis */}
-                        {artisan.averageRating > 0 && (
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                              <span className="font-semibold">{artisan.averageRating.toFixed(1)}</span>
-                            </div>
-                            <span className="text-sm text-gray-500">
-                              ({artisan.reviewCount} avis)
-                            </span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-2 min-h-[20px]">
+                          {(artisan.reviewCount || 0) > 0 && (
+                            <>
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                                <span className="font-semibold">{(artisan.averageRating || 0).toFixed(1)}</span>
+                              </div>
+                              <span className="text-sm text-gray-500">
+                                ({artisan.reviewCount} avis)
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
 
                       {/* Professions */}
@@ -384,6 +413,12 @@ export default function ArtisansSection() {
             </Card>
           ))}
         </div>
+
+        <Alert className="mt-6">
+          <AlertDescription>
+            <p>Certains comptes artisans sont en cours de création.</p>
+          </AlertDescription>
+        </Alert>
 
         {/* CTA section avec trait orange */}
         <div className="text-left mt-12 flex items-stretch gap-4">

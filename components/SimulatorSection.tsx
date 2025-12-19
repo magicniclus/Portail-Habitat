@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import VideoPlayer from "@/components/VideoPlayer";
 import { CheckCircle, Brain, Calculator, Clock } from "lucide-react";
 import Link from "next/link";
 
@@ -32,7 +33,7 @@ export default function SimulatorSection() {
   return (
     <section className="py-16 lg:py-24 bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-stretch">
           
           {/* Contenu à gauche */}
           <div>
@@ -84,7 +85,7 @@ export default function SimulatorSection() {
                   className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3"
                 >
                   <Link href="/simulateur-devis">
-                    Essayer le simulateur IA
+                    Essayer le simulateur
                   </Link>
                 </Button>
               </div>
@@ -92,24 +93,23 @@ export default function SimulatorSection() {
           </div>
 
           {/* Vidéo à droite */}
-          <div>
-            <Card className="overflow-hidden shadow-xl">
-              <div className="relative aspect-video">
-                {/* Placeholder pour la vidéo YouTube */}
-                <iframe
-                  className="absolute inset-0 w-full h-full"
-                  src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                  title="Simulateur de devis IA - Démonstration"
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
+          <div className="flex flex-col justify-center">
+            <Card className="overflow-hidden shadow-xl flex-1 h-full  max-h-[450px]">
+              <div className="relative h-full bg-black">
+                <VideoPlayer
+                  src="/video/simulateur.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="scale-[1.15]"
                 />
               </div>
             </Card>
             
             {/* Texte sous la vidéo */}
             <p className="text-sm text-gray-500 mt-4 text-center">
-              Découvrez comment fonctionne notre simulateur IA en 2 minutes
+              Découvrez comment fonctionne notre simulateur en 2 minutes
             </p>
           </div>
         </div>

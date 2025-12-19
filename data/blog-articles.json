@@ -20,7 +20,7 @@
       "targetAudience": "Particuliers",
       "difficulty": "Intermédiaire",
       "featured": true,
-      "featuredImage": "/images/blog/renovation-salle-bain-2024.jpg",
+      "featuredImage": "/photos/blog/renovation-salle-de-bain-moderne.png",
       "gallery": [
         "/images/blog/sdb-tendance-1.jpg",
         "/images/blog/sdb-tendance-2.jpg"
@@ -256,7 +256,7 @@
       "targetAudience": "Particuliers",
       "difficulty": "Débutant",
       "featured": false,
-      "featuredImage": "/images/blog/budget-renovation-sdb.jpg",
+      "featuredImage": "/photos/blog/renovation-salle-de-bain-bohem.png",
       "tableOfContents": [
         {
           "id": "facteurs-prix",
@@ -305,7 +305,7 @@
       "targetAudience": "Particuliers",
       "difficulty": "Intermédiaire",
       "featured": true,
-      "featuredImage": "/images/blog/isolation-combles.jpg",
+      "featuredImage": "/photos/blog/isolation-des-combles.png",
       "tableOfContents": [
         {
           "id": "pourquoi-isoler",

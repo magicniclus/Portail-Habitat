@@ -94,11 +94,13 @@ export default function FicheEntreprisePublic({
   // Logique demo artisan
   const isDemo = isDemoArtisan(entreprise);
   const isContactable = isDemoArtisanContactable(entreprise);
-  const displayPhone = getDisplayPhone(entreprise);
+  const demoDisplayPhone = getDisplayPhone(entreprise);
   const displayEmail = getDisplayEmail(entreprise);
   const phoneAction = getPhoneClickAction(entreprise);
   const formAction = getContactFormAction(entreprise);
   const demoMessage = getDemoArtisanMessage(entreprise);
+
+  const resolvedPhone = (isDemo ? demoDisplayPhone : (entreprise.telephone || (entreprise as any).phone || "")) as string;
   const [privacySettings, setPrivacySettings] = useState({
     profileVisible: true,
     showPhone: true,
@@ -281,7 +283,7 @@ export default function FicheEntreprisePublic({
       setShowPhone(true);
     } else {
       // Juste ouvrir l'appel sans tracking supplémentaire
-      window.location.href = `tel:${displayPhone}`;
+      window.location.href = `tel:${resolvedPhone}`;
     }
   };
 
@@ -1043,7 +1045,7 @@ export default function FicheEntreprisePublic({
                           disabled={phoneAction === 'disabled'}
                         >
                           <Phone className="h-4 w-4 mr-2" />
-                          {showPhone ? displayPhone : 'Voir le numéro'}
+                          {showPhone ? resolvedPhone : 'Voir le numéro'}
                         </Button>
                       </div>
                     )}

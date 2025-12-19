@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Search, Phone, Mail, MapPin, Star, Plus, Wrench } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -17,6 +18,7 @@ import { filterArtisansByDistance } from "@/lib/geo-utils";
 import { renovationPrestations } from "@/lib/renovation-suggestions";
 import { filterAndSortArtisans, getFilteringStats } from "@/lib/artisan-filtering-algorithm";
 import TopArtisanBadge from "@/components/TopArtisanBadge";
+import { getPremiumBannerPhotoUrl } from "@/lib/storage";
 
 interface Artisan {
   id: string;
@@ -60,6 +62,7 @@ export default function ArtisansClient() {
   const [artisans, setArtisans] = useState<Artisan[]>([]);
   const [loading, setLoading] = useState(true);
   const [paginationLoading, setPaginationLoading] = useState(false);
+  const [topBannerUrlById, setTopBannerUrlById] = useState<Record<string, string>>({});
   const [secteurSearch, setSecteurSearch] = useState("");
   const [prestationSearch, setPrestationSearch] = useState("");
   const [selectedSecteur, setSelectedSecteur] = useState<{name: string, lat: number, lng: number, type?: string} | null>(null);
@@ -717,6 +720,26 @@ export default function ArtisansClient() {
     return result;
   }, [paginatedArtisans, secteurSearch, prestationSearch, user, isArtisan]);
 
+  useEffect(() => {
+    const topArtisans = artisansWithPromo.filter((a: any) => !a?.isPromo).filter((a: any) => {
+      return a?.premiumFeatures?.isPremium === true && (a?.premiumFeatures as any)?.showTopArtisanBadge === true;
+    }) as Artisan[];
+
+    topArtisans.forEach((a) => {
+      const hasBannerInData = !!(a.premiumFeatures as any)?.bannerPhotos?.[0];
+      if (hasBannerInData) return;
+      if (topBannerUrlById[a.id]) return;
+
+      getPremiumBannerPhotoUrl(a.id, 1)
+        .then((url) => {
+          setTopBannerUrlById((prev) => ({ ...prev, [a.id]: url }));
+        })
+        .catch(() => {
+          // Si le fichier n'existe pas ou accès refusé, on laisse le fallback coverUrl
+        });
+    });
+  }, [artisansWithPromo, topBannerUrlById]);
+
   // Reset page quand la recherche change
   useEffect(() => {
     setCurrentPage(1);
@@ -968,9 +991,19 @@ export default function ArtisansClient() {
                                 />
                               </div>
                             )}
-                            {artisan.coverUrl ? (
+                            {(
+                              artisan.premiumFeatures?.isPremium === true &&
+                              (artisan.premiumFeatures as any)?.showTopArtisanBadge === true
+                                ? topBannerUrlById[artisan.id] || (artisan.premiumFeatures as any)?.bannerPhotos?.[0] || artisan.coverUrl
+                                : artisan.coverUrl
+                            ) ? (
                               <Image
-                                src={artisan.coverUrl}
+                                src={
+                                  artisan.premiumFeatures?.isPremium === true &&
+                                  (artisan.premiumFeatures as any)?.showTopArtisanBadge === true
+                                    ? topBannerUrlById[artisan.id] || (artisan.premiumFeatures as any)?.bannerPhotos?.[0] || artisan.coverUrl || ""
+                                    : artisan.coverUrl || ""
+                                }
                                 alt={`Couverture ${artisan.companyName}`}
                                 fill
                                 className="object-cover"
@@ -1032,21 +1065,25 @@ export default function ArtisansClient() {
                             </div>
 
                             {/* Note et avis - vraies données de la DB */}
-                            <div className="flex items-center text-sm text-gray-600 mb-3 mt-auto">
-                              <div className="flex items-center space-x-1">
-                                {[1, 2, 3, 4, 5].map((star) => (
-                                  <Star
-                                    key={star}
-                                    className={`h-4 w-4 ${
-                                      star <= (artisan.averageRating || 0) 
-                                        ? 'fill-yellow-400 text-yellow-400' 
-                                        : 'fill-gray-300 text-gray-300'
-                                    }`}
-                                  />
-                                ))}
-                              </div>
-                              <span className="font-medium ml-2">{(artisan.averageRating || 0).toFixed(1)}/5</span>
-                              <span className="ml-1">({artisan.reviewCount || 0} avis)</span>
+                            <div className="flex items-center text-sm text-gray-600 mb-3 mt-auto min-h-[20px]">
+                              {(artisan.reviewCount || 0) > 0 && (
+                                <>
+                                  <div className="flex items-center space-x-1">
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                      <Star
+                                        key={star}
+                                        className={`h-4 w-4 ${
+                                          star <= (artisan.averageRating || 0) 
+                                            ? 'fill-yellow-400 text-yellow-400' 
+                                            : 'fill-gray-300 text-gray-300'
+                                        }`}
+                                      />
+                                    ))}
+                                  </div>
+                                  <span className="font-medium ml-2">{(artisan.averageRating || 0).toFixed(1)}/5</span>
+                                  <span className="ml-1">({artisan.reviewCount || 0} avis)</span>
+                                </>
+                              )}
                             </div>
 
                           </div>
@@ -1116,11 +1153,18 @@ export default function ArtisansClient() {
                   </Button>
                 </div>
               )}
+
+              <Alert className="mt-6">
+                <AlertDescription>
+                  <p>Certains comptes artisans sont en cours de création.</p>
+                </AlertDescription>
+              </Alert>
+
             </>
           )}
         </div>
       </main>
-      
+
       <Footer />
     </div>
   );

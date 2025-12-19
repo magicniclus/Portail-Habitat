@@ -17,6 +17,13 @@ import {
   deleteDoc 
 } from 'firebase/firestore';
 
+export async function getPremiumBannerPhotoUrl(artisanId: string, index: number = 1): Promise<string> {
+  const safeIndex = Math.min(Math.max(index, 1), 5);
+  const fileName = `banner_${String(safeIndex).padStart(3, '0')}.jpg`;
+  const bannerRef = ref(storage, `artisans/${artisanId}/premium/banner_photos/${fileName}`);
+  return await getDownloadURL(bannerRef);
+}
+
 /**
  * Upload une photo de couverture pour un artisan
  * Suit le schéma: /artisans/{artisanId}/profile/cover.jpg
