@@ -306,7 +306,7 @@ export default function OnboardingStep2Content() {
 
         {/* Barre en bas mobile - prend l'espace restant */}
         <div className="bg-white border-t shadow-lg p-3 flex-shrink-0">
-          <div className="flex flex-col gap-2 mb-7">
+          <div className="flex flex-col gap-2 mb-12">
             {/* CTA principal - pleine largeur */}
             <Button
               onClick={handleReserveZone}
