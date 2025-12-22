@@ -1,0 +1,10 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Désactiver le secrets scanning car NEXT_PUBLIC_FIREBASE_API_KEY est légitime côté client
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
