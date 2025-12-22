@@ -264,21 +264,34 @@ export default function OnboardingStep2Content() {
           {/* Sélecteur de rayon (overlay mobile) */}
           {selectedCity && (
             <div className="absolute bottom-4 left-4 right-4 z-10">
-              <div className="bg-white rounded-lg shadow-lg p-4">
-                <p className="font-semibold text-orange-600 mb-3">
-                  📍 {selectedCity}
+              <div className="bg-white rounded-lg shadow-lg p-3">
+                {/* Titre principal */}
+                <p className="font-bold text-gray-900 text-base mb-1">
+                  Votre zone d'intervention
                 </p>
+                {/* Ville en secondaire */}
+                <p className="text-sm text-gray-600 mb-2">
+                  📍 {selectedCity.split(',')[0].trim()}
+                </p>
+                
+                {/* Stats demandes au-dessus des boutons */}
+                {!isLoadingStats && estimatedSearches > 0 && (
+                  <p className="text-xs text-gray-500 mb-2">
+                    ≈ {estimatedSearches} demandes ces dernières 24h
+                  </p>
+                )}
+                
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-600">Rayon d'intervention :</p>
-                  <div className="flex space-x-2">
+                  <p className="text-xs text-gray-700 font-medium">Jusqu'à quelle distance souhaitez-vous intervenir ?</p>
+                  <div className="flex gap-2">
                     {[30, 50, 100].map((radius) => (
                       <button
                         key={radius}
                         onClick={() => setSelectedRadius(radius)}
-                        className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+                        className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${
                           selectedRadius === radius
-                            ? 'bg-orange-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-orange-50 text-orange-700 border-2 border-orange-600'
+                            : 'bg-gray-100 text-gray-700 border-2 border-transparent hover:bg-gray-200 active:scale-95'
                         }`}
                       >
                         {radius} km
@@ -292,40 +305,21 @@ export default function OnboardingStep2Content() {
         </div>
 
         {/* Barre en bas mobile - prend l'espace restant */}
-        <div className="bg-white border-t shadow-lg p-4 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            {/* Gauche : Étape ou recherches */}
-            <div className="flex-1">
-              {selectedCity ? (
-                <div className="text-sm">
-                  {isLoadingStats ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
-                      <span className="text-gray-600">Analyse...</span>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="font-semibold text-gray-900">~{estimatedSearches} recherches</p>
-                      <p className="text-xs text-gray-500">dernières 24h à {selectedCity}</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-sm">
-                  <p className="font-semibold text-gray-900">Étape 2/3</p>
-                  <p className="text-xs text-gray-500">Choisissez votre zone</p>
-                </div>
-              )}
-            </div>
-
-            {/* Droite : Bouton */}
+        <div className="bg-white border-t shadow-lg p-3 flex-shrink-0">
+          <div className="flex flex-col gap-2">
+            {/* CTA principal - pleine largeur */}
             <Button
               onClick={handleReserveZone}
               disabled={!selectedCity}
-              className="px-6 py-3 font-semibold bg-orange-600 hover:bg-orange-700 disabled:bg-gray-300"
+              className="w-full py-3 text-base font-bold bg-orange-600 hover:bg-orange-700 disabled:bg-gray-300 shadow-lg"
             >
               ACCÉDER
             </Button>
+            
+            {/* Micro-rassurance sous le CTA */}
+            <p className="text-[11px] text-gray-500 text-center opacity-75">
+              Aucun engagement – vous choisissez ensuite vos demandes
+            </p>
           </div>
         </div>
       </div>
@@ -408,7 +402,9 @@ export default function OnboardingStep2Content() {
                                 </>
                               ) : (
                                 <>
-                                  <strong>Environ {estimatedSearches} particuliers recherchent actuellement</strong> un {getProfessionLabel(profession).toLowerCase()} dans cette zone
+                                  <span className="text-3xl font-bold text-orange-600">{estimatedSearches}</span> <span className="text-lg">particuliers recherchent actuellement un {getProfessionLabel(profession).toLowerCase()}</span>
+                                  <br />
+                                  <span className="text-base">dans cette zone</span>
                                   <br />
                                   <span className="text-sm text-orange-600 font-medium">Zone très active en ce moment</span>
                                 </>
@@ -436,6 +432,13 @@ export default function OnboardingStep2Content() {
                               <strong>Disponible immédiatement</strong>
                             </span>
                           </div>
+                          
+                          {/* Micro-projection business */}
+                          <div className="mt-4 p-3 bg-orange-50 rounded-lg border-l-4 border-orange-500">
+                            <p className="text-sm text-gray-700">
+                              💡 Un seul chantier signé peut rentabiliser l'abonnement.
+                            </p>
+                          </div>
                         </>
                       ) : (
                         <div className="text-center p-8 bg-gray-50 rounded-lg">
@@ -455,19 +458,17 @@ export default function OnboardingStep2Content() {
                       disabled={!selectedCity}
                       className="w-full py-4 text-xl font-semibold bg-orange-600 hover:bg-orange-700 disabled:bg-gray-300"
                     >
-                      Accéder aux demandes de cette zone →
+                      Voir les demandes disponibles dans cette zone →
                     </Button>
+
+                    {/* Transparence repositionnée sous le CTA */}
+                    <p className="text-xs text-gray-400 text-center leading-relaxed">
+                      <strong>Transparence :</strong> Données basées sur l'activité réelle des dernières 24h. Elles peuvent varier selon la saison, les tendances locales et la demande du secteur.
+                    </p>
 
                     <p className="text-xs text-gray-400 text-center">
                       Zone disponible aujourd'hui • des demandes sont déjà actives dans votre secteur
                     </p>
-
-                    {/* Message d'anti-vente */}
-                    <div className="border-t pt-6">
-                      <p className="text-xs text-gray-400 leading-relaxed">
-                        <strong>Transparence :</strong> Données basées sur l'activité réelle des dernières 24h. Elles peuvent varier selon la saison, les tendances locales et la demande du secteur. Nous privilégions la transparence à la sur-promesse.
-                      </p>
-                    </div>
                   </div>
                 </CardContent>
               </Card>

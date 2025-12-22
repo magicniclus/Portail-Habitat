@@ -337,19 +337,30 @@ export default function OnboardingStep3Content() {
             
             {/* Récapitulatif mobile */}
             <Card className="bg-white border border-gray-200">
-              <CardContent className="p-6">
-                <h2 className="text-xl font-bold text-gray-900 ">Vous êtes à 30 secondes d'être visible et de recevoir vos premières demandes</h2>
-                <p className="text-sm text-gray-600 mb-6">Votre fiche est prête. Dès l'activation, vous apparaissez dans votre zone et recevez gratuitement les demandes des particuliers qui vous contactent directement. L'accès aux demandes ciblées à 35 € est entièrement facultatif.</p>
+              <CardContent className="p-4 md:p-6">
+                <h2 className="text-xl font-bold text-gray-900 md:hidden">Votre fiche est prête</h2>
+                {/* Titre desktop inchangé */}
+                <h2 className="text-xl font-bold text-gray-900 hidden md:block">Vous êtes à 30 secondes d'être visible et de recevoir vos premières demandes</h2>
                 
-                <div className="space-y-6">
-                  {/* Zone couverte */}
+                {/* Texte court mobile */}
+                <p className="text-sm text-gray-600 mb-4 md:mb-6 md:hidden">Les particuliers peuvent vous contacter dès l'activation.</p>
+                {/* Texte desktop inchangé */}
+                <p className="text-sm text-gray-600 mb-6 hidden md:block">Votre fiche est prête. Dès l'activation, vous apparaissez dans votre zone et recevez gratuitement les demandes des particuliers qui vous contactent directement. L'accès aux demandes ciblées à 35 € est entièrement facultatif.</p>
+                
+                <div className="space-y-4 md:space-y-6">
+                  {/* Zone couverte - Fusion sur une ligne mobile */}
                   <div className="pb-4 border-b border-gray-100 border-l-4 border-l-orange-500 pl-3">
-                    <h3 className="text-gray-600 text-sm font-medium mb-2">Zone couverte :</h3>
-                    <p className="font-semibold text-sm">{prospectData.selectedCity} + {prospectData.selectedZoneRadius} km — {getProfessionLabel(prospectData.profession)}</p>
+                    {/* Version mobile compacte */}
+                    <p className="font-semibold text-sm md:hidden">📍 {prospectData.selectedCity} – {getProfessionLabel(prospectData.profession)} – {prospectData.selectedZoneRadius} km</p>
+                    {/* Version desktop inchangée */}
+                    <div className="hidden md:block">
+                      <h3 className="text-gray-600 text-sm font-medium mb-2">Zone couverte :</h3>
+                      <p className="font-semibold text-sm">{prospectData.selectedCity} + {prospectData.selectedZoneRadius} km — {getProfessionLabel(prospectData.profession)}</p>
+                    </div>
                   </div>
                   
-                  {/* Demandes estimées */}
-                  <div className="pb-4 border-b border-gray-100 border-l-4 border-l-orange-500 pl-3">
+                  {/* Demandes estimées - Masqué sur mobile */}
+                  <div className="pb-4 border-b border-gray-100 border-l-4 border-l-orange-500 pl-3 hidden md:block">
                     <h3 className="text-gray-600 text-sm font-medium mb-2">Demandes estimées dans votre secteur :</h3>
                     <div>
                       <p className="font-semibold text-sm">Des demandes de devis sont déjà générées chaque mois dans votre zone et votre métier</p>
@@ -361,35 +372,37 @@ export default function OnboardingStep3Content() {
                   <div className="pb-4 border-b border-gray-100 border-l-4 border-l-orange-500 pl-3">
                     <h3 className="text-gray-600 text-sm font-medium mb-3">Vos avantages inclus :</h3>
                     <div className="space-y-2">
+                      {/* 3 premiers avantages visibles sur mobile */}
                       <div className="flex items-start space-x-2">
                         <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Visibilité prioritaire sur votre métier et votre ville</span>
+                        <span className="text-xs text-gray-700"><span className="md:hidden">Visibilité locale prioritaire (dans votre métier)</span><span className="hidden md:inline">Visibilité locale prioritaire</span></span>
                       </div>
                       <div className="flex items-start space-x-2">
                         <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Demandes clients GRATUITES quand on vous contacte depuis votre fiche</span>
+                        <span className="text-xs text-gray-700"><span className="md:hidden">Demandes directes de particuliers (sans intermédiaire)</span><span className="hidden md:inline">Demandes directes de particuliers</span></span>
                       </div>
                       <div className="flex items-start space-x-2">
+                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs text-gray-700">Sans engagement – résiliable à tout moment</span>
+                      </div>
+                      {/* Avantages supplémentaires masqués sur mobile */}
+                      <div className="flex items-start space-x-2 hidden md:flex">
                         <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
                         <span className="text-xs text-gray-700">Accès aux chantiers ciblés uniquement si vous le souhaitez</span>
                       </div>
-                      <div className="flex items-start space-x-2">
+                      <div className="flex items-start space-x-2 hidden md:flex">
                         <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
                         <span className="text-xs text-gray-700">Accès aux demandes ciblées — vous restez libre de répondre ou non</span>
                       </div>
-                      <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Sans engagement, résiliable à tout moment</span>
-                      </div>
-                      <div className="flex items-start space-x-2">
+                      <div className="flex items-start space-x-2 hidden md:flex">
                         <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
                         <span className="text-xs text-gray-700">Application mobile pour recevoir les demandes en temps réel</span>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Témoignages */}
-                  <section className="mt-6 pb-4 border-b border-gray-100">
+                  {/* Témoignages - Masqués sur mobile */}
+                  <section className="mt-6 pb-4 border-b border-gray-100 hidden md:block">
                     <h3 className="text-gray-600 text-sm font-medium mb-3">
                       Ce que disent nos artisans
                     </h3>
@@ -480,14 +493,14 @@ export default function OnboardingStep3Content() {
                     </AutoplayCarousel>
                   </section>
                   
-                  {/* Abonnement */}
-                  <div className="pb-4 border-b border-gray-100">
+                  {/* Abonnement - Masqué sur mobile (info dans le bouton) */}
+                  <div className="pb-4 border-b border-gray-100 hidden md:block">
                     <h3 className="text-gray-600 text-sm font-medium mb-2">Abonnement :</h3>
                     <p className="font-semibold text-orange-600 text-sm">Activation immédiate – 69 €/mois, sans engagement</p>
                   </div>
                   
-                  {/* Garantie satisfaction */}
-                  <div className="pb-4 border-b border-gray-100">
+                  {/* Garantie satisfaction - Masqué sur mobile */}
+                  <div className="pb-4 border-b border-gray-100 hidden md:block">
                     <h3 className="text-gray-600 text-sm font-medium mb-2">Garantie satisfaction :</h3>
                     <p className="font-semibold text-orange-600 text-sm">Sans engagement</p>
                   </div>
@@ -503,9 +516,9 @@ export default function OnboardingStep3Content() {
                   <h2 className="text-xl font-bold text-gray-900">Paiement sécurisé</h2>
                 </div>
 
-                <form onSubmit={handlePayment} className="space-y-6">
+                <form onSubmit={handlePayment} className="space-y-6 md:space-y-6">
                   {/* Numéro de carte - gros et clair */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:space-y-2">
                     <Label htmlFor="cardNumber" className="text-base font-medium">Numéro de carte</Label>
                     <div className="relative">
                       <Input
@@ -524,7 +537,7 @@ export default function OnboardingStep3Content() {
                   </div>
 
                   {/* Date d'expiration + CVV */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3 md:gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="expiryDate" className="text-base font-medium">Date d'expiration</Label>
                       <Input
@@ -552,7 +565,7 @@ export default function OnboardingStep3Content() {
                   </div>
 
                   {/* Nom sur la carte */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:space-y-2">
                     <Label htmlFor="cardholderName" className="text-base font-medium">Nom sur la carte</Label>
                     <Input
                       id="cardholderName"
@@ -565,7 +578,7 @@ export default function OnboardingStep3Content() {
                   </div>
 
                   {/* Code postal */}
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:space-y-2">
                     <Label htmlFor="postalCode" className="text-base font-medium">Code postal</Label>
                     <Input
                       id="postalCode"
@@ -578,7 +591,7 @@ export default function OnboardingStep3Content() {
                     />
                   </div>
 
-                  {/* Bouton énorme */}
+                  {/* Bouton desktop inchangé */}
                   <Button
                     type="submit"
                     disabled={isProcessing}
@@ -588,21 +601,35 @@ export default function OnboardingStep3Content() {
                     {!isProcessing && <ArrowRight className="h-6 w-6" />}
                   </Button>
 
-    <Button
+                  {/* Bouton mobile optimisé */}
+                  <Button
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full text-xl py-6 font-bold bg-orange-700 hover:bg-orange-800 text-white flex md:hidden items-center justify-center space-x-3"
+                    className="w-full text-lg py-6 font-bold bg-orange-700 hover:bg-orange-800 text-white flex md:hidden items-center justify-center"
                   >
-                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Mes demandes – 69 €"}</span>
-                    {!isProcessing && <ArrowRight className="h-6 w-6" />}
+                    {isProcessing ? (
+                      <span>TRAITEMENT...</span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <span>Activer ma visibilité –</span>
+                        <span className="font-extrabold">69 €</span>
+                        <ArrowRight className="h-6 w-6 ml-1" />
+                      </span>
+                    )}
                   </Button>
                   
-                  {/* Texte de réassurance sous le bouton */}
-                  <div className="text-center mt-4">
+                  {/* Réassurance compacte - Mobile uniquement */}
+                  <div className="text-center space-y-1.5 mt-2.5 md:hidden">
+                    <p className="text-xs text-gray-600">🔒 Paiement sécurisé • Résiliation en 1 clic</p>
+                    <p className="text-xs text-gray-500">Déjà utilisé par des artisans dans votre zone</p>
+                  </div>
+
+                  {/* Rassurance desktop inchangée */}
+                  <div className="text-center mt-4 hidden md:block">
                     <p className="text-sm font-medium text-gray-700">🔒 Essai sans risque — résiliation en 1 clic depuis votre espace</p>
                   </div>
 
-                  {/* Textes sous le bouton */}
+                  {/* Textes sous le bouton - Desktop uniquement */}
                   <div className="text-center space-y-1 mt-4 md:block hidden">
                     <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
                       <span>Résiliation en 1 clic</span>
@@ -613,11 +640,13 @@ export default function OnboardingStep3Content() {
                     </div>
                   </div>
 
-                  {/* Badges sécurité */}
-                  <PaymentSecurityBadges />
+                  {/* Badges sécurité - Desktop uniquement */}
+                  <div className="hidden md:block">
+                    <PaymentSecurityBadges />
+                  </div>
                   
-                  {/* Texte de réassurance final */}
-                  <div className="mt-6 pt-4 border-t border-gray-100">
+                  {/* Texte de réassurance final - Desktop uniquement */}
+                  <div className="mt-6 pt-4 border-t border-gray-100 hidden md:block">
                     <p className="text-xs text-gray-400 leading-relaxed md:text-base text-center">
                       Vous ne payez pas pour des promesses, mais pour être visible auprès de particuliers qui cherchent activement un artisan comme vous.
                     </p>

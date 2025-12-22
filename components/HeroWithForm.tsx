@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Check } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
@@ -15,6 +15,12 @@ import { getCoordinatesFromPostalCode, type Coordinates } from "@/lib/geo-utils"
 
 export default function HeroWithForm() {
   const router = useRouter();
+  const formRef = useRef<HTMLDivElement>(null);
+  
+  // Fonction pour scroller vers le formulaire
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
   
   // États du formulaire
   const [formData, setFormData] = useState({
@@ -53,10 +59,10 @@ export default function HeroWithForm() {
   }, []);
 
   const advantages = [
-    "Accès gratuit aux demandes – vous décidez lesquelles accepter",
-    "Vous choisissez quels chantiers accepter",
+    "Demandes locales et réelles",
+    "Vous choisissez les chantiers",
+    "Accès immédiat",
     "Aucun engagement — résiliable à tout moment",
-    "Activation immédiate",
     "Application mobile pour répondre instantanément"
   ];
 
@@ -177,7 +183,7 @@ export default function HeroWithForm() {
   };
 
   return (
-    <section id="onboarding" className="relative py-20 overflow-hidden">
+    <section id="onboarding" className="relative py-12 md:py-20 overflow-hidden">
       {/* Vidéo en arrière-plan */}
       <video 
         autoPlay 
@@ -191,8 +197,11 @@ export default function HeroWithForm() {
         <source src="/video/video.mp4" type="video/mp4" />
       </video>
       
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/40 z-20"></div>
+      {/* Overlay - optimisé mobile pour meilleure lisibilité */}
+      <div className="absolute inset-0 bg-black/40 md:bg-black/40 z-20">
+        {/* Gradient supplémentaire mobile pour contraste texte */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/50 md:hidden"></div>
+      </div>
       
       <div className="relative z-30 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -212,32 +221,53 @@ export default function HeroWithForm() {
             </div>
 
 
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Recevez des demandes de travaux qualifiées dans votre zone
+            {/* Titre mobile optimisé - contraste amélioré */}
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 md:mb-4 leading-tight drop-shadow-lg md:drop-shadow-none">
+              <span className="md:hidden">Recevez des demandes de travaux qualifiées près de chez vous</span>
+              <span className="hidden md:block">Recevez dès aujourd'hui des demandes de travaux qualifiées dans votre zone</span>
             </h1>
             
-            <p className="text-xl text-gray-100 mb-8">
-             Des projets réels issus de demandes locales, triés et accessibles immédiatement
+            {/* Sous-titre mobile optimisé - contraste amélioré */}
+            <p className="text-base md:text-xl text-white md:text-gray-100 mb-6 md:mb-8 drop-shadow-md md:drop-shadow-none font-medium md:font-normal">
+              <span className="md:hidden">Sans engagement – activation immédiate – résiliable à tout moment</span>
+              <span className="hidden md:block">Des projets réels issus de demandes locales, triés et accessibles immédiatement</span>
             </p>
 
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-white mb-4">
+            <div className="space-y-2.5 md:space-y-4">
+              <h3 className="text-sm md:text-lg font-semibold text-white mb-2.5 md:mb-4 opacity-90 md:opacity-100">
                 Vos avantages avec Portail Habitat :
               </h3>
               {advantages.map((advantage, index) => (
-                <div key={index} className="flex items-center space-x-3">
+                <div 
+                  key={index} 
+                  className={`flex items-center space-x-2.5 md:space-x-3 ${index >= 3 ? 'hidden md:flex' : ''}`}
+                >
                   <div className="flex-shrink-0">
-                    <Check className="h-5 w-5 text-orange-400" />
+                    <Check className="h-4 w-4 md:h-5 md:w-5 text-orange-400" />
                   </div>
-                  <span className="text-gray-100">{renderTextWithBold(advantage)}</span>
+                  <span className="text-sm md:text-base text-white md:text-gray-100 opacity-90 md:opacity-100">{renderTextWithBold(advantage)}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Formulaire droite */}
-          <div>
+          <div ref={formRef}>
             <Card className="shadow-xl">
+              {/* Micro-réassurance mobile */}
+              <div className="md:hidden pt-4 px-6 text-center">
+                <p className="text-xs text-gray-500">
+                  Inscription en 30 secondes — sans engagement
+                </p>
+              </div>
+              
+              {/* Ligne de transition desktop */}
+              <div className="hidden md:block pt-6 px-6 text-center">
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  Remplissez ce formulaire pour accéder immédiatement aux demandes disponibles dans votre zone.
+                </p>
+              </div>
+              
               <CardHeader>
                 <CardTitle className="text-2xl text-center">
                   Inscrivez-vous dès maintenant
@@ -400,9 +430,9 @@ export default function HeroWithForm() {
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full text-lg py-3 bg-orange-600 hover:bg-orange-700">
-                    <span className="hidden sm:inline">Voir les demandes disponibles dans ma zone</span>
-                    <span className="sm:hidden">Voir les demandes</span>
+                  <Button type="submit" className="w-full text-base md:text-lg py-3 bg-orange-600 hover:bg-orange-700">
+                    <span className="hidden sm:inline">Accéder aux demandes de ma zone</span>
+                    <span className="sm:hidden">Voir les demandes disponibles</span>
                   </Button>
 
                   <div className="text-center space-y-1">
