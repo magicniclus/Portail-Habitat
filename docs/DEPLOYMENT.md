@@ -67,7 +67,7 @@ NEXT_PUBLIC_APP_URL=https://portail-habitat.fr
 NODE_ENV=production
 
 # Firebase Production
-NEXT_PUBLIC_FIREBASE_API_KEY=AIza...
+NEXT_PUBLIC_FIREBASE_API_KEY=...
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=portail-habitat-prod.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=portail-habitat-prod
 NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=portail-habitat-prod.appspot.com

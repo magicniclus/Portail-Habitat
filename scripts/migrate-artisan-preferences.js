@@ -6,7 +6,7 @@ const { getFirestore, collection, getDocs, doc, updateDoc } = require('firebase/
 
 // Configuration Firebase - utilise la même config que l'app
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", // Remplacez par votre vraie clé
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY , // Remplacez par votre vraie clé
   authDomain: "portail-habitat-2ac32.firebaseapp.com",
   databaseURL: "https://portail-habitat-2ac32-default-rtdb.firebaseio.com",
   projectId: "portail-habitat-2ac32",
