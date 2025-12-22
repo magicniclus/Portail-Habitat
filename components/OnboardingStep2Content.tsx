@@ -222,8 +222,8 @@ export default function OnboardingStep2Content() {
   return (
     <>
     
-    <div className="h-screen bg-gray-50 flex flex-col lg:min-h-screen">
-      {/* Header */}
+    <div className="h-screen bg-gray-50 flex flex-col">
+      {/* Header - hauteur fixe */}
       <header className="bg-white border-b shadow-sm flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -251,10 +251,10 @@ export default function OnboardingStep2Content() {
         </div>
       </header>
 
-      {/* Layout mobile : header + carte + barre = 100vh */}
-      <div className="lg:hidden flex flex-col h-screen">
-        {/* Carte qui prend max 60vh sur mobile */}
-        <div className="relative" style={{ maxHeight: '60vh', height: '60vh' }}>
+      {/* Layout mobile : carte + barre prennent le reste de l'espace */}
+      <div className="lg:hidden flex flex-col flex-1">
+        {/* Carte qui prend l'espace restant */}
+        <div className="relative flex-1">
           <MapboxMap 
             onLocationSelect={handleCitySearch}
             selectedCity={selectedCity}
@@ -291,8 +291,8 @@ export default function OnboardingStep2Content() {
           )}
         </div>
 
-        {/* Barre en bas mobile (partie intégrante du layout) */}
-        <div className="bg-white border-t shadow-lg p-4">
+        {/* Barre en bas mobile - prend l'espace restant */}
+        <div className="bg-white border-t shadow-lg p-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             {/* Gauche : Étape ou recherches */}
             <div className="flex-1">
