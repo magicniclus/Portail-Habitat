@@ -183,7 +183,10 @@ export default function HeroWithForm() {
         autoPlay 
         muted 
         loop 
-        className="absolute inset-0 w-full h-full object-cover z-10"
+        playsInline
+        disablePictureInPicture
+        controlsList="nodownload nofullscreen noremoteplayback"
+        className="absolute inset-0 w-full h-full object-cover z-10 pointer-events-none"
       >
         <source src="/video/video.mp4" type="video/mp4" />
       </video>
