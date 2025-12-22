@@ -253,8 +253,8 @@ export default function OnboardingStep2Content() {
 
       {/* Layout mobile : header + carte + barre = 100vh */}
       <div className="lg:hidden flex flex-col h-screen">
-        {/* Carte qui prend l'espace restant */}
-        <div className="flex-1 relative">
+        {/* Carte qui prend max 60vh sur mobile */}
+        <div className="relative" style={{ maxHeight: '60vh', height: '60vh' }}>
           <MapboxMap 
             onLocationSelect={handleCitySearch}
             selectedCity={selectedCity}
