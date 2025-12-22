@@ -68,7 +68,7 @@ components/admin/DemoArtisanManager.tsx
 app/admin/artisans-demo/
 
 # Utilitaires demo artisans
-lib/demo-artisan-utils.ts
+# lib/demo-artisan-utils.ts
 
 # Page de contact demo
 # app/contact-artisan/
