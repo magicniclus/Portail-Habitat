@@ -338,6 +338,7 @@ export default function OnboardingStep3Content() {
             {/* Récapitulatif mobile */}
             <Card className="bg-white border border-gray-200">
               <CardContent className="p-4 md:p-6">
+                {/* Titre court mobile */}
                 <h2 className="text-xl font-bold text-gray-900 md:hidden">Votre fiche est prête</h2>
                 {/* Titre desktop inchangé */}
                 <h2 className="text-xl font-bold text-gray-900 hidden md:block">Vous êtes à 30 secondes d'être visible et de recevoir vos premières demandes</h2>
