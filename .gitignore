@@ -71,4 +71,4 @@ app/admin/artisans-demo/
 lib/demo-artisan-utils.ts
 
 # Page de contact demo
-app/contact-artisan/
+# app/contact-artisan/

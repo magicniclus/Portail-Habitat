@@ -3,10 +3,10 @@ import { getArtisanAnalytics, initializeArtisanAnalytics } from '@/lib/artisan-a
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: artisanId } = params;
+    const { id: artisanId } = await params;
 
     if (!artisanId) {
       return NextResponse.json(
