@@ -56,68 +56,71 @@ export default function TrustSection() {
   };
 
   return (
-    <section className="py-16  bg-gray-50 border-t border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section className="py-12 md:py-16 bg-white">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Layout principal : texte à gauche, cards à droite */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        {/* Title + Subtitle */}
+        <div className="text-center mb-10 md:mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            Plus de 3 200 artisans nous font déjà confiance
+          </h2>
+          <p className="text-lg md:text-xl text-gray-600">
+            Ils développent leur activité grâce à des demandes locales qualifiées
+          </p>
+        </div>
+
+        {/* Note globale + Cards plateformes */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           
-          {/* Contenu gauche */}
-          <div>
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Nos clients nous font confiance
-            </h2>
-            <div className="flex items-baseline space-x-3 mb-4">
-              <span className="text-6xl font-bold text-gray-900">4,8</span>
-              <span className="text-2xl text-gray-600">/5</span>
+          {/* Chiffre clé central */}
+          <div className="md:col-span-3 text-center mb-4">
+            <div className="inline-flex items-baseline space-x-3 mb-2">
+              <span className="text-6xl md:text-7xl font-bold text-orange-600">4,8</span>
+              <span className="text-2xl md:text-3xl text-gray-600">/5</span>
             </div>
-            <p className="text-xl text-gray-600 mb-6">
-              Notre moyenne basée sur plus de <span className="font-bold">2 000 avis clients</span>
-            </p>
-            <p className="text-gray-600">
-              Rejoignez des milliers d'artisans satisfaits qui développent leur activité 
-              grâce à notre plateforme de mise en relation avec des particuliers.
+            <p className="text-base md:text-lg text-gray-600 font-medium">
+              basé sur <span className="font-bold text-gray-900">+2 000 avis clients</span>
             </p>
           </div>
 
-          {/* Cards plateformes à droite */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3 gap-6">
-            {platforms.map((platform, index) => (
-              <div 
-                key={index} 
-                className="bg-white rounded-2xl p-6 text-center border-2 border-gray-100 hover:border-gray-200 transition-all duration-300 hover:shadow-lg"
-              >
-                <div className="mb-4">
-                  {/* Logo de la plateforme */}
-                  <div className="w-20 h-12 mx-auto mb-3 flex items-center justify-center">
-                    <Image
-                      src={platform.logo}
-                      alt={`Logo ${platform.name}`}
-                      width={80}
-                      height={48}
-                      className="max-w-full max-h-full object-contain"
-                    />
-                  </div>
-                  
-                  <div className="flex justify-center mb-2">
-                    {renderStars(platform.rating, platform.color)}
-                  </div>
-                  <div className="flex items-center justify-center space-x-1">
-                    <span className="text-2xl font-bold text-gray-900">
-                      {platform.rating}
-                    </span>
-                    <span className="text-gray-600">/5</span>
-                  </div>
-                </div>
-                
-                <div className="text-sm text-gray-600">
-                  {platform.name === "Trustpilot" && "850 avis"}
-                  {platform.name === "Google" && "1 200 avis"}
-                  {platform.name === "Sitejabber" && "450 avis"}
-                </div>
+          {/* Cards plateformes */}
+          {platforms.map((platform, index) => (
+            <div 
+              key={index} 
+              className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-300"
+            >
+              {/* Logo */}
+              <div className="w-20 h-12 mx-auto mb-4 flex items-center justify-center">
+                <Image
+                  src={platform.logo}
+                  alt={`Logo ${platform.name}`}
+                  width={80}
+                  height={48}
+                  className="max-w-full max-h-full object-contain"
+                />
               </div>
-            ))}
-          </div>
+              
+              {/* Stars */}
+              <div className="flex justify-center mb-3">
+                {renderStars(platform.rating, platform.color)}
+              </div>
+              
+              {/* Rating */}
+              <div className="flex items-center justify-center space-x-1 mb-2">
+                <span className="text-2xl font-bold text-orange-600">
+                  {platform.rating}
+                </span>
+                <span className="text-base text-gray-600">/5</span>
+              </div>
+              
+              {/* Nombre d'avis */}
+              <div className="text-sm text-gray-500">
+                {platform.name === "Trustpilot" && "850 avis"}
+                {platform.name === "Google" && "1 200 avis"}
+                {platform.name === "Sitejabber" && "450 avis"}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
