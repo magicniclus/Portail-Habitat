@@ -388,26 +388,35 @@ export default function ArtisansClient() {
 
       if (withFilters) {
         // Avec filtres : ordre random (pas de orderBy pour permettre le random)
+        // OPTIMISATION : Réduit de 600 à 200 pour améliorer les performances
         q = query(
           artisansRef,
-          // IMPORTANT: avec filtre secteur (rayon) / prestation, un petit échantillon donne des résultats incomplets.
-          // On charge un pool plus large pour que le filtrage côté client puisse fonctionner correctement.
-          limit(600)
+          limit(200)
         );
       } else {
         // Sans filtres : ordre général (par date de création)
-        if (lastVisible && !isFirstLoad) {
+        // Essayer avec orderBy, sinon fallback sans orderBy
+        try {
+          if (lastVisible && !isFirstLoad) {
+            q = query(
+              artisansRef,
+              orderBy("createdAt", "desc"),
+              startAfter(lastVisible),
+              limit(50)
+            );
+          } else {
+            q = query(
+              artisansRef,
+              orderBy("createdAt", "desc"),
+              limit(100)
+            );
+          }
+        } catch (indexError) {
+          console.warn('⚠️ Index manquant pour orderBy, utilisation sans tri');
+          // Fallback sans orderBy si l'index n'existe pas
           q = query(
             artisansRef,
-            orderBy("createdAt", "desc"),
-            startAfter(lastVisible),
-            limit(50) // Charger plus d'artisans
-          );
-        } else {
-          q = query(
-            artisansRef,
-            orderBy("createdAt", "desc"),
-            limit(300) // Charger un pool plus large au premier chargement (évite une page 1 dominée par les démos)
+            limit(100)
           );
         }
       }
@@ -533,6 +542,8 @@ export default function ArtisansClient() {
           console.warn('⚠️ Fallback fetch artisans failed:', e);
         }
       }
+
+      console.log(`✅ ${batchArtisans.length} artisans chargés et traités`);
 
       // Mettre à jour lastVisible pour la pagination
       if (!withFilters && querySnapshot.docs.length > 0) {
@@ -725,20 +736,40 @@ export default function ArtisansClient() {
       return a?.premiumFeatures?.isPremium === true && (a?.premiumFeatures as any)?.showTopArtisanBadge === true;
     }) as Artisan[];
 
-    topArtisans.forEach((a) => {
-      const hasBannerInData = !!(a.premiumFeatures as any)?.bannerPhotos?.[0];
-      if (hasBannerInData) return;
-      if (topBannerUrlById[a.id]) return;
-
-      getPremiumBannerPhotoUrl(a.id, 1)
-        .then((url) => {
-          setTopBannerUrlById((prev) => ({ ...prev, [a.id]: url }));
+    // OPTIMISATION : Charger les bannières premium en parallèle
+    const loadBanners = async () => {
+      const promises = topArtisans
+        .filter((a) => {
+          const hasBannerInData = !!(a.premiumFeatures as any)?.bannerPhotos?.[0];
+          return !hasBannerInData && !topBannerUrlById[a.id];
         })
-        .catch(() => {
-          // Si le fichier n'existe pas ou accès refusé, on laisse le fallback coverUrl
+        .map(async (a) => {
+          try {
+            const url = await getPremiumBannerPhotoUrl(a.id, 1);
+            return { id: a.id, url };
+          } catch {
+            return null;
+          }
         });
-    });
-  }, [artisansWithPromo, topBannerUrlById]);
+
+      const results = await Promise.allSettled(promises);
+      const newUrls: Record<string, string> = {};
+      
+      results.forEach((result) => {
+        if (result.status === 'fulfilled' && result.value) {
+          newUrls[result.value.id] = result.value.url;
+        }
+      });
+
+      if (Object.keys(newUrls).length > 0) {
+        setTopBannerUrlById((prev) => ({ ...prev, ...newUrls }));
+      }
+    };
+
+    if (topArtisans.length > 0) {
+      loadBanners();
+    }
+  }, [artisansWithPromo]);
 
   // Reset page quand la recherche change
   useEffect(() => {
@@ -1007,6 +1038,8 @@ export default function ArtisansClient() {
                                 alt={`Couverture ${artisan.companyName}`}
                                 fill
                                 className="object-cover"
+                                loading="lazy"
+                                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
                               />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
@@ -1026,6 +1059,7 @@ export default function ArtisansClient() {
                                     width={64}
                                     height={64}
                                     className="object-cover"
+                                    loading="lazy"
                                   />
                                 </div>
                               </div>
