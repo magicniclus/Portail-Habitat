@@ -124,77 +124,35 @@ export default function ArtisansSection() {
       try {
         const artisansRef = collection(db, 'artisans');
         const desiredCount = 5;
-        const batchSize = 100;
-        const maxBatches = 6; // jusqu'à ~600 docs (évite de tout charger)
+        let pool: Artisan[] = [];
 
-        let lastDoc: any = null;
-        const pool: Artisan[] = [];
-
-        let orderByFetchOk = true;
+        // Essayer d'abord avec orderBy (nécessite un index)
         try {
-          for (let i = 0; i < maxBatches; i++) {
-            const q = lastDoc
-              ? query(
-                  artisansRef,
-                  where('privacy.profileVisible', '==', true),
-                  orderBy('createdAt', 'desc'),
-                  startAfter(lastDoc),
-                  limit(batchSize)
-                )
-              : query(
-                  artisansRef,
-                  where('privacy.profileVisible', '==', true),
-                  orderBy('createdAt', 'desc'),
-                  limit(batchSize)
-                );
-
-            const snap = await getDocs(q);
-            if (snap.empty) break;
-
-            snap.forEach((doc) => {
-              pool.push(mapDocToArtisan(doc));
-            });
-
-            lastDoc = snap.docs[snap.docs.length - 1];
-
-            const picked = selectHomeArtisans(pool, desiredCount);
-            const pickedRealCount = picked.filter(isReal).length;
-            const poolRealCount = pool.filter(isReal).length;
-
-            // Stop dès qu'on a de quoi remplir avec au moins quelques vrais
-            if (picked.length >= desiredCount && (pickedRealCount >= Math.min(desiredCount, 3) || poolRealCount >= desiredCount)) {
-              break;
-            }
-          }
-        } catch (e) {
-          orderByFetchOk = false;
-          // Ne pas laisser la section vide si l'index createdAt/orderBy manque.
-          // On bascule sur un fetch sans orderBy plus bas.
-          console.warn('⚠️ Home artisans: fetch orderBy(createdAt) failed, falling back to non-ordered fetch', e);
-        }
-
-        // Fallback :
-        // - si la requête orderBy(createdAt) a échoué (index manquant / champ absent)
-        // - ou si on n'a AUCUN vrai artisan dans ce pool (tri dominé par des démos)
-        // on fait un fetch sans orderBy pour augmenter les chances de récupérer des vrais profils.
-        if (!orderByFetchOk || pool.filter(isReal).length === 0) {
-          const fallbackSnap = await getDocs(
-            query(
-              artisansRef,
-              where('privacy.profileVisible', '==', true),
-              limit(600)
-            )
+          const q = query(
+            artisansRef,
+            where('privacy.profileVisible', '==', true),
+            orderBy('createdAt', 'desc'),
+            limit(50)
           );
 
-          const byId = new Map<string, Artisan>();
-          for (const a of pool) byId.set(a.id, a);
-          fallbackSnap.forEach((doc) => {
-            if (!byId.has(doc.id)) {
-              byId.set(doc.id, mapDocToArtisan(doc));
-            }
+          const snap = await getDocs(q);
+          snap.forEach((doc) => {
+            pool.push(mapDocToArtisan(doc));
           });
-
-          pool.splice(0, pool.length, ...Array.from(byId.values()));
+        } catch (indexError) {
+          console.warn('⚠️ Index manquant, utilisation du fallback sans orderBy');
+          
+          // Fallback : charger sans orderBy si l'index n'existe pas
+          const fallbackQ = query(
+            artisansRef,
+            where('privacy.profileVisible', '==', true),
+            limit(50)
+          );
+          
+          const fallbackSnap = await getDocs(fallbackQ);
+          fallbackSnap.forEach((doc) => {
+            pool.push(mapDocToArtisan(doc));
+          });
         }
 
         setArtisans(selectHomeArtisans(pool, 5));
@@ -211,20 +169,40 @@ export default function ArtisansSection() {
   useEffect(() => {
     const topArtisans = artisans.filter(isTop);
 
-    topArtisans.forEach((a) => {
-      const hasBannerInData = !!a.premiumFeatures?.bannerPhotos?.[0];
-      if (hasBannerInData) return;
-      if (topBannerUrlById[a.id]) return;
-
-      getPremiumBannerPhotoUrl(a.id, 1)
-        .then((url) => {
-          setTopBannerUrlById((prev) => ({ ...prev, [a.id]: url }));
+    // OPTIMISATION : Charger les bannières premium en parallèle avec Promise.allSettled
+    const loadBanners = async () => {
+      const promises = topArtisans
+        .filter((a) => {
+          const hasBannerInData = !!a.premiumFeatures?.bannerPhotos?.[0];
+          return !hasBannerInData && !topBannerUrlById[a.id];
         })
-        .catch(() => {
-          // fallback coverUrl
+        .map(async (a) => {
+          try {
+            const url = await getPremiumBannerPhotoUrl(a.id, 1);
+            return { id: a.id, url };
+          } catch {
+            return null;
+          }
         });
-    });
-  }, [artisans, topBannerUrlById]);
+
+      const results = await Promise.allSettled(promises);
+      const newUrls: Record<string, string> = {};
+      
+      results.forEach((result) => {
+        if (result.status === 'fulfilled' && result.value) {
+          newUrls[result.value.id] = result.value.url;
+        }
+      });
+
+      if (Object.keys(newUrls).length > 0) {
+        setTopBannerUrlById((prev) => ({ ...prev, ...newUrls }));
+      }
+    };
+
+    if (topArtisans.length > 0) {
+      loadBanners();
+    }
+  }, [artisans]);
 
   if (loading) {
     return (
@@ -293,6 +271,8 @@ export default function ArtisansSection() {
                         alt={`Couverture ${artisan.companyName}`}
                         fill
                         className="object-cover"
+                        loading="lazy"
+                        sizes="(max-width: 1024px) 100vw, 33vw"
                       />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
@@ -303,6 +283,7 @@ export default function ArtisansSection() {
                             width={80}
                             height={80}
                             className="object-contain"
+                            loading="lazy"
                           />
                         ) : (
                           <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center">
