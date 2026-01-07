@@ -621,7 +621,7 @@ export async function replacePremiumBannerPhoto(artisanId: string, photoIndex: n
     
     // Récupérer l'URL de téléchargement avec timestamp pour forcer le rechargement
     const baseURL = await getDownloadURL(snapshot.ref);
-    const downloadURL = `${baseURL}?t=${Date.now()}`;
+    const downloadURL = `${baseURL}&t=${Date.now()}`; // Utiliser & au lieu de ? car l'URL contient déjà des paramètres
 
     // Remplacer dans la liste
     const updatedPhotos = [...existingPhotos];

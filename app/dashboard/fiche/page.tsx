@@ -50,12 +50,6 @@ export default function MaFichePage() {
             const artisanDoc = querySnapshot.docs[0];
             const artisanData = artisanDoc.data();
             
-            // Debug des données premium
-            console.log('Données artisan complètes:', artisanData);
-            console.log('Premium features:', artisanData.premiumFeatures);
-            console.log('hasPremiumSite:', artisanData.hasPremiumSite);
-            console.log('subscriptionStatus:', artisanData.subscriptionStatus);
-            
             // CORRECTION AUTOMATIQUE DES DONNÉES PREMIUM MANQUANTES
             if (artisanData.premiumFeatures?.isPremium && !artisanData.premiumFeatures?.showTopArtisanBadge) {
               console.log('🔧 Correction automatique des données premium...');

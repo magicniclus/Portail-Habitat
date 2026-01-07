@@ -428,14 +428,11 @@ export default function ArtisansClient() {
         return [];
       }
 
-      console.log(`📦 ${querySnapshot.docs.length} artisans chargés depuis Firestore`);
       const batchArtisans: Artisan[] = [];
       
       for (const doc of querySnapshot.docs) {
         const data = doc.data();
         
-        console.log(`🔎 Artisan chargé: ${data.companyName || data.firstName} - accountType: ${data.accountType || 'undefined'}`);
-
         // Règle stricte : ne pas afficher les profils non visibles
         if (data.privacy?.profileVisible !== true) {
           continue;
@@ -448,7 +445,6 @@ export default function ArtisansClient() {
         
         // Exclure les artisans demo expirés
         if (isExpired) {
-          console.log(`❌ Artisan demo expiré exclu: ${data.companyName}`);
           continue;
         }
         
@@ -474,17 +470,6 @@ export default function ArtisansClient() {
             averageRating: data.averageRating || 0,
             reviewCount: data.reviewCount || 0
           } as Artisan;
-          
-          // Log pour déboguer
-          if (!isDemo) {
-            console.log('✅ VRAI ARTISAN chargé:', {
-              id: doc.id,
-              name: data.companyName,
-              accountType: data.accountType,
-              subscriptionStatus: data.subscriptionStatus,
-              profileVisible: data.privacy?.profileVisible
-            });
-          }
           
           batchArtisans.push(artisan);
         }
@@ -527,23 +512,11 @@ export default function ArtisansClient() {
           }
 
           const merged = Array.from(byId.values());
-          const mergedHasAnyReal = merged.some(a => !a.accountType || a.accountType !== 'demo');
-          console.log('🧩 Fallback merge artisans:', {
-            initial: batchArtisans.length,
-            fallback: fallbackArtisans.length,
-            merged: merged.length,
-            hasAnyRealBefore: realCount > 0,
-            hasAnyRealAfter: mergedHasAnyReal
-          });
-
-          // Remplacer le batch par le batch enrichi
           batchArtisans.splice(0, batchArtisans.length, ...merged);
         } catch (e) {
           console.warn('⚠️ Fallback fetch artisans failed:', e);
         }
       }
-
-      console.log(`✅ ${batchArtisans.length} artisans chargés et traités`);
 
       // Mettre à jour lastVisible pour la pagination
       if (!withFilters && querySnapshot.docs.length > 0) {
@@ -645,22 +618,12 @@ export default function ArtisansClient() {
       selectedPrestation
     };
     
-    console.log(`🔍 AVANT ALGORITHME:`);
-    console.log(`- allArtisansCache.length: ${allArtisansCache.length}`);
-    console.log(`- criteria:`, criteria);
-    console.log(`- currentPage: ${currentPage}`);
-    console.log(`- itemsPerPage: ${itemsPerPage}`);
-    
     const result = filterAndSortArtisans(
       allArtisansCache,
       criteria,
       currentPage,
       itemsPerPage
     );
-    
-    console.log(`🔍 APRÈS ALGORITHME:`);
-    console.log(`- result.artisans.length: ${result.artisans.length}`);
-    console.log(`- result.totalCount: ${result.totalCount}`);
     
     return result;
   }, [allArtisansCache, secteurSearch, prestationSearch, selectedSecteur, selectedPrestation, currentPage, itemsPerPage]);

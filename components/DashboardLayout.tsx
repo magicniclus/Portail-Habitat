@@ -131,14 +131,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // Vérifier si l'artisan n'est pas du tout premium (pas premium ET pas d'abonnement annulé en cours)
   const isNotPremium = artisan && !artisan.premiumFeatures?.isPremium && artisan.subscriptionStatus !== 'canceled';
   
-  // Debug pour voir les valeurs
-  console.log('Debug bouton navigation:', {
-    artisan: !!artisan,
-    isPremium: artisan?.premiumFeatures?.isPremium,
-    subscriptionStatus: artisan?.subscriptionStatus,
-    isNotPremium: isNotPremium
-  });
-
   const handleLogout = async () => {
     try {
       await signOut(auth);
