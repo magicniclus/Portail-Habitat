@@ -624,7 +624,9 @@ export default function FicheEntreprise({
             {entreprise.logo ? (
               <>
                 {isLogoLoading && (
-                  <div className="w-20 h-20 rounded-full bg-gray-300 animate-pulse" style={{ animationDuration: '2s' }} />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                  </div>
                 )}
                 <img
                   src={entreprise.logo}

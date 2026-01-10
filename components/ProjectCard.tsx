@@ -12,7 +12,8 @@ import {
   Calendar,
   MoreHorizontal,
   Edit,
-  Trash2
+  Trash2,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -63,6 +64,7 @@ export default function ProjectCard({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isImageLoading, setIsImageLoading] = useState(true);
 
   // Gérer l'hydratation
   useEffect(() => {
@@ -95,10 +97,18 @@ export default function ProjectCard({
       {/* Image principale - tout en haut */}
       {project.photos.length > 0 && (
         <div className="aspect-video relative overflow-hidden">
+          {isImageLoading && (
+            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+            </div>
+          )}
           <img
             src={project.photos[0]}
             alt={project.title}
             className="w-full h-full object-cover"
+            onLoad={() => setIsImageLoading(false)}
+            onError={() => setIsImageLoading(false)}
+            style={{ display: isImageLoading ? 'none' : 'block' }}
           />
           {project.photos.length > 1 && (
             <div className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">

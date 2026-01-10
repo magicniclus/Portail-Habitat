@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Building } from "lucide-react";
+import { Building, Loader2 } from "lucide-react";
 
 interface StandardBannerProps {
   coverUrl?: string;
@@ -44,9 +43,11 @@ export default function StandardBanner({
   return (
     <div className={`relative w-full overflow-hidden rounded-lg ${className}`}>
       <div className="relative w-full h-96 overflow-hidden">
-        {/* Skeleton pendant le chargement */}
+        {/* Loader pendant le chargement */}
         {isLoading && (
-          <Skeleton className="w-full h-full" />
+          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
+          </div>
         )}
 
         {/* Image de couverture */}

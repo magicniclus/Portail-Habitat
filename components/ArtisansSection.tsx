@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { MapPin, Star, Phone, Mail, ExternalLink } from "lucide-react";
+import { MapPin, Star, Phone, Mail, ExternalLink, Loader2 } from "lucide-react";
 import { collection, query, limit, getDocs, where, orderBy, startAfter } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getPremiumBannerPhotoUrl } from "@/lib/storage";
@@ -47,6 +47,7 @@ export default function ArtisansSection() {
   const [artisans, setArtisans] = useState<Artisan[]>([]);
   const [loading, setLoading] = useState(true);
   const [topBannerUrlById, setTopBannerUrlById] = useState<Record<string, string>>({});
+  const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
 
   const isReal = (a: Artisan) => !a.accountType || a.accountType !== 'demo';
   const isTop = (a: Artisan) => a.premiumFeatures?.isPremium === true && a.premiumFeatures?.showTopArtisanBadge === true;
@@ -262,29 +263,47 @@ export default function ArtisansSection() {
                   {/* Image de couverture ou logo */}
                   <div className="lg:w-1/3 h-48 lg:h-auto relative">
                     {(isTop(artisan) ? artisan.premiumFeatures?.bannerPhotos?.[0] || artisan.coverUrl : artisan.coverUrl) ? (
-                      <Image
-                        src={
-                          isTop(artisan)
-                            ? topBannerUrlById[artisan.id] || artisan.premiumFeatures?.bannerPhotos?.[0] || artisan.coverUrl || ""
-                            : artisan.coverUrl || ""
-                        }
-                        alt={`Couverture ${artisan.companyName}`}
-                        fill
-                        className="object-cover"
-                        loading="lazy"
-                        sizes="(max-width: 1024px) 100vw, 33vw"
-                      />
+                      <>
+                        {imageLoadingStates[artisan.id] !== false && (
+                          <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-10">
+                            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                          </div>
+                        )}
+                        <Image
+                          src={
+                            isTop(artisan)
+                              ? topBannerUrlById[artisan.id] || artisan.premiumFeatures?.bannerPhotos?.[0] || artisan.coverUrl || ""
+                              : artisan.coverUrl || ""
+                          }
+                          alt={`Couverture ${artisan.companyName}`}
+                          fill
+                          className="object-cover"
+                          loading="lazy"
+                          sizes="(max-width: 1024px) 100vw, 33vw"
+                          onLoad={() => setImageLoadingStates(prev => ({ ...prev, [artisan.id]: false }))}
+                          onError={() => setImageLoadingStates(prev => ({ ...prev, [artisan.id]: false }))}
+                        />
+                      </>
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center relative">
                         {artisan.logoUrl ? (
-                          <Image
-                            src={artisan.logoUrl}
-                            alt={`Logo ${artisan.companyName}`}
-                            width={80}
-                            height={80}
-                            className="object-contain"
-                            loading="lazy"
-                          />
+                          <>
+                            {imageLoadingStates[`logo-${artisan.id}`] !== false && (
+                              <div className="absolute inset-0 flex items-center justify-center z-10">
+                                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                              </div>
+                            )}
+                            <Image
+                              src={artisan.logoUrl}
+                              alt={`Logo ${artisan.companyName}`}
+                              width={80}
+                              height={80}
+                              className="object-contain"
+                              loading="lazy"
+                              onLoad={() => setImageLoadingStates(prev => ({ ...prev, [`logo-${artisan.id}`]: false }))}
+                              onError={() => setImageLoadingStates(prev => ({ ...prev, [`logo-${artisan.id}`]: false }))}
+                            />
+                          </>
                         ) : (
                           <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center">
                             <span className="text-2xl font-bold text-orange-600">

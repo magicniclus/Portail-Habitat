@@ -26,6 +26,7 @@ export default function BannerVideoManager({
 }: BannerVideoManagerProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
   const [localBannerVideo, setLocalBannerVideo] = useState<string | null>(
     entreprise.premiumFeatures?.bannerVideo || null
   );
@@ -197,11 +198,19 @@ export default function BannerVideoManager({
       <h3 className="text-lg font-semibold">Vidéo de présentation</h3>
       
       <div className="relative group">
+        {isVideoLoading && (
+          <div className="absolute inset-0 bg-gray-100 rounded-lg flex items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
+          </div>
+        )}
         <video
           src={bannerVideo}
           controls
           className="w-full h-80 object-contain bg-black rounded-lg shadow-sm"
-          poster="" // Optionnel: ajouter une image de preview
+          poster=""
+          onLoadedData={() => setIsVideoLoading(false)}
+          onError={() => setIsVideoLoading(false)}
+          style={{ display: isVideoLoading ? 'none' : 'block' }}
         >
           Votre navigateur ne supporte pas la lecture de vidéos.
         </video>

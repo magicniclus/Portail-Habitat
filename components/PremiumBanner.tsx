@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Carousel,
   CarouselContent,
@@ -10,7 +9,7 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { ChevronLeft, ChevronRight, Building } from "lucide-react";
+import { ChevronLeft, ChevronRight, Building, Loader2 } from "lucide-react";
 
 interface PremiumBannerProps {
   bannerPhotos: string[];
@@ -97,9 +96,11 @@ export default function PremiumBanner({
     return (
       <div className={`relative w-full overflow-hidden rounded-lg ${className}`}>
         <div className="relative w-full h-96 overflow-hidden">
-          {/* Skeleton pendant le chargement */}
+          {/* Loader pendant le chargement */}
           {loadingStates[media] && (
-            <Skeleton className="w-full h-full" />
+            <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+              <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
+            </div>
           )}
 
           {isVideoUrl(media) ? (
@@ -166,9 +167,11 @@ export default function PremiumBanner({
             return (
               <CarouselItem key={index} className="relative w-full h-full">
                 <div className="relative w-full h-96 overflow-hidden">
-                  {/* Skeleton pendant le chargement */}
+                  {/* Loader pendant le chargement */}
                   {loadingStates[media] && (
-                    <Skeleton className="w-full h-full" />
+                    <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+                      <Loader2 className="h-12 w-12 animate-spin text-gray-400" />
+                    </div>
                   )}
 
                   {isVideoUrl(media) ? (
