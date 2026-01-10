@@ -33,7 +33,8 @@ export default function WhyPortailHabitat() {
             <div className="space-y-8">
               {/* Section 1 */}
               <div className="space-y-3">
-                <h4 className="text-xl font-semibold text-gray-900 border-b-4 border-orange-500 pb-2 inline-block">
+                <h4 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
+                  <span className="flex-shrink-0 w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-lg">1</span>
                   Des estimations précises powered by IA
                 </h4>
                 <p className="text-gray-600 leading-relaxed text-lg">
@@ -45,7 +46,8 @@ export default function WhyPortailHabitat() {
 
               {/* Section 2 */}
               <div className="space-y-3">
-                <h4 className="text-xl font-semibold text-gray-900 border-b-4 border-orange-500 pb-2 inline-block">
+                <h4 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
+                  <span className="flex-shrink-0 w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-lg">2</span>
                   Un réseau d'artisans triés sur le volet
                 </h4>
                 <p className="text-gray-600 leading-relaxed text-lg">
@@ -57,7 +59,8 @@ export default function WhyPortailHabitat() {
 
               {/* Section 3 */}
               <div className="space-y-3">
-                <h4 className="text-xl font-semibold text-gray-900 border-b-4 border-orange-500 pb-2 inline-block">
+                <h4 className="text-xl font-semibold text-gray-900 flex items-center gap-3">
+                  <span className="flex-shrink-0 w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-lg">3</span>
                   Un processus simplifié et transparent
                 </h4>
                 <p className="text-gray-600 leading-relaxed text-lg">
