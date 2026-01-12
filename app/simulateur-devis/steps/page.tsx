@@ -127,6 +127,9 @@ function SimulatorStepsContent() {
   const updateURL = (newData: Partial<SimulatorData>, step?: number, resetProjectDetails?: boolean) => {
     const params = new URLSearchParams()
     
+    // Toujours conserver le paramètre 'project' s'il existe
+    const projectParam = searchParams.get('project')
+    
     // Si on change de prestation, on repart à zéro sauf pour les données de base
     if (newData.selectedPrestation) {
       // Nouvelle prestation : on garde seulement les données de base
@@ -142,8 +145,9 @@ function SimulatorStepsContent() {
       if (newData.selectedPrestation) {
         params.set('prestation', newData.selectedPrestation)
       }
-      if (searchParams.get('project')) {
-        params.set('project', searchParams.get('project')!)
+      // Toujours conserver le paramètre 'project'
+      if (projectParam) {
+        params.set('project', projectParam)
       }
       // On repart à l'étape 1 si on change de prestation
       params.set('step', '1')
@@ -178,6 +182,11 @@ function SimulatorStepsContent() {
       }
       
       if (step) currentParams.set('step', step.toString())
+      
+      // Toujours conserver le paramètre 'project' s'il existe
+      if (projectParam && !currentParams.has('project')) {
+        currentParams.set('project', projectParam)
+      }
       
       // Copier seulement les paramètres nécessaires
       const allowedParams = ['postalCode', 'city', 'propertyType', 'prestation', 'project', 'surface', 'answers', 'prestationLevel', 'existingState', 'timeline', 'firstName', 'phone', 'email', 'acceptsCGV', 'step']
