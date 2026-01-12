@@ -2,7 +2,9 @@
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Progress } from '@/components/ui/progress'
+import { Badge } from '@/components/ui/badge'
 import MobileMenu from '@/components/MobileMenu'
+import { renovationPrestations } from '@/lib/renovation-suggestions'
 
 interface SimulatorTemplateProps {
   children: React.ReactNode
@@ -25,6 +27,15 @@ export default function SimulatorTemplate({
 }: SimulatorTemplateProps) {
   // Calculer le pourcentage de progression basé uniquement sur l'étape
   const stepProgress = (currentStep / totalSteps) * 100
+
+  // Trouver le nom de la prestation à partir du slug
+  const getPrestationName = () => {
+    if (!currentPrestation) return null
+    const prestation = renovationPrestations.find(p => p.slug === currentPrestation)
+    return prestation?.nom || currentPrestation
+  }
+
+  const prestationName = getPrestationName()
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -55,8 +66,14 @@ export default function SimulatorTemplate({
           {/* Barre de progression - masquée sur la page de résultats */}
           {currentStep < totalSteps && (
             <div className="space-y-2">
-              <div className="flex justify-between text-sm text-gray-600">
+              <div className="flex justify-between items-center text-sm text-gray-600">
                 <span>{stepTitle}</span>
+                {/* Badge de la prestation sélectionnée */}
+                {prestationName && (
+                  <Badge variant="secondary" className="bg-orange-100 text-orange-800 hover:bg-orange-100 px-3 py-1 text-sm font-medium">
+                    {prestationName}
+                  </Badge>
+                )}
               </div>
               <Progress 
                 value={stepProgress} 
