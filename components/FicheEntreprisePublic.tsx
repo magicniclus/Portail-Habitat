@@ -116,6 +116,7 @@ export default function FicheEntreprisePublic({
     isPremiumActive({ id: entreprise.id, premiumFeatures: entreprise.premiumFeatures }) && 
     entreprise.premiumFeatures.showTopArtisanBadge;
   const [showAllProjects, setShowAllProjects] = useState(false);
+  const [showAllReviews, setShowAllReviews] = useState(false);
   const [isSubmittingForm, setIsSubmittingForm] = useState(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [formErrorMessage, setFormErrorMessage] = useState("");
@@ -541,42 +542,26 @@ export default function FicheEntreprisePublic({
               )}
 
               {/* Note et avis */}
-              <div ref={avisClientsSectionRef} className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-lg p-6 mt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Avis clients</h3>
-                    <p className="text-sm text-gray-600">
-                      Découvrez les retours de nos clients satisfaits
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    {getStarRating(entreprise.note)}
-                    <span className="ml-2 text-sm font-medium text-gray-700">
-                      {entreprise.note}/5 ({entreprise.nombreAvis} avis)
-                    </span>
-                  </div>
-                </div>
-                
-                <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center">
-                      {getStarRating(entreprise.note)}
-                      <span className="font-medium ml-2 text-lg">{entreprise.note}/5</span>
+              {entreprise.nombreAvis > 0 && (
+                <div ref={avisClientsSectionRef} className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-lg p-6 mt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        Avis clients ({entreprise.nombreAvis})
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Découvrez les retours de nos clients satisfaits
+                      </p>
                     </div>
-                    <span className="text-sm text-gray-600">
-                      ({entreprise.nombreAvis} avis)
-                    </span>
+                    <div className="flex items-center space-x-1">
+                      {getStarRating(entreprise.note)}
+                      <span className="ml-2 text-sm font-medium text-gray-700">
+                        {entreprise.note}/5
+                      </span>
+                    </div>
                   </div>
-                  {entreprise.nombreAvis === 0 && (
-                    <Link href={`/avis/${entreprise.id}`}>
-                      <Button variant="outline" size="sm">
-                        <Star className="h-4 w-4 mr-2" />
-                        Laisser un avis
-                      </Button>
-                    </Link>
-                  )}
                 </div>
-              </div>
+              )}
 
               {/* Description */}
               <div className="space-y-3 pb-6 border-b border-gray-200">
@@ -859,9 +844,13 @@ export default function FicheEntreprisePublic({
               {/* Avis clients */}
               {reviews && reviews.length > 0 && (
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold mt-10">Avis clients</h3>
+                  <div className="flex items-center justify-between mt-10">
+                    <h3 className="text-lg font-semibold">
+                      Avis clients {reviews.length > 0 && `(${reviews.length})`}
+                    </h3>
+                  </div>
                   <div className="space-y-4">
-                    {reviews.slice(0, 5).map((review) => (
+                    {(showAllReviews ? reviews : reviews.slice(0, 5)).map((review) => (
                       <div key={review.id} className="bg-gray-50 rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center space-x-2">
@@ -878,6 +867,17 @@ export default function FicheEntreprisePublic({
                       </div>
                     ))}
                   </div>
+                  {reviews.length > 5 && (
+                    <div className="flex justify-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowAllReviews(!showAllReviews)}
+                      >
+                        {showAllReviews ? 'Voir moins' : 'Voir plus d\'avis'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
 

@@ -3,13 +3,21 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { doc, getDoc, collection, query, where, getDocs, orderBy, limit, updateDoc } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, orderBy, limit, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { getCurrentAdmin, hasPermission, ADMIN_PERMISSIONS } from "@/lib/admin-auth";
+import { getCurrentAdmin, hasPermission, ADMIN_PERMISSIONS, hasRole, ADMIN_ROLES, logAdminAction } from "@/lib/admin-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import EditableField from "@/components/admin/EditableField";
 import EditableSelect from "@/components/admin/EditableSelect";
 import PrestationsModal from "@/components/admin/PrestationsModal";
@@ -38,7 +46,9 @@ import {
   Settings,
   Plus,
   Euro,
-  Crown
+  Crown,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 
 interface UserDetail {
@@ -160,6 +170,9 @@ export default function UserDetailPage() {
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [isPrestationsModalOpen, setIsPrestationsModalOpen] = useState(false);
   const [isUpdatingPrestations, setIsUpdatingPrestations] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [canDelete, setCanDelete] = useState(false);
 
   // Fonction pour changer d'onglet et mettre à jour l'URL
   const handleTabChange = (tabValue: string) => {
@@ -181,6 +194,11 @@ export default function UserDetailPage() {
       // Vérifier les permissions
       const canEditUsers = await hasPermission(ADMIN_PERMISSIONS.MANAGE_USERS);
       setCanEdit(canEditUsers);
+      
+      // Vérifier les permissions de suppression (super_admin ou admin avec MANAGE_USERS)
+      const admin = await getCurrentAdmin();
+      const canDeleteUser = admin ? (admin.adminRole === ADMIN_ROLES.SUPER_ADMIN || canEditUsers) : false;
+      setCanDelete(canDeleteUser);
 
       // Essayer de charger depuis artisans
       const artisanDoc = await getDoc(doc(db, "artisans", userId));
@@ -311,6 +329,40 @@ export default function UserDetailPage() {
       throw error;
     } finally {
       setIsUpdatingPrestations(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!user || !canDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const collectionName = user.type === 'artisan' ? 'artisans' : 'prospects';
+      
+      // Logger l'action avant la suppression
+      await logAdminAction(
+        'delete_user',
+        {
+          userId: user.id,
+          userType: user.type,
+          email: user.email,
+          companyName: user.companyName || `${user.firstName} ${user.lastName}`
+        },
+        user.type === 'artisan' ? user.id : undefined,
+        user.type === 'prospect' ? user.id : undefined
+      );
+
+      // Supprimer le document principal
+      await deleteDoc(doc(db, collectionName, userId));
+      
+      // Rediriger vers la liste des utilisateurs
+      router.push('/admin/utilisateurs');
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert('Erreur lors de la suppression de l\'utilisateur. Veuillez réessayer.');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -640,8 +692,8 @@ export default function UserDetailPage() {
                 disabled={!canEdit}
               />
 
-              {/* Abonnement et statut */}
-              <div className="space-y-4">
+              {/* Abonnement et Gestion utilisateur */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Statut principal */}
                 <Card>
                   <CardHeader className="pb-3">
@@ -668,7 +720,34 @@ export default function UserDetailPage() {
                   </CardContent>
                 </Card>
 
-
+                {/* Gestion de l'utilisateur */}
+                {canDelete && (
+                  <Card className="border-red-200 bg-red-50/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="flex items-center gap-2 text-lg text-red-700">
+                        <Settings className="h-5 w-5" />
+                        Gestion de l'utilisateur
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <p className="text-sm text-gray-700">
+                          La suppression de cet utilisateur est définitive et irréversible. 
+                          Toutes les données associées seront perdues.
+                        </p>
+                        <Button
+                          variant="destructive"
+                          onClick={() => setIsDeleteDialogOpen(true)}
+                          disabled={isDeleting}
+                          className="w-full"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Supprimer cet utilisateur
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           )}
@@ -1013,6 +1092,79 @@ export default function UserDetailPage() {
         onSave={handleSavePrestations}
         disabled={!canEdit || isUpdatingPrestations}
       />
+
+      {/* Modal de confirmation de suppression */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Confirmer la suppression
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-3 pt-4">
+                <p className="text-base font-medium text-gray-900">
+                  Êtes-vous sûr de vouloir supprimer cet utilisateur ?
+                </p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2">
+                  <p className="text-sm text-red-800 font-medium">
+                    ⚠️ Cette action est irréversible
+                  </p>
+                  <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                    <li>Toutes les données de l'utilisateur seront supprimées</li>
+                    <li>L'accès au compte sera définitivement révoqué</li>
+                    <li>Cette action sera enregistrée dans les logs admin</li>
+                  </ul>
+                </div>
+                {user && (
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-1">
+                    <p className="text-sm">
+                      <span className="font-medium">Utilisateur :</span>{' '}
+                      {user.type === 'artisan' 
+                        ? (user.companyName || `${user.firstName} ${user.lastName}`)
+                        : `${user.firstName} ${user.lastName}`
+                      }
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">Email :</span> {user.email}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">Type :</span>{' '}
+                      {user.type === 'artisan' ? 'Artisan' : 'Prospect'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteUser}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Suppression en cours...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Supprimer définitivement
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

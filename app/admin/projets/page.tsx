@@ -1,14 +1,23 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, getDocs, where, updateDoc, doc } from "firebase/firestore";
+import { collection, query, orderBy, getDocs, where, updateDoc, doc, deleteDoc } from "firebase/firestore";
 import Link from "next/link";
 import { db } from "@/lib/firebase";
+import { getCurrentAdmin, ADMIN_ROLES, logAdminAction } from "@/lib/admin-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Search, 
   FileText, 
@@ -22,7 +31,9 @@ import {
   Send,
   Download,
   Building2,
-  ShoppingCart
+  ShoppingCart,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 
 interface Estimation {
@@ -78,10 +89,25 @@ export default function ProjetsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [projectToDelete, setProjectToDelete] = useState<Estimation | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [canDelete, setCanDelete] = useState(false);
 
   useEffect(() => {
+    checkPermissions();
     loadEstimations();
   }, []);
+
+  const checkPermissions = async () => {
+    try {
+      const admin = await getCurrentAdmin();
+      const canDeleteProjects = admin ? (admin.adminRole === ADMIN_ROLES.SUPER_ADMIN || admin.adminRole === ADMIN_ROLES.CONTENT_ADMIN) : false;
+      setCanDelete(canDeleteProjects);
+    } catch (error) {
+      console.error('Erreur vérification permissions:', error);
+    }
+  };
 
   useEffect(() => {
     filterEstimations();
@@ -154,6 +180,42 @@ export default function ProjetsPage() {
       ));
     } catch (error) {
       console.error('Erreur lors de la mise à jour:', error);
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!projectToDelete || !canDelete) return;
+
+    setIsDeleting(true);
+    try {
+      // Logger l'action avant la suppression
+      await logAdminAction(
+        'delete_project',
+        {
+          projectId: projectToDelete.id,
+          clientName: projectToDelete.clientInfo?.firstName || 'Non renseigné',
+          clientEmail: projectToDelete.clientInfo?.email || 'Non renseigné',
+          prestationType: projectToDelete.project?.prestationType || 'Non renseigné',
+          status: projectToDelete.status || 'unknown',
+          city: projectToDelete.location?.city || 'Non renseigné',
+          postalCode: projectToDelete.location?.postalCode || 'Non renseigné'
+        }
+      );
+
+      // Supprimer le projet
+      await deleteDoc(doc(db, "estimations", projectToDelete.id));
+      
+      // Mettre à jour l'état local
+      setEstimations(estimations.filter(e => e.id !== projectToDelete.id));
+      
+      // Fermer la modal
+      setIsDeleteDialogOpen(false);
+      setProjectToDelete(null);
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert('Erreur lors de la suppression du projet. Veuillez réessayer.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -439,6 +501,20 @@ export default function ProjetsPage() {
                       <Download className="h-4 w-4 mr-1" />
                       Export
                     </Button>
+                    
+                    {canDelete && (
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => {
+                          setProjectToDelete(estimation);
+                          setIsDeleteDialogOpen(true);
+                        }}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -454,6 +530,83 @@ export default function ProjetsPage() {
           <p className="text-gray-600">Aucune estimation ne correspond à vos critères de recherche.</p>
         </div>
       )}
+
+      {/* Modal de confirmation de suppression */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Confirmer la suppression
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-3 pt-4">
+                <p className="text-base font-medium text-gray-900">
+                  Êtes-vous sûr de vouloir supprimer ce projet ?
+                </p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2">
+                  <p className="text-sm text-red-800 font-medium">
+                    ⚠️ Cette action est irréversible
+                  </p>
+                  <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                    <li>Toutes les données du projet seront supprimées</li>
+                    <li>Les assignations aux artisans seront perdues</li>
+                    <li>Cette action sera enregistrée dans les logs admin</li>
+                  </ul>
+                </div>
+                {projectToDelete && (
+                  <div className="bg-gray-50 rounded-lg p-3 space-y-1">
+                    <p className="text-sm">
+                      <span className="font-medium">Client :</span>{' '}
+                      {projectToDelete.clientInfo?.firstName}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">Email :</span> {projectToDelete.clientInfo?.email}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">Projet :</span>{' '}
+                      {projectToDelete.project?.prestationType}
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-medium">Localisation :</span>{' '}
+                      {projectToDelete.location?.city} ({projectToDelete.location?.postalCode})
+                    </p>
+                  </div>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setProjectToDelete(null);
+              }}
+              disabled={isDeleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteProject}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Suppression en cours...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Supprimer définitivement
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

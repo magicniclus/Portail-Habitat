@@ -1,15 +1,25 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, getDocs, where } from "firebase/firestore";
+import { collection, query, orderBy, getDocs, where, deleteDoc, doc } from "firebase/firestore";
 import Link from "next/link";
 import { db } from "@/lib/firebase";
+import { getCurrentAdmin, ADMIN_ROLES, logAdminAction } from "@/lib/admin-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { 
   Search, 
   Users, 
@@ -21,7 +31,9 @@ import {
   Loader2,
   Eye,
   UserPlus,
-  Filter
+  Filter,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 
 interface Prospect {
@@ -64,10 +76,25 @@ export default function DemandesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStep, setSelectedStep] = useState<string>("all");
   const [selectedSource, setSelectedSource] = useState<string>("all");
+  const [selectedProspects, setSelectedProspects] = useState<string[]>([]);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [canDelete, setCanDelete] = useState(false);
 
   useEffect(() => {
+    checkPermissions();
     loadProspects();
   }, []);
+
+  const checkPermissions = async () => {
+    try {
+      const admin = await getCurrentAdmin();
+      const canDeleteProspects = admin ? (admin.adminRole === ADMIN_ROLES.SUPER_ADMIN || admin.adminRole === ADMIN_ROLES.CONTENT_ADMIN) : false;
+      setCanDelete(canDeleteProspects);
+    } catch (error) {
+      console.error('Erreur vérification permissions:', error);
+    }
+  };
 
   useEffect(() => {
     filterProspects();
@@ -122,6 +149,63 @@ export default function DemandesPage() {
     setFilteredProspects(filtered);
   };
 
+  const toggleSelectProspect = (prospectId: string) => {
+    setSelectedProspects(prev => 
+      prev.includes(prospectId)
+        ? prev.filter(id => id !== prospectId)
+        : [...prev, prospectId]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedProspects.length === filteredProspects.length) {
+      setSelectedProspects([]);
+    } else {
+      setSelectedProspects(filteredProspects.map(p => p.id));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedProspects.length === 0 || !canDelete) return;
+
+    setIsDeleting(true);
+    try {
+      // Supprimer chaque prospect sélectionné
+      for (const prospectId of selectedProspects) {
+        const prospect = prospects.find(p => p.id === prospectId);
+        if (prospect) {
+          // Logger l'action
+          await logAdminAction(
+            'delete_prospect',
+            {
+              prospectId: prospect.id,
+              firstName: prospect.firstName || 'Non renseigné',
+              lastName: prospect.lastName || 'Non renseigné',
+              email: prospect.email || 'Non renseigné',
+              funnelStep: prospect.funnelStep || 'unknown',
+              city: prospect.city || 'Non renseigné'
+            }
+          );
+
+          // Supprimer le prospect
+          await deleteDoc(doc(db, "prospects", prospectId));
+        }
+      }
+      
+      // Mettre à jour l'état local
+      setProspects(prospects.filter(p => !selectedProspects.includes(p.id)));
+      setSelectedProspects([]);
+      
+      // Fermer la modal
+      setIsDeleteDialogOpen(false);
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert('Erreur lors de la suppression des prospects. Veuillez réessayer.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
 
   const getFunnelBadge = (step: string) => {
     const stepConfig = {
@@ -167,9 +251,27 @@ export default function DemandesPage() {
           <p className="text-gray-600">Gestion des prospects et demandes clients</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="text-sm">
-            {filteredProspects.length} / {prospects.length} demandes
-          </Badge>
+          {selectedProspects.length > 0 ? (
+            <>
+              <Badge variant="secondary" className="text-sm">
+                {selectedProspects.length} sélectionné{selectedProspects.length > 1 ? 's' : ''}
+              </Badge>
+              {canDelete && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Supprimer ({selectedProspects.length})
+                </Button>
+              )}
+            </>
+          ) : (
+            <Badge variant="outline" className="text-sm">
+              {filteredProspects.length} / {prospects.length} demandes
+            </Badge>
+          )}
         </div>
       </div>
 
@@ -287,39 +389,82 @@ export default function DemandesPage() {
 
       {/* Liste des prospects */}
       <div className="space-y-4">
+        {/* Checkbox Tout sélectionner */}
+        {filteredProspects.length > 0 && canDelete && (
+          <Card className="bg-gray-50">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Checkbox
+                    id="select-all"
+                    checked={selectedProspects.length === filteredProspects.length}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                  <label
+                    htmlFor="select-all"
+                    className="text-sm font-medium cursor-pointer"
+                  >
+                    Tout sélectionner ({filteredProspects.length})
+                  </label>
+                </div>
+                {selectedProspects.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Supprimer ({selectedProspects.length})
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {filteredProspects.map((prospect) => (
           <Card key={prospect.id}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-6 flex-1">
-                  <div className="flex items-center gap-3">
-                    <h3 className="font-semibold">
-                      {prospect.firstName} {prospect.lastName}
-                    </h3>
-                    {getFunnelBadge(prospect.funnelStep)}
-                  </div>
+                <div className="flex items-center gap-4 flex-1">
+                  {/* Checkbox de sélection */}
+                  {canDelete && (
+                    <Checkbox
+                      checked={selectedProspects.includes(prospect.id)}
+                      onCheckedChange={() => toggleSelectProspect(prospect.id)}
+                    />
+                  )}
                   
-                  <div className="flex items-center gap-6 text-sm text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      <span>{prospect.email || 'Non renseigné'}</span>
+                  <div className="flex items-center gap-6 flex-1">
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-semibold">
+                        {prospect.firstName} {prospect.lastName}
+                      </h3>
+                      {getFunnelBadge(prospect.funnelStep)}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4" />
-                      {prospect.phone ? (
-                        <a 
-                          href={`tel:${prospect.phone}`}
-                          className="text-blue-600 hover:text-blue-800 hover:underline"
-                        >
-                          {prospect.phone}
-                        </a>
-                      ) : (
-                        <span>Non renseigné</span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{prospect.city} ({prospect.postalCode})</span>
+                  
+                    <div className="flex items-center gap-6 text-sm text-gray-600">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4" />
+                        <span>{prospect.email || 'Non renseigné'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        {prospect.phone ? (
+                          <a 
+                            href={`tel:${prospect.phone}`}
+                            className="text-blue-600 hover:text-blue-800 hover:underline"
+                          >
+                            {prospect.phone}
+                          </a>
+                        ) : (
+                          <span>Non renseigné</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>{prospect.city} ({prospect.postalCode})</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -337,6 +482,20 @@ export default function DemandesPage() {
                       Voir ce prospect
                     </Link>
                   </Button>
+                  
+                  {canDelete && (
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedProspects([prospect.id]);
+                        setIsDeleteDialogOpen(true);
+                      }}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -351,6 +510,95 @@ export default function DemandesPage() {
           <p className="text-gray-600">Aucun prospect ne correspond à vos critères de recherche.</p>
         </div>
       )}
+
+      {/* Modal de confirmation de suppression */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+              Confirmer la suppression
+            </DialogTitle>
+            <DialogDescription asChild>
+              <div className="space-y-3 pt-4">
+                <p className="text-base font-medium text-gray-900">
+                  Êtes-vous sûr de vouloir supprimer {selectedProspects.length === 1 ? 'ce prospect' : `ces ${selectedProspects.length} prospects`} ?
+                </p>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2">
+                  <p className="text-sm text-red-800 font-medium">
+                    ⚠️ Cette action est irréversible
+                  </p>
+                  <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                    <li>Toutes les données {selectedProspects.length === 1 ? 'du prospect seront supprimées' : 'des prospects seront supprimées'}</li>
+                    <li>L'historique des interactions sera perdu</li>
+                    <li>Cette action sera enregistrée dans les logs admin</li>
+                  </ul>
+                </div>
+                {selectedProspects.length === 1 && (
+                  (() => {
+                    const prospect = prospects.find(p => p.id === selectedProspects[0]);
+                    return prospect ? (
+                      <div className="bg-gray-50 rounded-lg p-3 space-y-1">
+                        <p className="text-sm">
+                          <span className="font-medium">Prospect :</span>{' '}
+                          {prospect.firstName} {prospect.lastName}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-medium">Email :</span> {prospect.email || 'Non renseigné'}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-medium">Étape :</span>{' '}
+                          {FUNNEL_STEPS.find(s => s.value === prospect.funnelStep)?.label || prospect.funnelStep}
+                        </p>
+                        <p className="text-sm">
+                          <span className="font-medium">Ville :</span>{' '}
+                          {prospect.city || 'Non renseigné'}
+                        </p>
+                      </div>
+                    ) : null;
+                  })()
+                )}
+                {selectedProspects.length > 1 && (
+                  <div className="bg-gray-50 rounded-lg p-3">
+                    <p className="text-sm font-medium">
+                      {selectedProspects.length} prospects sélectionnés
+                    </p>
+                  </div>
+                )}
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDeleteDialogOpen(false);
+                setSelectedProspects([]);
+              }}
+              disabled={isDeleting}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteSelected}
+              disabled={isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Suppression en cours...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Supprimer définitivement
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
