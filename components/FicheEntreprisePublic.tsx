@@ -546,9 +546,9 @@ export default function FicheEntreprisePublic({
                 <div ref={avisClientsSectionRef} className="bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-lg p-6 mt-6">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      <a href="#avis-clients" className="text-xl font-bold text-gray-900 mb-2 hover:underline">
                         Avis clients ({entreprise.nombreAvis})
-                      </h3>
+                      </a>
                       <p className="text-sm text-gray-600">
                         Découvrez les retours de nos clients satisfaits
                       </p>
@@ -843,7 +843,7 @@ export default function FicheEntreprisePublic({
 
               {/* Avis clients */}
               {reviews && reviews.length > 0 && (
-                <div className="space-y-6">
+                <div id="avis-clients" className="space-y-6">
                   <div className="flex items-center justify-between mt-10">
                     <h3 className="text-lg font-semibold">
                       Avis clients {reviews.length > 0 && `(${reviews.length})`}
