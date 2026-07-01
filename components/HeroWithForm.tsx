@@ -323,7 +323,9 @@ export default function HeroWithForm() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="postalCode">Code postal</Label>
+                      <Label htmlFor="postalCode">
+                        Code postal{city && <span className="font-normal text-gray-500 ml-1">({city})</span>}
+                      </Label>
                       <Input 
                         id="postalCode" 
                         type="text" 
@@ -343,11 +345,6 @@ export default function HeroWithForm() {
                         }}
                         required
                       />
-                      {city && (
-                        <p className="text-sm text-green-600 mt-1">
-                          📍 {city}
-                        </p>
-                      )}
                     </div>
                   </div>
 
