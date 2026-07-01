@@ -42,29 +42,40 @@ export default function LoginForm({
 
   // Vérifier si l'utilisateur est déjà connecté
   useEffect(() => {
+    // Timeout de sécurité : afficher le formulaire après 3s même si Firebase ne répond pas
+    const timeout = setTimeout(() => {
+      setIsCheckingAuth(false);
+    }, 3000);
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      clearTimeout(timeout);
       if (user) {
-        // Utilisateur connecté, rediriger selon le type
+        // Utilisateur déjà connecté — rediriger sans bloquer le rendu
         if (isProfessional) {
           router.push("/dashboard");
         } else {
-          router.push("/"); // Redirection vers l'accueil pour les particuliers
+          router.push("/");
         }
-      } else {
-        // Utilisateur non connecté, charger les identifiants sauvegardés
-        const savedEmail = localStorage.getItem("rememberedEmail");
-        const savedPassword = localStorage.getItem("rememberedPassword");
-        if (savedEmail && savedPassword) {
-          setEmail(savedEmail);
-          setPassword(savedPassword);
-          setRememberMe(true);
-        }
-        setIsCheckingAuth(false);
+        // On garde isCheckingAuth=true pour ne pas flasher le formulaire avant la navigation
+        return;
       }
+      // Utilisateur non connecté, charger les identifiants sauvegardés
+      const savedEmail = localStorage.getItem("rememberedEmail");
+      const savedPassword = localStorage.getItem("rememberedPassword");
+      if (savedEmail && savedPassword) {
+        setEmail(savedEmail);
+        setPassword(savedPassword);
+        setRememberMe(true);
+      }
+      setIsCheckingAuth(false);
     });
 
-    return () => unsubscribe();
-  }, [router, isProfessional]);
+    return () => {
+      clearTimeout(timeout);
+      unsubscribe();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

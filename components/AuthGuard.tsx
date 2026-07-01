@@ -17,24 +17,32 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   const pathname = usePathname();
 
   useEffect(() => {
+    // Timeout de sécurité : si Firebase ne répond pas en 8s, rediriger vers login
+    const timeout = setTimeout(() => {
+      if (loading) {
+        router.push('/connexion-pro');
+      }
+    }, 8000);
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      console.log('🔐 AuthGuard - État authentification:', currentUser ? 'Connecté' : 'Non connecté');
-      
+      clearTimeout(timeout);
+
       if (!currentUser) {
-        // Utilisateur non connecté, rediriger vers la page de connexion
-        console.log('❌ Utilisateur non connecté, redirection vers /connexion-pro');
+        setLoading(false);
         router.push('/connexion-pro');
         return;
       }
 
-      // Utilisateur connecté
       setUser(currentUser);
       setLoading(false);
     });
 
-    // Cleanup
-    return () => unsubscribe();
-  }, [router, pathname]);
+    return () => {
+      clearTimeout(timeout);
+      unsubscribe();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Affichage du loader pendant la vérification
   if (loading) {

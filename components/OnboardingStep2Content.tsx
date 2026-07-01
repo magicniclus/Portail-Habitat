@@ -174,6 +174,7 @@ export default function OnboardingStep2Content() {
         profession: prospectData.profession,
         city: selectedCity,
         selectedZoneRadius: selectedRadius.toString(),
+        leadsCount: estimatedSearches.toString(),
         ...(prospectData.coordinates && {
           lat: prospectData.coordinates.lat.toString(),
           lng: prospectData.coordinates.lng.toString()
@@ -194,6 +195,7 @@ export default function OnboardingStep2Content() {
         profession: prospectData.profession,
         city: selectedCity,
         selectedZoneRadius: selectedRadius.toString(),
+        leadsCount: estimatedSearches.toString(),
         ...(prospectData.coordinates && {
           lat: prospectData.coordinates.lat.toString(),
           lng: prospectData.coordinates.lng.toString()

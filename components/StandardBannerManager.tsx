@@ -126,7 +126,7 @@ export default function StandardBannerManager({
                 className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium shadow-lg border-0"
                 asChild
               >
-                <a href="/dashboard/premium">
+                <a href="/dashboard/premium?trial=true">
                   <Crown className="h-4 w-4 mr-2" />
                   + de photo
                 </a>
@@ -201,7 +201,7 @@ export default function StandardBannerManager({
                 className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-medium shadow-lg border-0"
                 asChild
               >
-                <a href="/dashboard/premium">
+                <a href="/dashboard/premium?trial=true">
                   <Crown className="h-4 w-4 mr-2" />
                   + de photo
                 </a>

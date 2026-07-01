@@ -134,7 +134,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const extractedData = body;
     prospectId = extractedData.prospectId;
-    const { firstName, lastName, email, phone, postalCode, profession, selectedCity, selectedZoneRadius, coordinates } = extractedData;
+    const {
+      firstName, lastName, email, phone, postalCode, profession,
+      selectedCity, selectedZoneRadius, coordinates,
+      // Données fiche (optionnelles — passées depuis l'onboarding step 3)
+      password: chosenPassword,
+      companyName: chosenCompanyName,
+      description: chosenDescription,
+      ficheComplete: ficheCompleteFromBody,
+    } = extractedData;
 
     if (!prospectId || !firstName || !lastName || !email || !profession) {
       return NextResponse.json(
@@ -173,17 +181,20 @@ export async function POST(request: NextRequest) {
       return { alreadyProcessed: false };
     });
 
-    // Si déjà traité, retourner sans créer
-    if (transactionResult.alreadyProcessed) {
-      return NextResponse.json(
-        { 
-          success: true, 
-          artisanId: transactionResult.artisanId,
-          message: 'Prospect déjà en cours de traitement ou converti',
-          alreadyExists: true
-        },
-        { status: 200 }
-      );
+    // Si déjà traité, retourner sans créer (avec custom token si possible)
+    if (transactionResult.alreadyProcessed && transactionResult.artisanId) {
+      try {
+        const existingToken = await auth.createCustomToken(transactionResult.artisanId);
+        return NextResponse.json(
+          { success: true, artisanId: transactionResult.artisanId, customToken: existingToken, alreadyExists: true },
+          { status: 200 }
+        );
+      } catch {
+        return NextResponse.json(
+          { success: true, artisanId: transactionResult.artisanId, alreadyExists: true },
+          { status: 200 }
+        );
+      }
     }
 
     // Vérifier si l'email existe déjà dans Firebase Auth
@@ -206,8 +217,8 @@ export async function POST(request: NextRequest) {
       // L'utilisateur n'existe pas, on peut continuer
     }
 
-    // Générer un mot de passe sécurisé
-    const generatedPassword = generatePassword();
+    // Utiliser le mot de passe choisi par l'artisan, sinon en générer un
+    const generatedPassword = chosenPassword || generatePassword();
 
     // Créer l'utilisateur Firebase Auth
     const userRecord = await auth.createUser({
@@ -231,94 +242,68 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Créer d'abord le produit Stripe
-    const product = await stripe.products.create({
-      name: 'Abonnement Portail Habitat',
-      description: `Abonnement artisan ${profession} - ${selectedCity || 'France'}`
-    });
-
-    // Créer le prix
-    const price = await stripe.prices.create({
-      currency: 'eur',
-      unit_amount: 6900, // 69€ en centimes
-      recurring: {
-        interval: 'month'
-      },
-      product: product.id
-    });
-
-    // Créer l'abonnement Stripe
-    const subscription = await stripe.subscriptions.create({
-      customer: stripeCustomer.id,
-      items: [{ price: price.id }],
-      payment_behavior: 'default_incomplete',
-      payment_settings: { save_default_payment_method: 'on_subscription' },
-      expand: ['latest_invoice.payment_intent'],
-    });
-
     // Créer le document utilisateur selon le schéma exact
     await db.collection('users').doc(userRecord.uid).set({
       email,
-      phone: phone || '', // Téléphone du formulaire
+      phone: phone || '',
       role: 'artisan',
       createdAt: new Date(),
       lastLoginAt: null,
       stripeCustomerId: stripeCustomer.id
     });
 
-    // Créer le document artisan selon le schéma
+    // ficheComplete = true si description + logo seront fournis (flag passé depuis le front)
+    const ficheComplete = ficheCompleteFromBody === true;
+
+    // Créer le document artisan selon le schéma — compte gratuit, fiche partiellement pré-remplie
     await db.collection('artisans').doc(userRecord.uid).set({
       userId: userRecord.uid,
-      companyName: `${firstName} ${lastName}`, // Par défaut, peut être modifié plus tard
+      companyName: chosenCompanyName || `${firstName} ${lastName}`,
       slug,
       firstName,
       lastName,
-      phone: phone || '', // Téléphone du formulaire
+      phone: phone || '',
       email,
-      siret: '', // À compléter par l'artisan
+      siret: '',
       city: selectedCity || '',
-      postalCode: postalCode || '', // Code postal du formulaire
-      fullAddress: '', // À compléter par l'artisan
-      coordinates: coordinates || { lat: 0, lng: 0 }, // Utiliser les coordonnées de l'onboarding ou 0,0 par défaut
+      postalCode: postalCode || '',
+      fullAddress: '',
+      coordinates: coordinates || { lat: 0, lng: 0 },
       profession,
-      professions: [profession], // Peut avoir plusieurs professions
-      description: '', // À compléter par l'artisan
-      services: [], // À compléter par l'artisan
-      logoUrl: '', // À compléter par l'artisan
-      coverUrl: '', // À compléter par l'artisan
-      photos: [], // À compléter par l'artisan
+      professions: [profession],
+      description: chosenDescription || '',
+      services: [],
+      logoUrl: '',
+      coverUrl: '',
+      photos: [],
       hasPremiumSite: false,
-      sitePricePaid: 0, // À l'inscription, gratuit (0 | 69 | 299)
-      monthlySubscriptionPrice: 69, // Prix abonnement mensuel en €
-      subscriptionStatus: 'active',
-      stripeSubscriptionId: subscription.id,
-      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 jours
+      sitePricePaid: 0,
+      monthlySubscriptionPrice: 49,
+      subscriptionStatus: 'free',
+      stripeSubscriptionId: null,
+      currentPeriodEnd: null,
+      premiumFeatures: {
+        isPremium: false,
+        premiumStartDate: null,
+        premiumEndDate: null,
+        premiumType: null,
+        bannerPhotos: [],
+        bannerVideo: null,
+        showTopArtisanBadge: false,
+        premiumBenefits: []
+      },
+      ficheComplete,
+      premiumProposalShown: false,
       leadCountThisMonth: 0,
       totalLeads: 0,
       averageRating: 0,
       reviewCount: 0,
       hasSocialFeed: false,
       publishedPostsCount: 0,
-      originalProspectId: prospectId, // Garder une trace du prospect d'origine
+      originalProspectId: prospectId,
       createdAt: new Date(),
       updatedAt: new Date(),
       isPriority: false
-    });
-
-    // Créer le document subscription pour le tracking
-    await db.collection('subscriptions').doc(subscription.id).set({
-      artisanId: userRecord.uid,
-      userId: userRecord.uid,
-      monthlyPrice: 69,
-      status: 'active',
-      stripeSubscriptionId: subscription.id,
-      stripePriceId: price.id,
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 jours
-      canceledAt: null,
-      cancelReason: null,
-      createdAt: new Date(),
-      updatedAt: new Date()
     });
 
     // Supprimer le prospect car il est maintenant artisan (transaction finale)
@@ -335,12 +320,18 @@ export async function POST(request: NextRequest) {
     console.log(`Prospect ${prospectId} supprimé - maintenant artisan ${userRecord.uid}`);
 
     // Envoyer l'email de bienvenue
-    const emailData = createWelcomeEmailTemplate(firstName, lastName, email, generatedPassword, profession);
+    // Si le mot de passe a été choisi par l'artisan, ne pas l'inclure dans l'email
+    const emailPassword = chosenPassword ? "Mot de passe choisi lors de votre inscription" : generatedPassword;
+    const emailData = createWelcomeEmailTemplate(firstName, lastName, email, emailPassword, profession);
     await sgMail.send(emailData);
+
+    // Générer un custom token pour l'auto-login côté client
+    const customToken = await auth.createCustomToken(userRecord.uid);
 
     return NextResponse.json({
       success: true,
       artisanId: userRecord.uid,
+      customToken,
       message: 'Compte artisan créé avec succès'
     });
 

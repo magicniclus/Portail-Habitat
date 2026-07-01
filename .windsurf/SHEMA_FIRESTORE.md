@@ -103,6 +103,10 @@ artisans
     │   └── updatedAt            ← dernière mise à jour des stats
     │   }
     ├── isPriority (true/false)
+    ├── ficheComplete (boolean, défaut: false) ← true quand description (>20 car.) + logo uploadé ; peut être mis à true dès l'onboarding step 3 si les champs sont remplis
+    ├── premiumProposalShown (boolean, défaut: false) ← true quand la proposition Premium a été affichée post-complétion
+    ├── companyName (string) ← peut être pré-rempli lors de l'onboarding step 3
+    ├── description (string) ← peut être pré-rempli lors de l'onboarding step 3
     ├── createdAt
     └── updatedAt
 

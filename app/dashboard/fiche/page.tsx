@@ -7,7 +7,7 @@ import FicheEntreprise from "@/components/FicheEntreprise";
 import { uploadCoverPhoto, uploadLogoPhoto, updateArtisanDescription, updateArtisanPrestations, updateArtisanQuoteRange, updateArtisanCertifications, addArtisanProject, getArtisanProjects, updateProjectVisibility, deleteArtisanProject, updateArtisanProject, addPremiumBannerPhoto, uploadPremiumBannerPhotos } from "@/lib/storage";
 import UpgradeButton from "@/components/UpgradeButton";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc, query, where, collection, getDocs, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, query, where, collection, getDocs, onSnapshot, updateDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { 
   ExternalLink,
@@ -21,19 +21,87 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Crown } from "lucide-react";
+import type { User } from "firebase/auth";
+import type { DocumentData } from "firebase/firestore";
+
+interface Entreprise {
+  id: string;
+  slug?: string;
+  nom: string;
+  logo?: string;
+  banniere?: string;
+  specialites: string[];
+  description: string;
+  telephone: string;
+  email: string;
+  adresse: string;
+  ville: string;
+  note: number;
+  nombreAvis: number;
+  certifications: string[];
+  zoneIntervention: string[];
+  averageQuoteMin?: number;
+  averageQuoteMax?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  premiumFeatures: any;
+  hasPremiumSite: boolean;
+}
+
+interface Project {
+  id: string;
+  title?: string;
+  description?: string;
+  photos?: string[];
+  isPubliclyVisible?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  createdAt?: any;
+  [key: string]: unknown;
+}
+
+interface Review {
+  id: string;
+  rating: number;
+  comment?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  createdAt?: any;
+  [key: string]: unknown;
+}
 
 export default function MaFichePage() {
-  const [entreprise, setEntreprise] = useState<any>(null);
-  const [projects, setProjects] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [entreprise, setEntreprise] = useState<Entreprise | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isUploadingBannerPhotos, setIsUploadingBannerPhotos] = useState(false);
   
   // Vérifier si l'artisan est premium et a le badge activé
   const shouldShowTopBadge = entreprise?.premiumFeatures && 
     isPremiumActive({ id: entreprise.id, premiumFeatures: entreprise.premiumFeatures }) && 
     entreprise.premiumFeatures.showTopArtisanBadge;
+
+  // Vérifie les critères de complétion et met ficheComplete = true en base si atteints
+  const checkAndMarkFicheComplete = async (artisanId: string, artisanData: DocumentData, projectsData: Project[]) => {
+    const hasDescription = artisanData.description && artisanData.description.trim().length > 10;
+    const hasProfession = artisanData.professions && artisanData.professions.length > 0;
+    const hasPhoto = (artisanData.photos && artisanData.photos.length > 0) ||
+      (artisanData.coverUrl && artisanData.coverUrl.length > 0) ||
+      projectsData.length > 0;
+
+    const isComplete = hasDescription && hasProfession && hasPhoto;
+
+    if (isComplete && !artisanData.ficheComplete) {
+      try {
+        await updateDoc(doc(db, "artisans", artisanId), {
+          ficheComplete: true,
+          updatedAt: serverTimestamp(),
+        });
+      } catch (err) {
+        console.error("Erreur mise à jour ficheComplete:", err);
+      }
+    }
+  };
+
 
   // Récupérer l'utilisateur connecté et ses données artisan
   useEffect(() => {
@@ -102,6 +170,10 @@ export default function MaFichePage() {
             // Charger les projets de l'artisan
             const artisanProjects = await getArtisanProjects(artisanDoc.id);
             setProjects(artisanProjects);
+
+            // Vérifier la complétion de la fiche
+            await checkAndMarkFicheComplete(artisanDoc.id, artisanData, artisanProjects);
+
           } else {
             console.error('Aucun artisan trouvé pour cet utilisateur');
           }
@@ -124,10 +196,11 @@ export default function MaFichePage() {
 
     const reviewsRef = collection(db, 'artisans', entreprise.id, 'reviews');
     const unsubscribe = onSnapshot(reviewsRef, (snapshot) => {
-      const reviewsData: any[] = [];
+      const reviewsData: Review[] = [];
       snapshot.forEach((doc) => {
         reviewsData.push({
           id: doc.id,
+          rating: (doc.data().rating as number) || 0,
           ...doc.data()
         });
       });
@@ -146,17 +219,17 @@ export default function MaFichePage() {
         const totalRating = reviewsData.reduce((sum, review) => sum + review.rating, 0);
         const averageRating = totalRating / reviewsData.length;
         
-        setEntreprise((prev: any) => ({
+        setEntreprise((prev) => prev ? ({
           ...prev,
           note: Math.round(averageRating * 10) / 10,
           nombreAvis: reviewsData.length
-        }));
+        }) : prev);
       } else {
-        setEntreprise((prev: any) => ({
+        setEntreprise((prev) => prev ? ({
           ...prev,
           note: 0,
           nombreAvis: 0
-        }));
+        }) : prev);
       }
     });
 
@@ -174,10 +247,7 @@ export default function MaFichePage() {
       const newCoverUrl = await uploadCoverPhoto(entreprise.id, file);
       
       // Mettre à jour l'état local
-      setEntreprise((prev: any) => ({
-        ...prev,
-        banniere: newCoverUrl
-      }));
+      setEntreprise((prev) => prev ? ({ ...prev, banniere: newCoverUrl }) : prev);
       
       console.log('Photo de couverture mise à jour:', newCoverUrl);
     } catch (error) {
@@ -197,10 +267,7 @@ export default function MaFichePage() {
       const newLogoUrl = await uploadLogoPhoto(entreprise.id, file);
       
       // Mettre à jour l'état local
-      setEntreprise((prev: any) => ({
-        ...prev,
-        logo: newLogoUrl
-      }));
+      setEntreprise((prev) => prev ? ({ ...prev, logo: newLogoUrl }) : prev);
       
       console.log('Logo mis à jour:', newLogoUrl);
     } catch (error) {
@@ -216,16 +283,10 @@ export default function MaFichePage() {
     }
 
     try {
-      // Mettre à jour dans Firestore avec le vrai ID de l'artisan
       await updateArtisanDescription(entreprise.id, description);
-      
-      // Mettre à jour l'état local
-      setEntreprise((prev: any) => ({
-        ...prev,
-        description: description
-      }));
-      
-      console.log('Description mise à jour:', description);
+      const updatedEntreprise = { ...entreprise, description };
+      setEntreprise(updatedEntreprise);
+      await checkAndMarkFicheComplete(entreprise.id, { ...entreprise, description } as DocumentData, projects);
     } catch (error) {
       console.error('Erreur lors du changement de description:', error);
       throw error;
@@ -239,16 +300,9 @@ export default function MaFichePage() {
     }
 
     try {
-      // Mettre à jour dans Firestore avec le vrai ID de l'artisan
       await updateArtisanPrestations(entreprise.id, prestations);
-      
-      // Mettre à jour l'état local
-      setEntreprise((prev: any) => ({
-        ...prev,
-        specialites: prestations
-      }));
-      
-      console.log('Prestations mises à jour:', prestations);
+      setEntreprise((prev) => prev ? ({ ...prev, specialites: prestations }) : prev);
+      await checkAndMarkFicheComplete(entreprise.id, { ...entreprise, professions: prestations } as DocumentData, projects);
     } catch (error) {
       console.error('Erreur lors du changement des prestations:', error);
       throw error;
@@ -266,11 +320,7 @@ export default function MaFichePage() {
       await updateArtisanQuoteRange(entreprise.id, min, max);
       
       // Mettre à jour l'état local
-      setEntreprise((prev: any) => ({
-        ...prev,
-        averageQuoteMin: min,
-        averageQuoteMax: max
-      }));
+      setEntreprise((prev) => prev ? ({ ...prev, averageQuoteMin: min, averageQuoteMax: max }) : prev);
       
       console.log('Prix mis à jour:', { min, max });
     } catch (error) {
@@ -290,10 +340,7 @@ export default function MaFichePage() {
       await updateArtisanCertifications(entreprise.id, certifications);
       
       // Mettre à jour l'état local
-      setEntreprise((prev: any) => ({
-        ...prev,
-        certifications: certifications
-      }));
+      setEntreprise((prev) => prev ? ({ ...prev, certifications }) : prev);
       
       console.log('Certifications mises à jour:', certifications);
     } catch (error) {
@@ -317,12 +364,9 @@ export default function MaFichePage() {
 
     try {
       const projectId = await addArtisanProject(entreprise.id, projectData);
-      
-      // Recharger les projets
       const updatedProjects = await getArtisanProjects(entreprise.id);
       setProjects(updatedProjects);
-      
-      console.log('Projet ajouté:', projectId);
+      await checkAndMarkFicheComplete(entreprise.id, entreprise, updatedProjects);
     } catch (error) {
       console.error('Erreur lors de l\'ajout du projet:', error);
       throw error;

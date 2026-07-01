@@ -12,9 +12,12 @@ interface ArtisanData {
   profession: string;
   professions: string[];
   city: string;
+  postalCode?: string;
   subscriptionStatus: string;
   monthlySubscriptionPrice?: number;
   premiumFeatures?: any;
+  ficheComplete?: boolean;
+  premiumProposalShown?: boolean;
   coordinates?: {
     lat: number;
     lng: number;
@@ -52,9 +55,12 @@ export function useAuth(): UseAuthReturn {
               profession: artisanData.profession || '',
               professions: artisanData.professions || [],
               city: artisanData.city || '',
-              subscriptionStatus: artisanData.subscriptionStatus || 'inactive',
-              monthlySubscriptionPrice: artisanData.monthlySubscriptionPrice || 69,
+              postalCode: artisanData.postalCode || '',
+              subscriptionStatus: artisanData.subscriptionStatus || 'free',
+              monthlySubscriptionPrice: artisanData.monthlySubscriptionPrice || 49,
               premiumFeatures: artisanData.premiumFeatures || null,
+              ficheComplete: artisanData.ficheComplete ?? false,
+              premiumProposalShown: artisanData.premiumProposalShown ?? false,
               coordinates: artisanData.coordinates || undefined
             });
           } else {

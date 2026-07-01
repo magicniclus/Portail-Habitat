@@ -1,24 +1,54 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
+import AddProjectModal from "@/components/AddProjectModal";
 import {
   Carousel,
   CarouselContent,
   CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
 } from "@/components/ui/carousel";
-import { MapPin, CheckCircle, Lock, Shield, ArrowRight, CreditCard, Smartphone, Bell, Star } from "lucide-react";
-import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import Footer from "@/components/Footer";
+import Autoplay from "embla-carousel-autoplay";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
+import { auth, db, storage } from "@/lib/firebase";
+import { uploadCoverPhoto, uploadLogoPhoto } from "@/lib/storage";
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+} from "firebase/auth";
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import {
+  AlertCircle,
+  ArrowRight,
+  Building,
+  Camera,
+  CheckCircle,
+  Eye,
+  EyeOff,
+  Image as ImageIcon,
+  Loader2,
+  TrendingUp,
+  Upload,
+  X,
+} from "lucide-react";
+import Image from "next/image";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ProspectData {
   prospectId?: string;
@@ -28,72 +58,135 @@ interface ProspectData {
   phone: string;
   postalCode: string;
   profession: string;
-  step: string;
   selectedCity?: string;
-  coordinates?: { lat: number; lng: number };
   selectedZoneRadius?: number;
+  lat?: number;
+  lng?: number;
 }
 
-interface PaymentData {
-  cardNumber: string;
-  expiryDate: string;
-  cvv: string;
-  cardholderName: string;
-  postalCode: string;
+interface LocalProject {
+  id: string;
+  title: string;
+  description: string;
+  city: string;
+  projectType: string;
+  isPubliclyVisible: boolean;
+  photos: File[];
+  previewUrls: string[];
 }
+
+type Status = "filling" | "creating" | "done";
+
+const LOCALSTORAGE_KEY = "onboarding_fiche_v2";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getProfessionLabel(p: string) {
+  const map: Record<string, string> = {
+    plombier: "Plombier",
+    electricien: "Électricien",
+    chauffagiste: "Chauffagiste",
+    peintre: "Peintre",
+    maconnerie: "Maçon",
+    menuisier: "Menuisier",
+    couvreur: "Couvreur",
+    carreleur: "Carreleur",
+    charpentier: "Charpentier",
+    multiservices: "Multiservices",
+    "entreprise-generale": "Entreprise générale",
+    diagnostiqueur: "Diagnostiqueur immobilier",
+    architecte: "Architecte",
+    paysagiste: "Paysagiste",
+    serrurier: "Serrurier",
+    vitrier: "Vitrier",
+    platrier: "Plâtrier",
+    isolation: "Spécialiste isolation",
+    climatisation: "Climaticien",
+    domotique: "Domoticien",
+  };
+  return map[p] || (p ? p.charAt(0).toUpperCase() + p.slice(1) : "Artisan");
+}
+
+function generateSlug(firstName: string, lastName: string, profession: string) {
+  return (
+    `${firstName}-${lastName}-${profession}`
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim() + `-${Date.now()}`
+  );
+}
+
+// ─── Indicateur de complétion ─────────────────────────────────────────────────
+
+function CompletionRing({ done, label }: { done: boolean; label: string }) {
+  if (done) {
+    return (
+      <span className="absolute -top-3 right-3 z-10 inline-flex items-center gap-1 px-2 py-0.5 bg-green-600 text-white text-xs rounded-full font-medium shadow-sm">
+        <CheckCircle className="h-3 w-3" />
+        Complété
+      </span>
+    );
+  }
+  return (
+    <span className="absolute -top-3 right-3 z-10 inline-flex items-center gap-1 px-2 py-0.5 bg-orange-500 text-white text-xs rounded-full font-medium shadow-sm animate-pulse">
+      <AlertCircle className="h-3 w-3" />
+      {label}
+    </span>
+  );
+}
+
+// ─── Composant principal ──────────────────────────────────────────────────────
 
 export default function OnboardingStep3Content() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  
-  const [prospectData, setProspectData] = useState<ProspectData>({
+
+  // ── Données prospect depuis l'URL ──────────────────────────────────────────
+  const [prospect, setProspect] = useState<ProspectData>({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     postalCode: "",
     profession: "",
-    step: "3"
   });
 
-  const [paymentData, setPaymentData] = useState<PaymentData>({
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
-    cardholderName: "",
-    postalCode: ""
-  });
+  // ── Données fiche (local, sans Firebase) ──────────────────────────────────
+  const [companyName, setCompanyName] = useState("");
+  const [description, setDescription] = useState("");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState("");
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState("");
+  const [specialites, setSpecialites] = useState<string[]>([]);
+  const [projects, setProjects] = useState<LocalProject[]>([]);
 
-  const [isProcessing, setIsProcessing] = useState(false);
+  // ── Mot de passe (formulaire en modal à la fin) ───────────────────────────
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
-  // Composant Carousel avec autoplay
-  const AutoplayCarousel = ({ children, className, opts }: any) => {
-    const [api, setApi] = useState<any>();
-    
-    useEffect(() => {
-      if (!api) return;
-      
-      const interval = setInterval(() => {
-        if (api.canScrollNext()) {
-          api.scrollNext();
-        } else {
-          api.scrollTo(0);
-        }
-      }, 4000);
-      
-      return () => clearInterval(interval);
-    }, [api]);
-    
-    return (
-      <Carousel className={className} opts={opts} setApi={setApi}>
-        {children}
-      </Carousel>
-    );
-  };
+  // ── State général ─────────────────────────────────────────────────────────
+  const [status, setStatus] = useState<Status>("filling");
+  const [creationError, setCreationError] = useState("");
+  const [leadsCount, setLeadsCount] = useState<number>(0);
 
-  // Charger les données depuis les paramètres URL
+  // ── Refs pour scroll vers les sections ───────────────────────────────────
+  const logoRef = useRef<HTMLDivElement>(null);
+  const descRef = useRef<HTMLDivElement>(null);
+  const projectRef = useRef<HTMLDivElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Lecture paramètres URL ─────────────────────────────────────────────────
   useEffect(() => {
-    const data: ProspectData = {
+    const p: ProspectData = {
       prospectId: searchParams.get("prospectId") || undefined,
       firstName: searchParams.get("firstName") || "",
       lastName: searchParams.get("lastName") || "",
@@ -101,861 +194,1080 @@ export default function OnboardingStep3Content() {
       phone: searchParams.get("phone") || "",
       postalCode: searchParams.get("postalCode") || "",
       profession: searchParams.get("profession") || "",
-      step: "3",
       selectedCity: searchParams.get("city") || "",
-      selectedZoneRadius: parseInt(searchParams.get("selectedZoneRadius") || "30")
+      selectedZoneRadius: parseInt(
+        searchParams.get("selectedZoneRadius") || "30",
+      ),
+      lat: parseFloat(searchParams.get("lat") || "0") || undefined,
+      lng: parseFloat(searchParams.get("lng") || "0") || undefined,
     };
-    
-    setProspectData(data);
-    
-    // Pré-remplir le nom du porteur de carte
-    if (data.firstName && data.lastName) {
-      setPaymentData(prev => ({
-        ...prev,
-        cardholderName: `${data.firstName} ${data.lastName}`
-      }));
-    }
+    setProspect(p);
+
+    // Récupérer le nombre de demandes transmis depuis l'étape 2
+    const lc = parseInt(searchParams.get("leadsCount") || "0");
+    if (lc > 0) setLeadsCount(lc);
+
+    // Initialiser le nom de l'entreprise et les spécialités depuis les params
+    setCompanyName(`${p.firstName} ${p.lastName}`.trim());
+    const prof = p.profession ? [getProfessionLabel(p.profession)] : [];
+    setSpecialites(prof);
+
+    // Charger le brouillon localStorage
+    try {
+      const draft = localStorage.getItem(LOCALSTORAGE_KEY);
+      if (draft) {
+        const d = JSON.parse(draft);
+        if (d.email === p.email) {
+          if (d.description) setDescription(d.description);
+          if (d.companyName) setCompanyName(d.companyName);
+          if (d.logoPreview) setLogoPreview(d.logoPreview);
+          if (d.coverPreview) setCoverPreview(d.coverPreview);
+          if (d.specialites) setSpecialites(d.specialites);
+        }
+      }
+    } catch {}
   }, [searchParams]);
 
-  const getProfessionLabel = (profession: string) => {
-    const labels: { [key: string]: string } = {
-      "plombier": "Plombier",
-      "electricien": "Électricien", 
-      "chauffagiste": "Chauffagiste",
-      "peintre": "Peintre",
-      "maconnerie": "Maçon",
-      "menuisier": "Menuisier",
-      "couvreur": "Couvreur",
-      "carreleur": "Carreleur",
-      "charpentier": "Charpentier",
-      "multiservices": "Multiservices"
-    };
-    return labels[profession] || profession;
-  };
-
-  const getCardType = (cardNumber: string) => {
-    const number = cardNumber.replace(/\s/g, '');
-    if (/^4/.test(number)) return 'visa';
-    if (/^5[1-5]/.test(number)) return 'mastercard';
-    if (/^3[47]/.test(number)) return 'amex';
-    if (/^6(?:011|5)/.test(number)) return 'discover';
-    return 'unknown';
-  };
-
-  const CardLogo = ({ type, className = "h-8 w-12" }: { type: string; className?: string }) => {
-    switch (type) {
-      case 'visa':
-        return (
-          <svg className={className} viewBox="0 0 40 24" fill="none">
-            <rect width="40" height="24" rx="3" fill="#1A1F71"/>
-            <text x="20" y="15" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold" fontFamily="Arial">VISA</text>
-          </svg>
-        );
-      case 'mastercard':
-        return (
-          <svg className={className} viewBox="0 0 40 24" fill="none">
-            <rect width="40" height="24" rx="3" fill="white" stroke="#ddd"/>
-            <circle cx="15" cy="12" r="6" fill="#EB001B"/>
-            <circle cx="25" cy="12" r="6" fill="#F79E1B"/>
-            <path d="M20 7.5c1.2 1.2 2 3 2 4.5s-.8 3.3-2 4.5c-1.2-1.2-2-3-2-4.5s.8-3.3 2-4.5z" fill="#FF5F00"/>
-          </svg>
-        );
-      case 'amex':
-        return (
-          <svg className={className} viewBox="0 0 40 24" fill="none">
-            <rect width="40" height="24" rx="3" fill="#006FCF"/>
-            <text x="20" y="15" textAnchor="middle" fill="white" fontSize="6" fontWeight="bold" fontFamily="Arial">AMERICAN EXPRESS</text>
-          </svg>
-        );
-      case 'discover':
-        return (
-          <svg className={className} viewBox="0 0 40 24" fill="none">
-            <rect width="40" height="24" rx="3" fill="#FF6000"/>
-            <text x="20" y="15" textAnchor="middle" fill="white" fontSize="6" fontWeight="bold" fontFamily="Arial">DISCOVER</text>
-          </svg>
-        );
-      default:
-        return <CreditCard className={`${className} text-gray-400`} />;
-    }
-  };
-
-  const PaymentSecurityBadges = () => (
-    <div className="flex flex-col items-center space-y-3 mt-6">
-      <div className="flex items-center justify-center space-x-6">
-        <div className="flex items-center space-x-2">
-          <Shield className="h-4 w-4 text-orange-600" />
-          <span className="text-xs text-gray-600 font-medium">SSL 256-bit</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Lock className="h-4 w-4 text-orange-600" />
-          <span className="text-xs text-gray-600 font-medium">PCI DSS</span>
-        </div>
-      </div>
-      <div className="flex items-center space-x-3">
-        <CardLogo type="visa" className="h-8 w-12" />
-        <CardLogo type="mastercard" className="h-8 w-12" />
-        <CardLogo type="amex" className="h-8 w-12" />
-        <CardLogo type="discover" className="h-8 w-12" />
-      </div>
-    </div>
-  );
-
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = matches && matches[0] || '';
-    const parts = [];
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return v;
-    }
-  };
-
-  const formatExpiryDate = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return v.substring(0, 2) + '/' + v.substring(2, 4);
-    }
-    return v;
-  };
-
-  const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-    
+  // ── Sauvegarde localStorage à chaque changement ───────────────────────────
+  useEffect(() => {
+    if (!prospect.email) return;
     try {
-      // TODO: Intégrer le vrai paiement Stripe ici
-      // Pour l'instant, on simule un paiement réussi
-      console.log("Simulation paiement pour:", paymentData);
-      
-      // Simuler un délai de traitement
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Seulement après un paiement réussi, mettre à jour le prospect
-      if (prospectData.prospectId) {
-        const prospectRef = doc(db, "prospects", prospectData.prospectId);
-        await updateDoc(prospectRef, {
-          funnelStep: "paid",
-          paidAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-      }
-
-      // Créer le compte artisan après paiement réussi
-      const response = await fetch('/api/create-artisan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prospectId: prospectData.prospectId,
-          firstName: prospectData.firstName,
-          lastName: prospectData.lastName,
-          email: prospectData.email,
-          phone: prospectData.phone,
-          postalCode: prospectData.postalCode,
-          profession: prospectData.profession,
-          selectedCity: prospectData.selectedCity,
-          selectedZoneRadius: prospectData.selectedZoneRadius,
-          coordinates: prospectData.coordinates
+      localStorage.setItem(
+        LOCALSTORAGE_KEY,
+        JSON.stringify({
+          email: prospect.email,
+          companyName,
+          description,
+          logoPreview: logoFile ? "" : logoPreview, // les File ne se sauvegardent pas
+          coverPreview: coverFile ? "" : coverPreview,
+          specialites,
         }),
+      );
+    } catch {}
+  }, [
+    companyName,
+    description,
+    logoPreview,
+    coverPreview,
+    specialites,
+    prospect.email,
+  ]);
+
+  // ── Si l'utilisateur est déjà connecté (reload), rediriger directement ────
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user && user.email === prospect.email) {
+        // Déjà authentifié → vérifier si artisan existe
+        const q = query(
+          collection(db, "artisans"),
+          where("userId", "==", user.uid),
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          // Compte déjà créé, rediriger vers le dashboard
+          router.push("/dashboard");
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, [prospect.email, router]);
+
+  // leadsCount est lu depuis les params URL (transmis par step2)
+
+  // ── Auto-slide témoignages ─────────────────────────────────────────────────
+  const TESTIMONIALS = [
+    {
+      initial: "M",
+      color: "bg-orange-500",
+      stars: 5,
+      quote:
+        "Une plateforme simple pour trouver des chantiers près de chez moi, sans passer par dix intermédiaires.",
+      author: "Marc B.",
+      role: "Plombier à Lyon",
+    },
+    {
+      initial: "I",
+      color: "bg-emerald-600",
+      stars: 5,
+      quote:
+        "Les demandes arrivent directement sur ma fiche. Je choisis celles qui correspondent à mon planning.",
+      author: "Isabelle R.",
+      role: "Peintre à Paris",
+    },
+    {
+      initial: "K",
+      color: "bg-blue-600",
+      stars: 5,
+      quote:
+        "Ma fiche me représente vraiment. Les clients arrivent déjà informés, les échanges sont plus directs.",
+      author: "Karim D.",
+      role: "Maçon à Marseille",
+    },
+    {
+      initial: "L",
+      color: "bg-purple-600",
+      stars: 5,
+      quote:
+        "Je peux gérer mes disponibilités et ma zone d'intervention sans décrocher le téléphone à chaque fois.",
+      author: "Laure M.",
+      role: "Électricienne à Rennes",
+    },
+  ];
+
+
+  // ── Calcul de complétion ──────────────────────────────────────────────────
+  const hasLogo = !!logoPreview;
+  const hasDescription = description.trim().length >= 10;
+  const hasCover = !!coverPreview;
+  const hasProject = projects.length > 0;
+  // Obligatoires : logo + description + photo de couverture
+  const ficheIsComplete = hasLogo && hasDescription && hasCover;
+  const completedRequired = [hasCover, hasLogo, hasDescription].filter(
+    Boolean,
+  ).length;
+  const completionPercent = Math.round((completedRequired / 3) * 100);
+
+  // ── Gestion du logo ───────────────────────────────────────────────────────
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Fichier trop lourd (max 5 Mo)");
+      return;
+    }
+    setLogoFile(file);
+    const url = URL.createObjectURL(file);
+    setLogoPreview(url);
+  };
+
+  // ── Gestion de la bannière ────────────────────────────────────────────────
+  const handleCoverChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Fichier trop lourd (max 5 Mo)");
+      return;
+    }
+    setCoverFile(file);
+    const url = URL.createObjectURL(file);
+    setCoverPreview(url);
+  };
+
+  // ── Gestion des projets ───────────────────────────────────────────────────
+  const handleAddProject = async (projectData: {
+    title: string;
+    description: string;
+    city: string;
+    projectType: string;
+    isPubliclyVisible: boolean;
+    photos: File[];
+  }) => {
+    const previewUrls = projectData.photos.map((f) => URL.createObjectURL(f));
+    const newProject: LocalProject = {
+      id: `local-${Date.now()}`,
+      ...projectData,
+      previewUrls,
+    };
+    setProjects((prev) => [...prev, newProject]);
+  };
+
+  const handleRemoveProject = (id: string) => {
+    setProjects((prev) => {
+      const p = prev.find((pr) => pr.id === id);
+      if (p) p.previewUrls.forEach((u) => URL.revokeObjectURL(u));
+      return prev.filter((pr) => pr.id !== id);
+    });
+  };
+
+  // ── Création du compte (appelée depuis la modal mot de passe) ─────────────
+  const handleCreateAccount = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError("");
+
+    if (password.length < 8) {
+      setPasswordError("Le mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
+    if (password !== passwordConfirm) {
+      setPasswordError("Les mots de passe ne correspondent pas.");
+      return;
+    }
+
+    setShowPasswordModal(false);
+    setStatus("creating");
+
+    try {
+      // 1. Créer l'utilisateur Firebase Auth
+      const credential = await createUserWithEmailAndPassword(
+        auth,
+        prospect.email,
+        password,
+      );
+      const user = credential.user;
+
+      // 2. Créer le doc utilisateur
+      await setDoc(doc(db, "users", user.uid), {
+        email: prospect.email,
+        phone: prospect.phone || "",
+        role: "artisan",
+        createdAt: serverTimestamp(),
+        lastLoginAt: serverTimestamp(),
       });
 
-      let artisanId = '';
-      if (response.ok) {
-        const result = await response.json();
-        artisanId = result.artisanId;
-        console.log('Compte artisan créé avec succès, ID:', artisanId);
-      } else {
-        console.error('Erreur lors de la création du compte artisan');
+      // 3. Créer le doc artisan (sans les URLs d'images pour l'instant)
+      const slug = generateSlug(
+        prospect.firstName,
+        prospect.lastName,
+        prospect.profession,
+      );
+      const artisanRef = doc(collection(db, "artisans"));
+      const artisanId = artisanRef.id;
+
+      await setDoc(artisanRef, {
+        userId: user.uid,
+        companyName:
+          companyName || `${prospect.firstName} ${prospect.lastName}`,
+        slug,
+        firstName: prospect.firstName,
+        lastName: prospect.lastName,
+        phone: prospect.phone || "",
+        email: prospect.email,
+        city: prospect.selectedCity || "",
+        postalCode: prospect.postalCode || "",
+        fullAddress: prospect.selectedCity || "",
+        coordinates:
+          prospect.lat && prospect.lng
+            ? { lat: prospect.lat, lng: prospect.lng }
+            : null,
+        profession: prospect.profession || "",
+        professions:
+          specialites.length > 0
+            ? specialites
+            : prospect.profession
+              ? [prospect.profession]
+              : [],
+        description: description.trim(),
+        services: [],
+        logoUrl: "",
+        coverUrl: "",
+        photos: [],
+        certifications: [],
+        averageRating: 0,
+        reviewCount: 0,
+        averageQuoteMin: null,
+        averageQuoteMax: null,
+        subscriptionStatus: "free",
+        hasPremiumSite: false,
+        premiumFeatures: { isPremium: false },
+        ficheComplete: false,
+        premiumProposalShown: false,
+        isActive: true,
+        selectedZoneRadius: prospect.selectedZoneRadius || 30,
+        prospectId: prospect.prospectId || null,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      // 4. Upload logo
+      let logoUrl = "";
+      if (logoFile) {
+        try {
+          logoUrl = await uploadLogoPhoto(artisanId, logoFile);
+        } catch (e) {
+          console.error("Erreur upload logo:", e);
+        }
       }
 
-      // Créer l'URL pour la page de fin (success) avec l'artisanId
-      const params = new URLSearchParams({
-        artisanId: artisanId || "",
-        firstName: prospectData.firstName,
-        lastName: prospectData.lastName,
-        email: prospectData.email,
-        phone: prospectData.phone,
-        postalCode: prospectData.postalCode,
-        profession: prospectData.profession,
-        city: prospectData.selectedCity || "",
-        selectedZoneRadius: prospectData.selectedZoneRadius?.toString() || "30"
-      });
+      // 5. Upload bannière
+      let coverUrl = "";
+      if (coverFile) {
+        try {
+          coverUrl = await uploadCoverPhoto(artisanId, coverFile);
+        } catch (e) {
+          console.error("Erreur upload bannière:", e);
+        }
+      }
 
-      // Rediriger vers la page de fin (success) au lieu de step4
-      router.push(`/onboarding/success?${params.toString()}`);
-      
-    } catch (error) {
-      console.error("Erreur lors du paiement:", error);
-      alert("Erreur lors du paiement. Veuillez réessayer.");
-    } finally {
-      setIsProcessing(false);
+      // 6. Upload projets
+      for (const project of projects) {
+        try {
+          const photoUrls: string[] = [];
+          for (let i = 0; i < project.photos.length; i++) {
+            const file = project.photos[i];
+            const ext = file.name.split(".").pop();
+            const photoRef = ref(
+              storage,
+              `artisans/${artisanId}/projects/${project.id}/photo_${i + 1}_${Date.now()}.${ext}`,
+            );
+            await uploadBytes(photoRef, file);
+            const url = await getDownloadURL(photoRef);
+            photoUrls.push(url);
+          }
+          const postsRef = collection(db, "artisans", artisanId, "posts");
+          const postRef = doc(postsRef);
+          await setDoc(postRef, {
+            title: project.title,
+            description: project.description,
+            city: project.city,
+            projectType: project.projectType,
+            isPublished: true,
+            isPubliclyVisible: project.isPubliclyVisible,
+            photos: photoUrls,
+            likesCount: 0,
+            commentsCount: 0,
+            createdAt: serverTimestamp(),
+          });
+        } catch (e) {
+          console.error("Erreur upload projet:", e);
+        }
+      }
+
+      // 7. Mettre à jour les URLs d'images et marquer ficheComplete si applicable
+      const updates: Record<string, any> = { updatedAt: serverTimestamp() };
+      if (logoUrl) updates.logoUrl = logoUrl;
+      if (coverUrl) updates.coverUrl = coverUrl;
+
+      // Fiche complète = logo + cover + description (projets facultatifs)
+      const ficheComplete =
+        logoUrl.length > 0 &&
+        coverUrl.length > 0 &&
+        description.trim().length >= 10;
+      updates.ficheComplete = ficheComplete;
+
+      await updateDoc(artisanRef, updates);
+
+      // 8. Mettre à jour le prospect (non bloquant)
+      if (prospect.prospectId) {
+        updateDoc(doc(db, "prospects", prospect.prospectId), {
+          funnelStep: "step3",
+          artisanId,
+          updatedAt: serverTimestamp(),
+        }).catch(() => {});
+      }
+
+      // 9. Stripe + email en arrière-plan (non bloquant)
+      fetch("/api/setup-artisan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user.uid,
+          artisanId,
+          firstName: prospect.firstName,
+          lastName: prospect.lastName,
+          email: prospect.email,
+          phone: prospect.phone,
+          profession: prospect.profession,
+          selectedCity: prospect.selectedCity,
+        }),
+      }).catch(() => {});
+
+      // 10. Nettoyer et rediriger
+      try {
+        [LOCALSTORAGE_KEY, "prospectData"].forEach((k) =>
+          localStorage.removeItem(k),
+        );
+      } catch {}
+
+      setStatus("done");
+      router.push("/dashboard");
+    } catch (err: any) {
+      console.error("Erreur création compte:", err);
+      setCreationError(
+        err.code === "auth/email-already-in-use"
+          ? "Un compte existe déjà avec cet email. Connectez-vous sur la page de connexion."
+          : err.message || "Une erreur est survenue. Réessayez.",
+      );
+      setStatus("filling");
+      setShowPasswordModal(true);
     }
   };
+
+  // ─── Rendu : spinner de création ─────────────────────────────────────────
+
+  if (status === "creating" || status === "done") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-orange-600 mx-auto mb-4" />
+          <p className="text-gray-700 font-semibold text-lg">
+            Création de votre espace…
+          </p>
+          <p className="text-sm text-gray-400 mt-2">
+            Upload des photos en cours, encore quelques secondes
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Rendu principal : fiche à remplir ────────────────────────────────────
 
   return (
-    <div className="bg-gray-50">
-      {/* Header identique à Step 2 */}
-      <header className="bg-white border-b shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+    <div className="bg-gray-50 min-h-screen">
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <header className="bg-white border-b shadow-sm sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
               <Image
                 src="/logo.png"
                 alt="Portail Habitat"
-                width={150}
-                height={60}
-                className="h-12 w-auto"
+                width={140}
+                height={50}
+                className="h-10 w-auto"
               />
               <div className="hidden sm:block">
-                <span className="text-sm text-gray-500">Étape 3/3</span>
-                <Progress value={100} className="w-32 mt-1" />
+                <p className="text-xs text-gray-500 mb-1">
+                  Étape 3/3 — Créez votre fiche
+                </p>
+                <Progress value={completionPercent} className="w-32 h-1.5" />
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">
-                {prospectData.firstName} {prospectData.lastName}
-              </p>
-              <p className="text-xs text-gray-500 lg:hidden">Étape 3/3</p>
-              <p className="text-xs text-gray-500 hidden lg:block">{prospectData.email}</p>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:block text-right">
+                <p className="text-sm text-gray-700 font-medium">
+                  {prospect.firstName} {prospect.lastName}
+                </p>
+                <p className="text-xs text-gray-400">{prospect.email}</p>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Contenu principal */}
-      <main className="lg:min-h-[calc(100vh-170px)] bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          
-          {/* Layout mobile : 1 colonne */}
-          <div className="lg:hidden space-y-6">
-            
-            {/* Récapitulatif mobile */}
-            <Card className="bg-white border border-gray-200">
-              <CardContent className="p-4 md:p-6">
-                {/* Titre court mobile */}
-                <h2 className="text-xl font-bold text-gray-900 md:hidden">Votre fiche est prête</h2>
-                {/* Titre desktop inchangé */}
-                <h2 className="text-xl font-bold text-gray-900 hidden md:block">Vous êtes à 30 secondes d'être visible et de recevoir vos premières demandes</h2>
-                
-                {/* Texte court mobile */}
-                <p className="text-sm text-gray-600 mb-4 md:mb-6 md:hidden">Les particuliers peuvent vous contacter dès l'activation.</p>
-                {/* Texte desktop inchangé */}
-                <p className="text-sm text-gray-600 mb-6 hidden md:block">Votre fiche est prête. Dès l'activation, vous apparaissez dans votre zone et recevez gratuitement les demandes des particuliers qui vous contactent directement. L'accès aux demandes ciblées à 35 € est entièrement facultatif.</p>
-                
-                <div className="space-y-4 md:space-y-6">
-                  {/* Zone couverte - Fusion sur une ligne mobile */}
-                  <div className="pb-4 border-b border-gray-100 border-l-4 border-l-orange-500 pl-3">
-                    {/* Version mobile compacte */}
-                    <p className="font-semibold text-sm md:hidden">📍 {prospectData.selectedCity} – {getProfessionLabel(prospectData.profession)} – {prospectData.selectedZoneRadius} km</p>
-                    {/* Version desktop inchangée */}
-                    <div className="hidden md:block">
-                      <h3 className="text-gray-600 text-sm font-medium mb-2">Zone couverte :</h3>
-                      <p className="font-semibold text-sm">{prospectData.selectedCity} + {prospectData.selectedZoneRadius} km — {getProfessionLabel(prospectData.profession)}</p>
-                    </div>
-                  </div>
-                  
-                  {/* Demandes estimées - Masqué sur mobile */}
-                  <div className="pb-4 border-b border-gray-100 border-l-4 border-l-orange-500 pl-3 hidden md:block">
-                    <h3 className="text-gray-600 text-sm font-medium mb-2">Demandes estimées dans votre secteur :</h3>
-                    <div>
-                      <p className="font-semibold text-sm">Des demandes de devis sont déjà générées chaque mois dans votre zone et votre métier</p>
-                      <p className="text-xs text-gray-500 mt-1">Le volume dépend de la demande locale et de votre réactivité.</p>
-                    </div>
-                  </div>
-                  
-                  {/* Vos avantages inclus */}
-                  <div className="pb-4 border-b border-gray-100 border-l-4 border-l-orange-500 pl-3">
-                    <h3 className="text-gray-600 text-sm font-medium mb-3">Vos avantages inclus :</h3>
-                    <div className="space-y-2">
-                      {/* 3 premiers avantages visibles sur mobile */}
-                      <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700"><span className="md:hidden">Visibilité locale prioritaire (dans votre métier)</span><span className="hidden md:inline">Visibilité locale prioritaire</span></span>
-                      </div>
-                      <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700"><span className="md:hidden">Demandes directes de particuliers (sans intermédiaire)</span><span className="hidden md:inline">Demandes directes de particuliers</span></span>
-                      </div>
-                      <div className="flex items-start space-x-2">
-                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Sans engagement – résiliable à tout moment</span>
-                      </div>
-                      {/* Avantages supplémentaires masqués sur mobile */}
-                      <div className="flex items-start space-x-2 hidden md:flex">
-                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Accès aux chantiers ciblés uniquement si vous le souhaitez</span>
-                      </div>
-                      <div className="flex items-start space-x-2 hidden md:flex">
-                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Accès aux demandes ciblées — vous restez libre de répondre ou non</span>
-                      </div>
-                      <div className="flex items-start space-x-2 hidden md:flex">
-                        <CheckCircle className="h-3 w-3 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-xs text-gray-700">Application mobile pour recevoir les demandes en temps réel</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Témoignages - Masqués sur mobile */}
-                  <section className="mt-6 pb-4 border-b border-gray-100 hidden md:block">
-                    <h3 className="text-gray-600 text-sm font-medium mb-3">
-                      Ce que disent nos artisans
-                    </h3>
-
-                    <AutoplayCarousel 
-                      className="w-full"
-                      opts={{
-                        align: "start",
-                        loop: true,
-                      }}
-                    >
-                      <CarouselContent>
-                        <CarouselItem>
-                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
-                            <CardContent className="p-3">
-                              <div className="flex items-start gap-2 mb-2">
-                                <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                  <span className="text-white text-xs font-bold">J</span>
-                                </div>
-                                <div className="flex gap-0.5">
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                </div>
-                              </div>
-                              <p className="text-xs text-gray-800">
-                                "Premier chantier signé en 12 jours, abonnement déjà rentabilisé."
-                              </p>
-                              <p className="mt-2 text-xs text-gray-500">
-                                Julien — Plombier à Toulouse
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </CarouselItem>
-
-                        <CarouselItem>
-                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
-                            <CardContent className="p-3">
-                              <div className="flex items-start gap-2 mb-2">
-                                <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                  <span className="text-white text-xs font-bold">S</span>
-                                </div>
-                                <div className="flex gap-0.5">
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                </div>
-                              </div>
-                              <p className="text-xs text-gray-800">
-                                "Je choisis uniquement les demandes qui m'intéressent, je ne subis plus les prospects."
-                              </p>
-                              <p className="mt-2 text-xs text-gray-500">
-                                Sarah — Électricienne à Bordeaux
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </CarouselItem>
-
-                        <CarouselItem>
-                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
-                            <CardContent className="p-3">
-                              <div className="flex items-start gap-2 mb-2">
-                                <div className="w-6 h-6 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                  <span className="text-white text-xs font-bold">O</span>
-                                </div>
-                                <div className="flex gap-0.5">
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                                </div>
-                              </div>
-                              <p className="text-xs text-gray-800">
-                                "J'ai testé un mois sans risque, maintenant je garde l'abonnement en continu."
-                              </p>
-                              <p className="mt-2 text-xs text-gray-500">
-                                Omar — Peintre à Lille
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </CarouselItem>
-                      </CarouselContent>
-                    </AutoplayCarousel>
-                  </section>
-                  
-                  {/* Abonnement - Masqué sur mobile (info dans le bouton) */}
-                  <div className="pb-4 border-b border-gray-100 hidden md:block">
-                    <h3 className="text-gray-600 text-sm font-medium mb-2">Abonnement :</h3>
-                    <p className="font-semibold text-orange-600 text-sm">Activation immédiate – 69 €/mois, sans engagement</p>
-                  </div>
-                  
-                  {/* Garantie satisfaction - Masqué sur mobile */}
-                  <div className="pb-4 border-b border-gray-100 hidden md:block">
-                    <h3 className="text-gray-600 text-sm font-medium mb-2">Garantie satisfaction :</h3>
-                    <p className="font-semibold text-orange-600 text-sm">Sans engagement</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Paiement mobile */}
-            <Card className="bg-white border border-gray-200">
-              <CardContent className="p-6">
-                <div className="flex items-center space-x-2 mb-6">
-                  <Lock className="h-5 w-5 text-orange-600" />
-                  <h2 className="text-xl font-bold text-gray-900">Paiement sécurisé</h2>
-                </div>
-
-                <form onSubmit={handlePayment} className="space-y-6 md:space-y-6">
-                  {/* Numéro de carte - gros et clair */}
-                  <div className="space-y-2 md:space-y-2">
-                    <Label htmlFor="cardNumber" className="text-base font-medium">Numéro de carte</Label>
-                    <div className="relative">
-                      <Input
-                        id="cardNumber"
-                        placeholder="1234 5678 9012 3456"
-                        value={paymentData.cardNumber}
-                        onChange={(e) => setPaymentData({...paymentData, cardNumber: formatCardNumber(e.target.value)})}
-                        maxLength={19}
-                        className="text-lg py-4 px-4 pr-16 border-2"
-                        required
+      {/* ── Corps principal ───────────────────────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-0 sm:px-6 lg:px-8 py-0 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:gap-8">
+          {/* ── Colonne principale (fiche) ─────────────────────────────── */}
+          <div className="lg:col-span-2">
+            <div className="bg-white shadow-sm sm:rounded-xl overflow-hidden">
+              {/* ── BANNIÈRE ─────────────────────────────────────────── */}
+              <div className="relative">
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleCoverChange}
+                  className="hidden"
+                />
+                <div
+                  className={`relative h-48 sm:h-64 cursor-pointer group flex items-center justify-center overflow-hidden transition-all ${
+                    hasCover
+                      ? "bg-gray-100"
+                      : "bg-gradient-to-r from-orange-50 to-orange-100"
+                  }`}
+                  onClick={() => coverInputRef.current?.click()}
+                >
+                  {coverPreview ? (
+                    <>
+                      <img
+                        src={coverPreview}
+                        alt="Photo de couverture"
+                        className="w-full h-full object-cover"
                       />
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        <CardLogo type={getCardType(paymentData.cardNumber)} className="h-7 w-11" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all flex items-center justify-center">
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-3">
+                          <Camera className="h-5 w-5 text-gray-700" />
+                        </div>
                       </div>
+                    </>
+                  ) : (
+                    <div className="text-center select-none">
+                      <Upload className="h-8 w-8 text-orange-400 mx-auto mb-2" />
+                      <p className="text-sm text-orange-600 font-semibold">
+                        Cliquez pour ajouter une photo de couverture
+                      </p>
+                      <p className="text-xs text-orange-400 mt-1">
+                        JPG, PNG ou WebP — max 5 Mo
+                      </p>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Date d'expiration + CVV */}
-                  <div className="grid grid-cols-2 gap-3 md:gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="expiryDate" className="text-base font-medium">Date d'expiration</Label>
-                      <Input
-                        id="expiryDate"
-                        placeholder="MM/AA"
-                        value={paymentData.expiryDate}
-                        onChange={(e) => setPaymentData({...paymentData, expiryDate: formatExpiryDate(e.target.value)})}
-                        maxLength={5}
-                        className="text-lg py-4 px-4 border-2"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cvv" className="text-base font-medium">CVV</Label>
-                      <Input
-                        id="cvv"
-                        placeholder="123"
-                        value={paymentData.cvv}
-                        onChange={(e) => setPaymentData({...paymentData, cvv: e.target.value.replace(/\D/g, '').slice(0, 3)})}
-                        maxLength={3}
-                        className="text-lg py-4 px-4 border-2"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Nom sur la carte */}
-                  <div className="space-y-2 md:space-y-2">
-                    <Label htmlFor="cardholderName" className="text-base font-medium">Nom sur la carte</Label>
-                    <Input
-                      id="cardholderName"
-                      placeholder="Prénom Nom"
-                      value={paymentData.cardholderName}
-                      onChange={(e) => setPaymentData({...paymentData, cardholderName: e.target.value})}
-                      className="text-lg py-4 px-4 border-2"
-                      required
-                    />
-                  </div>
-
-                  {/* Code postal */}
-                  <div className="space-y-2 md:space-y-2">
-                    <Label htmlFor="postalCode" className="text-base font-medium">Code postal</Label>
-                    <Input
-                      id="postalCode"
-                      placeholder="75000"
-                      value={paymentData.postalCode}
-                      onChange={(e) => setPaymentData({...paymentData, postalCode: e.target.value.replace(/\D/g, '').slice(0, 5)})}
-                      maxLength={5}
-                      className="text-lg py-4 px-4 border-2"
-                      required
-                    />
-                  </div>
-
-                  {/* Bouton desktop inchangé */}
-                  <Button
-                    type="submit"
-                    disabled={isProcessing}
-                    className="w-full text-xl py-6 font-bold bg-orange-700 hover:bg-orange-800 text-white md:flex hidden items-center justify-center space-x-3"
+                  {/* Badge Obligatoire / Complété */}
+                  <span
+                    className={`absolute top-3 right-3 z-10 inline-flex items-center gap-1 px-2 py-0.5 text-white text-xs rounded-full font-medium shadow-sm ${
+                      hasCover ? "bg-green-600" : "bg-orange-500 animate-pulse"
+                    }`}
                   >
-                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Recevoir des demandes – 69 €"}</span>
-                    {!isProcessing && <ArrowRight className="h-6 w-6" />}
-                  </Button>
-
-                  {/* Bouton mobile optimisé */}
-                  <Button
-                    type="submit"
-                    disabled={isProcessing}
-                    className="w-full text-lg py-6 font-bold bg-orange-700 hover:bg-orange-800 text-white flex md:hidden items-center justify-center"
-                  >
-                    {isProcessing ? (
-                      <span>TRAITEMENT...</span>
+                    {hasCover ? (
+                      <>
+                        <CheckCircle className="h-3 w-3" /> Complété
+                      </>
                     ) : (
-                      <span className="flex items-center gap-2">
-                        <span>Activer ma visibilité –</span>
-                        <span className="font-extrabold">69 €</span>
-                        <ArrowRight className="h-6 w-6 ml-1" />
+                      <>
+                        <AlertCircle className="h-3 w-3" /> Obligatoire
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {/* ── LOGO + NOM ────────────────────────────────────────── */}
+              <div className="px-4 sm:px-6 pb-6">
+                <div className="flex items-end gap-4 -mt-10 mb-5">
+                  {/* Logo avec indicateur */}
+                  <div className="relative flex-shrink-0">
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleLogoChange}
+                      className="hidden"
+                    />
+                    <div
+                      ref={logoRef}
+                      className={`relative w-24 h-24 rounded-full border-4 border-white shadow-lg flex items-center justify-center cursor-pointer group transition-all ${
+                        hasLogo
+                          ? "bg-white"
+                          : "bg-orange-50 ring-4 ring-orange-400 ring-offset-2 animate-pulse"
+                      }`}
+                      onClick={() => logoInputRef.current?.click()}
+                    >
+                      {logoPreview ? (
+                        <img
+                          src={logoPreview}
+                          alt="Logo"
+                          className="w-20 h-20 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="text-center">
+                          <Building className="h-8 w-8 text-orange-300 mx-auto" />
+                          <p className="text-xs text-orange-400 leading-tight mt-1">
+                            Logo
+                          </p>
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all rounded-full flex items-center justify-center">
+                        <Camera className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </div>
+                    {/* Badge sous le logo */}
+                    {!hasLogo && (
+                      <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs text-orange-600 font-semibold bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-full">
+                        Obligatoire
                       </span>
                     )}
-                  </Button>
-                  
-                  {/* Réassurance compacte - Mobile uniquement */}
-                  <div className="text-center space-y-1.5 mt-2.5 md:hidden">
-                    <p className="text-xs text-gray-600">🔒 Paiement sécurisé • Résiliation en 1 clic</p>
-                    <p className="text-xs text-gray-500">Déjà utilisé par des artisans dans votre zone</p>
                   </div>
 
-                  {/* Rassurance desktop inchangée */}
-                  <div className="text-center mt-4 hidden md:block">
-                    <p className="text-sm font-medium text-gray-700">🔒 Essai sans risque — résiliation en 1 clic depuis votre espace</p>
-                  </div>
-
-                  {/* Textes sous le bouton - Desktop uniquement */}
-                  <div className="text-center space-y-1 mt-4 md:block hidden">
-                    <div className="flex items-center justify-center gap-2 text-xs text-gray-600">
-                      <span>Résiliation en 1 clic</span>
-                      <span>•</span>
-                      <span>Aucun engagement</span>
-                      <span>•</span>
-                      <span>Paiement 100 % sécurisé</span>
+                  {/* Nom de l'entreprise */}
+                  <div className="flex-1 pt-12">
+                    <input
+                      type="text"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      placeholder="Nom de votre entreprise"
+                      className="text-2xl font-bold text-gray-900 bg-transparent border-0 border-b-2 border-dashed border-gray-200 focus:border-orange-400 focus:outline-none w-full py-1 placeholder:text-gray-300"
+                    />
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {specialites.map((s) => (
+                        <Badge key={s} variant="secondary" className="text-sm">
+                          {s}
+                        </Badge>
+                      ))}
                     </div>
                   </div>
+                </div>
 
-                  {/* Badges sécurité - Desktop uniquement */}
-                  <div className="hidden md:block">
-                    <PaymentSecurityBadges />
-                  </div>
-                  
-                  {/* Texte de réassurance final - Desktop uniquement */}
-                  <div className="mt-6 pt-4 border-t border-gray-100 hidden md:block">
-                    <p className="text-xs text-gray-400 leading-relaxed md:text-base text-center">
-                      Vous ne payez pas pour des promesses, mais pour être visible auprès de particuliers qui cherchent activement un artisan comme vous.
+                {/* ── DESCRIPTION ─────────────────────────────────── */}
+                <div
+                  ref={descRef}
+                  className={`relative rounded-xl border-2 transition-all p-4 mb-6 ${
+                    hasDescription
+                      ? "border-green-100 bg-green-50/30"
+                      : "border-orange-200 border-dashed bg-orange-50/30"
+                  }`}
+                >
+                  <CompletionRing done={hasDescription} label="Obligatoire" />
+                  <Label className="text-base font-semibold text-gray-800 mb-2 block">
+                    Description de votre entreprise
+                  </Label>
+                  <Textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Décrivez votre activité, vos spécialités, vos valeurs, votre expérience… (min. 10 caractères)"
+                    rows={5}
+                    className="resize-none bg-white border-gray-200 focus:border-orange-400"
+                  />
+                  <p
+                    className={`text-xs mt-1.5 ${
+                      description.trim().length >= 10
+                        ? "text-green-600"
+                        : "text-orange-500"
+                    }`}
+                  >
+                    {description.trim().length} / 10 caractères minimum
+                    {description.trim().length >= 10 && " ✓"}
+                  </p>
+                </div>
+
+                {/* ── RÉALISATIONS (facultatif, mais mis en avant) ──── */}
+                <div
+                  ref={projectRef}
+                  className={`relative rounded-xl border-2 transition-all p-4 ${
+                    hasProject
+                      ? "border-blue-100 bg-blue-50/30"
+                      : "border-blue-200 border-dashed bg-blue-50/20"
+                  }`}
+                >
+                  {/* Badge facultatif bleu */}
+                  {hasProject ? (
+                    <span className="absolute -top-3 right-3 z-10 inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full font-medium shadow-sm">
+                      <CheckCircle className="h-3 w-3" />
+                      Ajouté
+                    </span>
+                  ) : (
+                    <span className="absolute -top-3 right-3 z-10 inline-flex items-center gap-1 px-2 py-0.5 bg-blue-400 text-white text-xs rounded-full font-medium shadow-sm">
+                      Recommandé
+                    </span>
+                  )}
+                  <div className="mb-4">
+                    <Label className="text-base font-semibold text-gray-800">
+                      Réalisations
+                    </Label>
+                    <p className="text-xs text-blue-600 mt-0.5">
+                      Facultatif — les artisans avec des photos reçoivent 3×
+                      plus de demandes
                     </p>
                   </div>
-                </form>
-              </CardContent>
-            </Card>
+
+                  {projects.length === 0 ? (
+                    <AddProjectModal onSave={handleAddProject} />
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {projects.map((p) => (
+                        <div
+                          key={p.id}
+                          className="relative group rounded-lg overflow-hidden bg-gray-100"
+                        >
+                          {p.previewUrls[0] ? (
+                            <img
+                              src={p.previewUrls[0]}
+                              alt={p.title}
+                              className="w-full h-32 object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-32 flex items-center justify-center bg-gray-100">
+                              <ImageIcon className="h-8 w-8 text-gray-300" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all" />
+                          <button
+                            onClick={() => handleRemoveProject(p.id)}
+                            className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                          <div className="absolute bottom-0 left-0 right-0 px-2 py-1.5 bg-gradient-to-t from-black/60">
+                            <p className="text-white text-xs font-medium truncate">
+                              {p.title}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Bouton Ajouter une réalisation quand il y en a déjà */}
+                  {projects.length > 0 && (
+                    <div className="mt-3">
+                      <AddProjectModal onSave={handleAddProject} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Layout desktop : 2 colonnes 50/50 */}
-          <div className="hidden lg:grid lg:grid-cols-2 lg:gap-8">
-            
-            {/* Colonne gauche - Récapitulatif */}
-            <Card className="bg-white border border-gray-200">
-              <CardContent className="p-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">Vous êtes à 30 secondes d'être visible et de recevoir vos premières demandes</h2>
-                <p className="text-base text-gray-600 mb-8">Votre fiche est prête. Dès l'activation, vous apparaissez dans votre zone et recevez gratuitement les demandes des particuliers qui vous contactent directement.</p>
-                
-                <div className="space-y-8">
-                  {/* Zone couverte */}
-                  <div className="pb-6 border-b border-gray-100 border-l-4 border-l-orange-500 pl-4">
-                    <h3 className="text-gray-600 text-base font-medium mb-3">Zone couverte :</h3>
-                    <p className="font-semibold text-base">{prospectData.selectedCity} + {prospectData.selectedZoneRadius} km — {getProfessionLabel(prospectData.profession)}</p>
-                  </div>
-                  
-                  {/* Demandes estimées */}
-                  <div className="pb-6 border-b border-gray-100 border-l-4 border-l-orange-500 pl-4">
-                    <h3 className="text-gray-600 text-base font-medium mb-3">Demandes estimées dans votre secteur :</h3>
-                    <div>
-                      <p className="font-semibold text-base">Des demandes de devis sont déjà générées chaque mois dans votre zone et votre métier</p>
-                      <p className="text-sm text-gray-500 mt-1">Le volume dépend de la demande locale et de votre réactivité.</p>
-                    </div>
-                  </div>
-                  
-                  {/* Vos avantages inclus */}
-                  <div className="pb-6 border-b border-gray-100 border-l-4 border-l-orange-500 pl-4">
-                    <h3 className="text-gray-600 text-base font-medium mb-4">Vos avantages inclus :</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Visibilité prioritaire sur votre métier et votre ville</span>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Demandes clients GRATUITES quand on vous contacte depuis votre fiche</span>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Accès aux chantiers ciblés uniquement si vous le souhaitez</span>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Accès aux demandes ciblées — vous restez libre de répondre ou non</span>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Sans engagement, résiliable à tout moment</span>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <CheckCircle className="h-4 w-4 text-orange-500 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm text-gray-700">Application mobile pour recevoir les demandes en temps réel</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Témoignages */}
-                  <section className="mt-8">
+          {/* ── Colonne droite (sticky) ────────────────────────────────────── */}
+          <div className="hidden lg:block">
+            {/* Toutes les cartes partagent : rounded-xl, shadow-sm, border border-gray-100, p-5, même gap */}
+            <div className="sticky top-20 flex flex-col gap-3">
+              {/* ══ BLOC 1 : Progression ════════════════════════════════════ */}
+              <div className="rounded-xl border border-orange-100 bg-white shadow-sm p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                    Votre progression
+                  </p>
+                  <span
+                    className={`text-xs font-bold px-2 py-0.5 rounded-full tabular-nums ${
+                      ficheIsComplete
+                        ? "bg-green-100 text-green-700"
+                        : "bg-orange-100 text-orange-700"
+                    }`}
+                  >
+                    {completedRequired}/3 obligatoires
+                  </span>
+                </div>
 
-                    <AutoplayCarousel 
-                      className="w-full max-w-md"
-                      opts={{
-                        align: "start",
-                        loop: true,
-                      }}
+                {/* Barre */}
+                <Progress value={completionPercent} className="h-1.5 mb-2" />
+                <p className="text-xs text-gray-500 mb-4">
+                  {completedRequired === 0 &&
+                    "Plus que 3 étapes pour être visible dans votre zone"}
+                  {completedRequired === 1 &&
+                    "Bien démarré — encore 2 éléments obligatoires"}
+                  {completedRequired === 2 &&
+                    "Presque là — plus qu'un élément et vous êtes prêt"}
+                  {completedRequired === 3 &&
+                    "Votre fiche est prête — accédez à votre espace !"}
+                </p>
+
+                {/* Items obligatoires */}
+                <ul className="space-y-1.5">
+                  {[
+                    {
+                      done: hasCover,
+                      label: "Photo de couverture",
+                      action: () => coverInputRef.current?.click(),
+                    },
+                    {
+                      done: hasLogo,
+                      label: "Logo de l'entreprise",
+                      action: () => logoInputRef.current?.click(),
+                    },
+                    {
+                      done: hasDescription,
+                      label: "Description (min. 10 car.)",
+                      action: () =>
+                        descRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "center",
+                        }),
+                    },
+                  ].map((item, i) => (
+                    <li
+                      key={i}
+                      onClick={item.done ? undefined : item.action}
+                      className={`flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors cursor-pointer ${
+                        item.done
+                          ? "bg-green-50"
+                          : "bg-orange-50 hover:bg-orange-100"
+                      }`}
                     >
-                      <CarouselContent>
-                        <CarouselItem>
-                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
-                            <CardContent className="p-4">
-                              <div className="flex items-start gap-3 mb-3">
-                                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                  <span className="text-white text-sm font-bold">J</span>
-                                </div>
-                                <div className="flex gap-1">
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                </div>
-                              </div>
-                              <p className="text-sm text-gray-800">
-                                "Premier chantier signé en 12 jours, abonnement déjà rentabilisé."
-                              </p>
-                              <p className="mt-2 text-xs text-gray-500">
-                                Julien — Plombier à Toulouse
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </CarouselItem>
-
-                        <CarouselItem>
-                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
-                            <CardContent className="p-4">
-                              <div className="flex items-start gap-3 mb-3">
-                                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                  <span className="text-white text-sm font-bold">S</span>
-                                </div>
-                                <div className="flex gap-1">
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                </div>
-                              </div>
-                              <p className="text-sm text-gray-800">
-                                "Je choisis uniquement les demandes qui m'intéressent, je ne subis plus les prospects."
-                              </p>
-                              <p className="mt-2 text-xs text-gray-500">
-                                Sarah — Électricienne à Bordeaux
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </CarouselItem>
-
-                        <CarouselItem>
-                          <Card className="border border-gray-100 shadow-sm bg-gray-50/50">
-                            <CardContent className="p-4">
-                              <div className="flex items-start gap-3 mb-3">
-                                <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                  <span className="text-white text-sm font-bold">O</span>
-                                </div>
-                                <div className="flex gap-1">
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                </div>
-                              </div>
-                              <p className="text-sm text-gray-800">
-                                "J'ai testé un mois sans risque, maintenant je garde l'abonnement en continu."
-                              </p>
-                              <p className="mt-2 text-xs text-gray-500">
-                                Omar — Peintre à Lille
-                              </p>
-                            </CardContent>
-                          </Card>
-                        </CarouselItem>
-                      </CarouselContent>
-                    </AutoplayCarousel>
-                  </section>
-                  
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Colonne droite - Paiement */}
-            <div className="sticky top-20 max-h-[calc(100vh-5rem)]">
-              <Card className="bg-white border border-gray-200">
-                <CardContent className="p-8">
-                <div className="flex items-center space-x-3 mb-8">
-                  <Lock className="h-6 w-6 text-orange-600" />
-                  <h2 className="text-2xl font-bold text-gray-900">Paiement sécurisé</h2>
-                </div>
-
-                <form onSubmit={handlePayment} className="space-y-8">
-                  {/* Numéro de carte - gros et clair */}
-                  <div className="space-y-3">
-                    <Label htmlFor="cardNumber-desktop" className="text-lg font-medium">Numéro de carte</Label>
-                    <div className="relative">
-                      <Input
-                        id="cardNumber-desktop"
-                        placeholder="1234 5678 9012 3456"
-                        value={paymentData.cardNumber}
-                        onChange={(e) => setPaymentData({...paymentData, cardNumber: formatCardNumber(e.target.value)})}
-                        maxLength={19}
-                        className="text-xl py-6 px-6 pr-20 border-2 rounded-lg"
-                        required
-                      />
-                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                        <CardLogo type={getCardType(paymentData.cardNumber)} className="h-9 w-14" />
+                      <div
+                        className={`w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-colors ${
+                          item.done
+                            ? "bg-green-600 border-green-600"
+                            : "border-orange-400 bg-white"
+                        }`}
+                      >
+                        {item.done && (
+                          <svg
+                            className="h-2.5 w-2.5 text-white"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={3.5}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
                       </div>
-                    </div>
-                  </div>
+                      <span
+                        className={`flex-1 text-sm ${item.done ? "text-gray-400 line-through decoration-gray-300" : "text-gray-700 font-medium"}`}
+                      >
+                        {item.label}
+                      </span>
+                      {!item.done && (
+                        <span className="text-xs text-orange-500 font-semibold">
+                          requis
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
 
-                  {/* Date d'expiration + CVV */}
-                  <div className="grid grid-cols-2 gap-6">
-                    <div className="space-y-3">
-                      <Label htmlFor="expiryDate-desktop" className="text-lg font-medium">Date d'expiration</Label>
-                      <Input
-                        id="expiryDate-desktop"
-                        placeholder="MM/AA"
-                        value={paymentData.expiryDate}
-                        onChange={(e) => setPaymentData({...paymentData, expiryDate: formatExpiryDate(e.target.value)})}
-                        maxLength={5}
-                        className="text-xl py-6 px-6 border-2 rounded-lg"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="cvv-desktop" className="text-lg font-medium">CVV</Label>
-                      <Input
-                        id="cvv-desktop"
-                        placeholder="123"
-                        value={paymentData.cvv}
-                        onChange={(e) => setPaymentData({...paymentData, cvv: e.target.value.replace(/\D/g, '').slice(0, 3)})}
-                        maxLength={3}
-                        className="text-xl py-6 px-6 border-2 rounded-lg"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Nom sur la carte */}
-                  <div className="space-y-3">
-                    <Label htmlFor="cardholderName-desktop" className="text-lg font-medium">Nom sur la carte</Label>
-                    <Input
-                      id="cardholderName-desktop"
-                      placeholder="Prénom Nom"
-                      value={paymentData.cardholderName}
-                      onChange={(e) => setPaymentData({...paymentData, cardholderName: e.target.value})}
-                      className="text-xl py-6 px-6 border-2 rounded-lg"
-                      required
-                    />
-                  </div>
-
-                  {/* Code postal */}
-                  <div className="space-y-3">
-                    <Label htmlFor="postalCode-desktop" className="text-lg font-medium">Code postal</Label>
-                    <Input
-                      id="postalCode-desktop"
-                      placeholder="75000"
-                      value={paymentData.postalCode}
-                      onChange={(e) => setPaymentData({...paymentData, postalCode: e.target.value.replace(/\D/g, '').slice(0, 5)})}
-                      maxLength={5}
-                      className="text-xl py-6 px-6 border-2 rounded-lg"
-                      required
-                    />
-                  </div>
-
-                  {/* Bouton desktop */}
-                  <Button
-                    type="submit"
-                    disabled={isProcessing}
-                    className="w-full text-2xl py-8 font-bold bg-orange-700 hover:bg-orange-800 text-white hidden md:flex items-center justify-center space-x-4 rounded-lg"
+                {/* Item facultatif */}
+                <div className="mt-1.5 pt-1.5 border-t border-gray-100">
+                  <div
+                    onClick={
+                      !hasProject
+                        ? () =>
+                            projectRef.current?.scrollIntoView({
+                              behavior: "smooth",
+                              block: "center",
+                            })
+                        : undefined
+                    }
+                    className={`flex items-center gap-2.5 rounded-lg px-3 py-2 transition-colors ${
+                      hasProject
+                        ? "bg-blue-50"
+                        : "bg-slate-50 cursor-pointer hover:bg-slate-100"
+                    }`}
                   >
-                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Activer ma visibilité maintenant – 69 €"}</span>
-                    {!isProcessing && <ArrowRight className="h-7 w-7" />}
-                  </Button>
-
-                  {/* Bouton mobile */}
-                  <Button
-                    type="submit"
-                    disabled={isProcessing}
-                    className="w-full text-2xl py-8 font-bold bg-orange-700 hover:bg-orange-800 text-white flex md:hidden items-center justify-center space-x-4 rounded-lg"
-                  >
-                    <span>{isProcessing ? "TRAITEMENT EN COURS..." : "Mes Demandes – 69 €"}</span>
-                    {!isProcessing && <ArrowRight className="h-7 w-7" />}
-                  </Button>
-
-                  {/* Texte de réassurance sous le bouton */}
-                  <div className="text-center mt-4">
-                    <p className="text-sm font-medium text-gray-700">🔒 Essai sans risque — résiliation en 1 clic depuis votre espace</p>
-                  </div>
-
-                  {/* Textes sous le bouton */}
-                  <div className="text-center space-y-2 mt-6">
-                    <div className="flex items-center justify-center gap-3 text-sm text-gray-600">
-                      <span>Résiliation en 1 clic</span>
-                      <span>•</span>
-                      <span>Aucun engagement</span>
-                      <span>•</span>
-                      <span>Paiement 100 % sécurisé</span>
+                    <div
+                      className={`w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-colors ${
+                        hasProject
+                          ? "bg-green-600 border-green-600"
+                          : "border-slate-300 bg-white"
+                      }`}
+                    >
+                      {hasProject && (
+                        <svg
+                          className="h-2.5 w-2.5 text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth={3.5}
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                      )}
                     </div>
+                    <span
+                      className={`flex-1 text-sm ${hasProject ? "text-gray-400 line-through decoration-gray-300" : "text-slate-500"}`}
+                    >
+                      Réalisations (photos)
+                    </span>
+                    <span
+                      className={`text-xs font-medium ${hasProject ? "text-blue-500" : "text-slate-400"}`}
+                    >
+                      {hasProject
+                        ? `${projects.length} ajoutée${projects.length > 1 ? "s" : ""}`
+                        : "recommandé"}
+                    </span>
                   </div>
+                </div>
 
-                  {/* Badges sécurité */}
-                  <PaymentSecurityBadges />
-                  
-                  {/* Texte de réassurance final */}
-                  <div className="mt-6 pt-4 border-t border-gray-100">
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      Vous ne payez pas pour des promesses, mais pour être visible auprès de particuliers qui cherchent activement un artisan comme vous.
+                {/* CTA */}
+                <div className="mt-4">
+                  {ficheIsComplete ? (
+                    <Button
+                      onClick={() => setShowPasswordModal(true)}
+                      className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold gap-2"
+                    >
+                      Accéder à mon dashboard
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <p className="text-xs text-gray-400 leading-relaxed text-center">
+                      Complétez ces 3 éléments pour activer votre fiche et
+                      apparaître auprès des particuliers de votre zone.
                     </p>
+                  )}
+                </div>
+              </div>
+
+              {/* ══ BLOC 2 : Demandes ═══════════════════════════════════════ */}
+              <div className="rounded-xl border border-orange-100 bg-white shadow-sm p-5">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
+                  Demandes dans votre zone
+                </p>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <TrendingUp className="h-4 w-4 text-orange-600" />
                   </div>
-                </form>
-              </CardContent>
-            </Card>
+                  <div className="flex-1 min-w-0">
+                    {leadsCount > 0 ? (
+                      <>
+                        <p className="text-sm font-semibold text-orange-900 leading-snug">
+                          {leadsCount} particulier{leadsCount > 1 ? "s" : ""}{" "}
+                          recherche{leadsCount > 1 ? "nt" : ""} un{" "}
+                          {getProfessionLabel(
+                            prospect.profession,
+                          ).toLowerCase()}{" "}
+                          autour de{" "}
+                          {
+                            (
+                              prospect.selectedCity || prospect.postalCode
+                            ).split(",")[0]
+                          }
+                        </p>
+                        <p className="text-xs text-orange-600 mt-0.5">
+                          Rayon {prospect.selectedZoneRadius} km
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm font-semibold text-orange-900 leading-snug">
+                        Des demandes arrivent chaque jour dans votre zone
+                      </p>
+                    )}
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <p className="text-xs text-slate-400 text-center">
+                        {ficheIsComplete
+                          ? "Votre fiche est prête — vous allez apparaître dans les résultats"
+                          : "Complétez votre fiche pour accéder à ces demandes"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ══ BLOC 3 : Témoignages — Carousel shadcn ═══════════════════ */}
+              <div className="rounded-xl border border-gray-100 bg-white shadow-sm p-5 overflow-hidden">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-4">
+                  Ils utilisent Portail Habitat
+                </p>
+
+                <Carousel
+                  opts={{ align: "start", loop: true }}
+                  plugins={[Autoplay({ delay: 4000, stopOnInteraction: true })]}
+                  className="w-full"
+                >
+                  <CarouselContent>
+                    {TESTIMONIALS.map((t, i) => (
+                      <CarouselItem key={i}>
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0 ${t.color}`}>
+                            {t.initial}
+                          </div>
+                          <div>
+                            <div className="flex gap-0.5 mb-0.5">
+                              {Array.from({ length: t.stars }).map((_, s) => (
+                                <svg key={s} className="h-3.5 w-3.5 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                </svg>
+                              ))}
+                            </div>
+                            <p className="text-xs text-gray-400">{t.author} · {t.role}</p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 leading-relaxed italic">
+                          &ldquo;{t.quote}&rdquo;
+                        </p>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
+              </div>
             </div>
           </div>
         </div>
-      </main>
+      </div>
 
-      {/* Footer simple comme Step 2 */}
-      <footer className="bg-gray-900 text-white py-6 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-300">
-              © 2025 Portail Habitat. Tous droits réservés.
+      {/* ── CTA mobile fixé en bas ─────────────────────────────────────────── */}
+      <div className="lg:hidden sticky bottom-0 z-20 bg-white border-t shadow-[0_-4px_16px_rgba(0,0,0,0.08)] px-4 py-3">
+        {ficheIsComplete ? (
+          <Button
+            onClick={() => setShowPasswordModal(true)}
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold gap-2 py-5"
+          >
+            <span>Accéder à mon dashboard</span>
+            <ArrowRight className="h-5 w-5" />
+          </Button>
+        ) : (
+          <div className="flex items-center gap-3">
+            <Progress value={completionPercent} className="flex-1 h-2" />
+            <p className="text-xs text-gray-500 flex-shrink-0">
+              {completionPercent}%
             </p>
-            <a href="/conditions-generales" className="text-sm text-gray-300 hover:text-white">
-              Conditions générales
-            </a>
+          </div>
+        )}
+      </div>
+
+      {/* ── Modal mot de passe ─────────────────────────────────────────────── */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 relative">
+            <button
+              onClick={() => setShowPasswordModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900">
+                Votre fiche est prête !
+              </h2>
+              <p className="text-sm text-gray-500 mt-2">
+                Choisissez un mot de passe pour accéder à votre espace pro.
+              </p>
+            </div>
+
+            <form onSubmit={handleCreateAccount} className="space-y-4">
+              <div>
+                <Label className="text-sm text-gray-600 mb-1 block">
+                  Email
+                </Label>
+                <Input
+                  value={prospect.email}
+                  disabled
+                  className="bg-gray-50 text-gray-500"
+                />
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="pwd"
+                  className="text-sm font-medium text-gray-700 mb-1 block"
+                >
+                  Mot de passe
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="pwd"
+                    type={showPwd ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="8 caractères minimum"
+                    required
+                    className="pr-10"
+                    autoFocus
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPwd((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPwd ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <Label
+                  htmlFor="pwdConfirm"
+                  className="text-sm font-medium text-gray-700 mb-1 block"
+                >
+                  Confirmer le mot de passe
+                </Label>
+                <Input
+                  id="pwdConfirm"
+                  type={showPwd ? "text" : "password"}
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
+                  placeholder="Répétez votre mot de passe"
+                  required
+                />
+              </div>
+
+              {(passwordError || creationError) && (
+                <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                  {passwordError || creationError}
+                </p>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-5 text-base gap-2"
+              >
+                <span>Créer mon compte et accéder au dashboard</span>
+                <ArrowRight className="h-5 w-5" />
+              </Button>
+
+              <p className="text-xs text-gray-400 text-center">
+                Gratuit · Sans engagement · Sans carte bancaire
+              </p>
+            </form>
           </div>
         </div>
-      </footer>
+      )}
     </div>
   );
 }

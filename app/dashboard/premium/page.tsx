@@ -1,29 +1,54 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { 
   Crown, 
-  Star, 
   CheckCircle,
-  XCircle,
   Zap,
   Shield,
   TrendingUp,
-  Users,
   Camera,
   Video,
   Award,
-  ArrowRight,
+  Loader2,
   Play
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import UpgradeButton from "@/components/UpgradeButton";
+import { useRouter } from "next/navigation";
 
 export default function PremiumPage() {
   const { user, artisan, isLoading } = useAuth();
+  const router = useRouter();
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const handleStartTrial = async () => {
+    if (!user) return;
+    setIsCheckoutLoading(true);
+    setCheckoutError(null);
+    try {
+      const res = await fetch("/api/create-checkout-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          artisanId: artisan?.id || user.uid,
+          email: artisan?.email || user.email || "",
+          companyName: artisan?.companyName || "",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || "Erreur lors de la création du paiement");
+      }
+      window.location.href = data.url;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erreur inconnue";
+      setCheckoutError(message);
+      setIsCheckoutLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -33,7 +58,7 @@ export default function PremiumPage() {
     );
   }
 
-  if (!user || !artisan) {
+  if (!user) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600">Vous devez être connecté pour accéder à cette page.</p>
@@ -41,8 +66,8 @@ export default function PremiumPage() {
     );
   }
 
-  // Si déjà premium, rediriger vers la fiche
-  if (artisan.premiumFeatures?.isPremium) {
+  // Si déjà premium, afficher confirmation
+  if (artisan?.premiumFeatures?.isPremium) {
     return (
       <div className="text-center py-12">
         <Crown className="h-16 w-16 text-yellow-600 mx-auto mb-4" />
@@ -159,13 +184,14 @@ export default function PremiumPage() {
             <div className="sticky top-8">
               <Card className="p-6 shadow-xl border-2 border-yellow-200">
                 <div className="text-center mb-6">
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-yellow-100 rounded-full text-yellow-800 text-sm font-medium mb-4">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-orange-100 rounded-full text-orange-800 text-sm font-medium mb-4">
                     <Zap className="h-4 w-4" />
-                    Offre limitée
+                    7 jours gratuits
                   </div>
-                  <div className="text-4xl font-bold text-gray-900 mb-2">99€</div>
-                  <div className="text-gray-600">par mois</div>
-                  <div className="text-sm text-gray-500 line-through">129€</div>
+                  <div className="text-4xl font-bold text-gray-900 mb-1">0 €</div>
+                  <div className="text-gray-500 text-sm mb-1">pendant 7 jours</div>
+                  <div className="text-gray-600 font-medium">puis 49 €/mois</div>
+                  <div className="text-xs text-gray-400 mt-1">Sans engagement — résiliable en 1 clic</div>
                 </div>
 
                 <div className="space-y-4 mb-6">
@@ -191,11 +217,26 @@ export default function PremiumPage() {
                   </div>
                 </div>
 
-                <UpgradeButton 
-                  currentPlan="basic"
-                  monthlyPrice={artisan.monthlySubscriptionPrice || 69}
+                {checkoutError && (
+                  <p className="text-sm text-red-600 text-center mb-2">{checkoutError}</p>
+                )}
+                <Button
+                  onClick={handleStartTrial}
+                  disabled={isCheckoutLoading}
                   className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold py-3 px-6 rounded-lg text-lg"
-                />
+                >
+                  {isCheckoutLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Redirection vers le paiement…
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4 mr-2" />
+                      Activer mon essai gratuit 7 jours
+                    </>
+                  )}
+                </Button>
 
                 <div className="mt-4 text-center">
                   <div className="flex items-center justify-center gap-2 text-sm text-gray-600">

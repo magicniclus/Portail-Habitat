@@ -26,7 +26,7 @@ interface UpgradeButtonProps {
 const PLANS = {
   basic: {
     name: 'Basic',
-    price: 69,
+    price: 49,
     color: 'bg-gray-100 text-gray-800',
     features: ['Profil artisan', 'Gestion des demandes', 'Support standard']
   },

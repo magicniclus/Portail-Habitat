@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, query, orderBy, getDocs, where, deleteDoc, doc } from "firebase/firestore";
+import { collection, query, orderBy, getDocs, where, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import Link from "next/link";
 import { db } from "@/lib/firebase";
 import { getCurrentAdmin, ADMIN_ROLES, logAdminAction } from "@/lib/admin-auth";
@@ -56,8 +56,14 @@ interface Prospect {
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
-  createdAt: any;
-  updatedAt?: any;
+  createdAt: Timestamp | string | number;
+  updatedAt?: Timestamp | string | number;
+}
+
+function toDate(value: Timestamp | string | number | undefined): Date | null {
+  if (!value) return null;
+  if (value instanceof Timestamp) return value.toDate();
+  return new Date(value);
 }
 
 const FUNNEL_STEPS = [
@@ -472,7 +478,7 @@ export default function DemandesPage() {
                 <div className="flex items-center gap-3">
                   <div className="text-right text-xs text-gray-500">
                     <div>
-                      {prospect.createdAt?.toDate?.()?.toLocaleDateString('fr-FR')} • {prospect.createdAt?.toDate?.()?.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                      {toDate(prospect.createdAt)?.toLocaleDateString('fr-FR')} • {toDate(prospect.createdAt)?.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                   
@@ -530,7 +536,7 @@ export default function DemandesPage() {
                   </p>
                   <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
                     <li>Toutes les données {selectedProspects.length === 1 ? 'du prospect seront supprimées' : 'des prospects seront supprimées'}</li>
-                    <li>L'historique des interactions sera perdu</li>
+                    <li>L&apos;historique des interactions sera perdu</li>
                     <li>Cette action sera enregistrée dans les logs admin</li>
                   </ul>
                 </div>
