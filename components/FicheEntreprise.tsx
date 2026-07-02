@@ -27,6 +27,7 @@ import {
 import { collection, addDoc, updateDoc, doc, increment, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { addPremiumBannerPhoto, uploadPremiumBannerPhotos } from '@/lib/storage';
+import { getMetierLabel, resolveLegacySlug } from '@/lib/metiers';
 import { sendLeadNotificationIfAllowed } from '@/lib/notification-service';
 import { getArtisanPreferencesWithDefaults } from '@/lib/artisan-preferences';
 import ZoneInterventionMap from "./ZoneInterventionMap";
@@ -696,7 +697,7 @@ export default function FicheEntreprise({
               <div className="flex flex-wrap gap-2 items-center">
                 {entreprise.specialites.map((specialite, index) => (
                   <Badge key={index} variant="secondary" className="text-sm group relative flex items-center justify-center">
-                    <span className="text-center">{specialite}</span>
+                    <span className="text-center">{getMetierLabel(resolveLegacySlug(specialite))}</span>
                     {canEdit && (
                       <button
                         onClick={() => {

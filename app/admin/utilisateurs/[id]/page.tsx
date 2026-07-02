@@ -22,6 +22,7 @@ import EditableField from "@/components/admin/EditableField";
 import EditableSelect from "@/components/admin/EditableSelect";
 import PrestationsModal from "@/components/admin/PrestationsModal";
 import PremiumSwitch from "@/components/admin/PremiumSwitch";
+import { getMetierLabel, resolveLegacySlug } from "@/lib/metiers";
 import AdminArtisanMediaManager from "@/components/admin/AdminArtisanMediaManager";
 import CreateArtisanProjectDialog from "@/components/admin/CreateArtisanProjectDialog";
 import { 
@@ -655,7 +656,7 @@ export default function UserDetailPage() {
                     <div className="flex flex-wrap gap-2">
                       {user.professions.slice(0, 10).map((profession) => (
                         <Badge key={profession} variant="secondary" className="text-xs">
-                          {profession.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          {getMetierLabel(resolveLegacySlug(profession))}
                         </Badge>
                       ))}
                       {user.professions.length > 10 && (

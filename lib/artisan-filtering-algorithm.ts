@@ -1,4 +1,5 @@
 import { filterArtisansByDistance } from "@/lib/geo-utils";
+import { searchMetiers, resolveLegacySlug } from "@/lib/metiers";
 
 interface Artisan {
   id: string;
@@ -144,18 +145,30 @@ function applyBasicFilters(artisans: Artisan[], criteria: FilterCriteria): Artis
   
   // Filtrage par prestation
   if (criteria.prestationSearch.trim() || criteria.selectedPrestation) {
-    const prestationTerm = (criteria.selectedPrestation || criteria.prestationSearch).toLowerCase();
-    
+    const rawTerm = criteria.selectedPrestation || criteria.prestationSearch;
+    const prestationTerm = rawTerm.toLowerCase();
+
+    // Résoudre les métiers officiels correspondant au terme saisi (via synonymes)
+    const matchingMetiers = searchMetiers(rawTerm);
+    const matchingSlugs = new Set(matchingMetiers.map((m) => m.slug));
+
     filtered = filtered.filter(artisan => {
-      // Vérifier profession principale
+      // 1. Correspondance via métiers officiels (slug ou synonymes)
+      const artisanSlug = resolveLegacySlug(artisan.profession?.toLowerCase() || "");
+      if (matchingSlugs.size > 0 && (matchingSlugs.has(artisanSlug) || matchingSlugs.has(artisan.profession?.toLowerCase() || ""))) return true;
+
+      // 2. Correspondance texte sur profession principale (fallback)
       if (artisan.profession?.toLowerCase().includes(prestationTerm)) return true;
-      
-      // Vérifier professions secondaires
-      if (artisan.professions?.some(p => p.toLowerCase().includes(prestationTerm))) return true;
-      
-      // Vérifier description
+
+      // 3. Correspondance sur professions secondaires
+      if (artisan.professions?.some(p => {
+        const pSlug = resolveLegacySlug(p.toLowerCase());
+        return matchingSlugs.has(pSlug) || p.toLowerCase().includes(prestationTerm);
+      })) return true;
+
+      // 4. Correspondance sur description
       if (artisan.description?.toLowerCase().includes(prestationTerm)) return true;
-      
+
       return false;
     });
   }
@@ -358,29 +371,43 @@ function sortArtisans(artisans: Artisan[], criteria: FilterCriteria): Artisan[] 
  */
 function sortByPrestationRelevance(artisans: Artisan[], prestationTerm: string): Artisan[] {
   const term = prestationTerm.toLowerCase();
-  
+  const matchingMetiers = searchMetiers(prestationTerm);
+  const matchingSlugs = new Set(matchingMetiers.map((m) => m.slug));
+
   return artisans.sort((a, b) => {
     let scoreA = 0;
     let scoreB = 0;
-    
-    // Score pour profession principale
+
+    // Score profession principale via métiers officiels (slug + synonymes)
+    const aSlug = resolveLegacySlug(a.profession?.toLowerCase() || "");
+    const bSlug = resolveLegacySlug(b.profession?.toLowerCase() || "");
+    if (matchingSlugs.has(aSlug) || matchingSlugs.has(a.profession?.toLowerCase() || "")) scoreA += 15;
+    if (matchingSlugs.has(bSlug) || matchingSlugs.has(b.profession?.toLowerCase() || "")) scoreB += 15;
+
+    // Score profession principale via texte simple
     if (a.profession?.toLowerCase().includes(term)) scoreA += 10;
     if (b.profession?.toLowerCase().includes(term)) scoreB += 10;
-    
-    // Score pour professions secondaires
-    const aSecondaryMatch = a.professions?.some(p => p.toLowerCase().includes(term));
-    const bSecondaryMatch = b.professions?.some(p => p.toLowerCase().includes(term));
+
+    // Score professions secondaires
+    const aSecondaryMatch = a.professions?.some(p => {
+      const pSlug = resolveLegacySlug(p.toLowerCase());
+      return matchingSlugs.has(pSlug) || p.toLowerCase().includes(term);
+    });
+    const bSecondaryMatch = b.professions?.some(p => {
+      const pSlug = resolveLegacySlug(p.toLowerCase());
+      return matchingSlugs.has(pSlug) || p.toLowerCase().includes(term);
+    });
     if (aSecondaryMatch) scoreA += 5;
     if (bSecondaryMatch) scoreB += 5;
-    
-    // Score pour description
+
+    // Score description
     if (a.description?.toLowerCase().includes(term)) scoreA += 2;
     if (b.description?.toLowerCase().includes(term)) scoreB += 2;
-    
-    // Score pour rating
+
+    // Score rating
     scoreA += (a.averageRating || 0);
     scoreB += (b.averageRating || 0);
-    
+
     return scoreB - scoreA;
   });
 }

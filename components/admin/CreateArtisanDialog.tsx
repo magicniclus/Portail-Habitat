@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Plus, Copy } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getMetiers } from "@/lib/metiers";
 
 type CreateArtisanDialogProps = {
   onCreated?: () => void;
@@ -263,7 +265,19 @@ export default function CreateArtisanDialog({ onCreated }: CreateArtisanDialogPr
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Métier principal *</Label>
-                <Input value={form.profession} onChange={(e) => setForm((p) => ({ ...p, profession: e.target.value }))} />
+                <Select
+                  value={form.profession}
+                  onValueChange={(v) => setForm((p) => ({ ...p, profession: v }))}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Sélectionnez un métier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getMetiers().map((m) => (
+                      <SelectItem key={m.slug} value={m.slug}>{m.nom}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Métiers secondaires (séparés par des virgules)</Label>

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { MapPin, CheckCircle, Lock, Shield, ArrowRight, CreditCard } from "lucide-react";
+import { getMetierLabel, resolveLegacySlug } from "@/lib/metiers";
 
 interface ProspectData {
   artisanId?: string;
@@ -82,21 +83,7 @@ export default function OnboardingStep4Content() {
     }
   }, [searchParams]);
 
-  const getProfessionLabel = (profession: string) => {
-    const labels: { [key: string]: string } = {
-      "plombier": "Plombier",
-      "electricien": "Électricien", 
-      "chauffagiste": "Chauffagiste",
-      "peintre": "Peintre",
-      "maconnerie": "Maçon",
-      "menuisier": "Menuisier",
-      "couvreur": "Couvreur",
-      "carreleur": "Carreleur",
-      "charpentier": "Charpentier",
-      "multiservices": "Multiservices"
-    };
-    return labels[profession] || profession;
-  };
+  const getProfessionLabel = (profession: string) => getMetierLabel(resolveLegacySlug(profession));
 
   const getCardType = (cardNumber: string) => {
     const number = cardNumber.replace(/\s/g, '');

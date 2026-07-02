@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sgMail from '@sendgrid/mail';
+import { getMetierLabel, resolveLegacySlug } from '@/lib/metiers';
 
 // Configuration SendGrid
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
@@ -121,17 +122,5 @@ export async function POST(request: NextRequest) {
 }
 
 function getProfessionLabel(profession: string) {
-  const labels: { [key: string]: string } = {
-    "plombier": "Plombier",
-    "electricien": "Électricien", 
-    "chauffagiste": "Chauffagiste",
-    "peintre": "Peintre",
-    "maconnerie": "Maçon",
-    "menuisier": "Menuisier",
-    "couvreur": "Couvreur",
-    "carreleur": "Carreleur",
-    "charpentier": "Charpentier",
-    "multiservices": "Multiservices"
-  };
-  return labels[profession] || profession;
+  return getMetierLabel(resolveLegacySlug(profession));
 }

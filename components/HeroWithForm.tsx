@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { getCoordinatesFromPostalCode, type Coordinates } from "@/lib/geo-utils";
+import { getMetiers } from "@/lib/metiers";
 
 export default function HeroWithForm() {
   const router = useRouter();
@@ -359,47 +360,9 @@ export default function HeroWithForm() {
                         <SelectValue placeholder="Sélectionnez votre métier" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="carreleur">Carreleur</SelectItem>
-                        <SelectItem value="charpentier">Charpentier</SelectItem>
-                        <SelectItem value="chauffagiste">Chauffagiste</SelectItem>
-                        <SelectItem value="constructeur-maison">Constructeur de maison</SelectItem>
-                        <SelectItem value="courtier">Courtier</SelectItem>
-                        <SelectItem value="couvreur">Couvreur</SelectItem>
-                        <SelectItem value="cuisiniste">Cuisiniste</SelectItem>
-                        <SelectItem value="decorateur">Décorateur</SelectItem>
-                        <SelectItem value="detailleur">Détailleur</SelectItem>
-                        <SelectItem value="diagnostiqueur">Diagnostiqueur immobilier</SelectItem>
-                        <SelectItem value="domoticien">Domoticien</SelectItem>
-                        <SelectItem value="electricien">Électricien</SelectItem>
-                        <SelectItem value="entreprise-generale">Entreprise générale de bâtiment</SelectItem>
-                        <SelectItem value="escalieteur">Escalieteur</SelectItem>
-                        <SelectItem value="fenetres-installateur">Fenêtres (installateur)</SelectItem>
-                        <SelectItem value="geometre">Géomètre</SelectItem>
-                        <SelectItem value="installateur-alarmes">Installateur d'alarmes</SelectItem>
-                        <SelectItem value="installateur-climatisation">Installateur de climatisation</SelectItem>
-                        <SelectItem value="installateur-communication">Installateur de communication & pompe à chaleur</SelectItem>
-                        <SelectItem value="installateur-portail">Installateur de portail et clôtures</SelectItem>
-                        <SelectItem value="installateur-salle-bain">Installateur de salle de bain</SelectItem>
-                        <SelectItem value="installateur-photovoltaique">Installateur Photovoltaïque / Solaire</SelectItem>
-                        <SelectItem value="jardinier">Jardinier</SelectItem>
-                        <SelectItem value="macon">Maçon</SelectItem>
-                        <SelectItem value="maitre-oeuvre">Maître d'œuvre</SelectItem>
-                        <SelectItem value="menuisier">Menuisier</SelectItem>
-                        <SelectItem value="miroitier-vitrier">Miroitier / Vitrier</SelectItem>
-                        <SelectItem value="multiservices">Multiservices</SelectItem>
-                        <SelectItem value="parqueteur">Parqueteur</SelectItem>
-                        <SelectItem value="paysagiste">Paysagiste</SelectItem>
-                        <SelectItem value="peintre">Peintre</SelectItem>
-                        <SelectItem value="pisciniste">Pisciniste</SelectItem>
-                        <SelectItem value="placoiste">Placoïste</SelectItem>
-                        <SelectItem value="platrier">Plâtrier</SelectItem>
-                        <SelectItem value="plombier">Plombier</SelectItem>
-                        <SelectItem value="ravaleur-facade">Ravaleur de façade / Façadier</SelectItem>
-                        <SelectItem value="serrurier">Serrurier</SelectItem>
-                        <SelectItem value="solier-moquettiste">Solier Moquettiste</SelectItem>
-                        <SelectItem value="storiste">Storiste</SelectItem>
-                        <SelectItem value="terrassier">Terrassier</SelectItem>
-                        <SelectItem value="verandaliste">Vérandaliste</SelectItem>
+                        {getMetiers().map((m) => (
+                          <SelectItem key={m.slug} value={m.slug}>{m.nom}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>

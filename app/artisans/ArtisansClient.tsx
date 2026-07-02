@@ -17,6 +17,7 @@ import Image from "next/image";
 import { filterArtisansByDistance } from "@/lib/geo-utils";
 import { renovationPrestations } from "@/lib/renovation-suggestions";
 import { filterAndSortArtisans, getFilteringStats } from "@/lib/artisan-filtering-algorithm";
+import { searchMetiers, getMetierLabel, resolveLegacySlug } from "@/lib/metiers";
 import TopArtisanBadge from "@/components/TopArtisanBadge";
 import { getPremiumBannerPhotoUrl } from "@/lib/storage";
 
@@ -130,22 +131,35 @@ export default function ArtisansClient() {
       .replace(/[\u0300-\u036f]/g, ""); // Supprime les accents
   };
 
-  // Fonction pour rechercher les prestations
-  const searchPrestations = (query: string) => {
-    // Si pas de query, retourner toutes les prestations (pour affichage au clic)
+  // Fonction pour rechercher les prestations (métiers officiels + prestations détaillées)
+  const searchPrestations = (query: string): string[] => {
     if (!query.trim()) {
-      return renovationPrestations
-        .map(prestation => prestation.nom)
-        .slice(0, 10); // Afficher plus de prestations quand pas de filtre
+      // Sans filtre : afficher les 10 métiers prioritaires
+      return searchMetiers("").slice(0, 10).map(m => m.nom);
     }
-    
+
     const queryNormalized = normalizeText(query);
-    return renovationPrestations
-      .filter(prestation => 
-        normalizeText(prestation.nom).includes(queryNormalized)
-      )
-      .map(prestation => prestation.nom)
-      .slice(0, 8);
+
+    // 1. Métiers officiels via synonymes (source de vérité)
+    const metiersMatch = searchMetiers(query).map(m => m.nom);
+
+    // 2. Prestations détaillées (services spécifiques)
+    const prestationsMatch = renovationPrestations
+      .filter(p => normalizeText(p.nom).includes(queryNormalized))
+      .map(p => p.nom);
+
+    // Fusionner sans doublons (métiers d'abord), limiter à 10
+    const seen = new Set<string>();
+    const results: string[] = [];
+    for (const nom of [...metiersMatch, ...prestationsMatch]) {
+      const key = normalizeText(nom);
+      if (!seen.has(key)) {
+        seen.add(key);
+        results.push(nom);
+      }
+      if (results.length >= 10) break;
+    }
+    return results;
   };
 
   // Gérer la saisie du secteur avec debounce
@@ -1044,7 +1058,7 @@ export default function ArtisansClient() {
                             {/* Profession principale */}
                             {artisan.profession && (
                               <Badge variant="secondary" className="mb-3">
-                                {artisan.profession}
+                                {getMetierLabel(resolveLegacySlug(artisan.profession))}
                               </Badge>
                             )}
 

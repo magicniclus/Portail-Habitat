@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { MapPin, Star, Phone, Mail, ExternalLink, Loader2 } from "lucide-react";
 import { collection, query, limit, getDocs, where, orderBy, startAfter } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { getMetierLabel, resolveLegacySlug } from "@/lib/metiers";
 import { getPremiumBannerPhotoUrl } from "@/lib/storage";
 import Link from "next/link";
 import Image from "next/image";
@@ -352,7 +353,7 @@ export default function ArtisansSection() {
                       {/* Professions */}
                       <div className="flex flex-wrap gap-2 mb-4">
                         <Badge variant="secondary" className="bg-orange-100 text-orange-800">
-                          {artisan.profession}
+                          {getMetierLabel(resolveLegacySlug(artisan.profession))}
                         </Badge>
                         {artisan.professions.slice(0, 2).map((prof, index) => (
                           <Badge key={index} variant="outline" className="text-xs">

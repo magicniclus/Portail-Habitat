@@ -47,6 +47,7 @@ import {
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { getMetierLabel, resolveLegacySlug } from "@/lib/metiers";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -82,29 +83,8 @@ const LOCALSTORAGE_KEY = "onboarding_fiche_v2";
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function getProfessionLabel(p: string) {
-  const map: Record<string, string> = {
-    plombier: "Plombier",
-    electricien: "Électricien",
-    chauffagiste: "Chauffagiste",
-    peintre: "Peintre",
-    maconnerie: "Maçon",
-    menuisier: "Menuisier",
-    couvreur: "Couvreur",
-    carreleur: "Carreleur",
-    charpentier: "Charpentier",
-    multiservices: "Multiservices",
-    "entreprise-generale": "Entreprise générale",
-    diagnostiqueur: "Diagnostiqueur immobilier",
-    architecte: "Architecte",
-    paysagiste: "Paysagiste",
-    serrurier: "Serrurier",
-    vitrier: "Vitrier",
-    platrier: "Plâtrier",
-    isolation: "Spécialiste isolation",
-    climatisation: "Climaticien",
-    domotique: "Domoticien",
-  };
-  return map[p] || (p ? p.charAt(0).toUpperCase() + p.slice(1) : "Artisan");
+  if (!p) return "Artisan";
+  return getMetierLabel(resolveLegacySlug(p));
 }
 
 function generateSlug(firstName: string, lastName: string, profession: string) {
@@ -523,7 +503,7 @@ export default function OnboardingStep3Content() {
       }
 
       // 7. Mettre à jour les URLs d'images et marquer ficheComplete si applicable
-      const updates: Record<string, any> = { updatedAt: serverTimestamp() };
+      const updates: Record<string, unknown> = { updatedAt: serverTimestamp() };
       if (logoUrl) updates.logoUrl = logoUrl;
       if (coverUrl) updates.coverUrl = coverUrl;
 
@@ -570,12 +550,13 @@ export default function OnboardingStep3Content() {
 
       setStatus("done");
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Erreur création compte:", err);
+      const firebaseErr = err as { code?: string; message?: string };
       setCreationError(
-        err.code === "auth/email-already-in-use"
+        firebaseErr.code === "auth/email-already-in-use"
           ? "Un compte existe déjà avec cet email. Connectez-vous sur la page de connexion."
-          : err.message || "Une erreur est survenue. Réessayez.",
+          : firebaseErr.message || "Une erreur est survenue. Réessayez.",
       );
       setStatus("filling");
       setShowPasswordModal(true);

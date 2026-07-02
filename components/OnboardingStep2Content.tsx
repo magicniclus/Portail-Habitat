@@ -10,6 +10,7 @@ import { MapPin, Search, Users, CheckCircle, Navigation, MousePointer } from "lu
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import MapboxMap from "@/components/MapboxMap";
+import { getMetierLabel, resolveLegacySlug } from "@/lib/metiers";
 
 interface ProspectData {
   prospectId?: string;
@@ -205,21 +206,7 @@ export default function OnboardingStep2Content() {
     }
   };
 
-  const getProfessionLabel = (profession: string) => {
-    const labels: { [key: string]: string } = {
-      "plombier": "Plombier",
-      "electricien": "Électricien", 
-      "chauffagiste": "Chauffagiste",
-      "peintre": "Peintre",
-      "maconnerie": "Maçon",
-      "menuisier": "Menuisier",
-      "couvreur": "Couvreur",
-      "carreleur": "Carreleur",
-      "charpentier": "Charpentier",
-      "multiservices": "Multiservices"
-    };
-    return labels[profession] || profession;
-  };
+  const getProfessionLabel = (slug: string) => getMetierLabel(resolveLegacySlug(slug));
 
   return (
     <>
