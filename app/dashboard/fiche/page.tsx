@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import FicheEntreprise from "@/components/FicheEntreprise";
@@ -27,6 +27,7 @@ import type { DocumentData } from "firebase/firestore";
 interface Entreprise {
   id: string;
   slug?: string;
+  siret?: string;
   nom: string;
   logo?: string;
   banniere?: string;
@@ -74,6 +75,15 @@ export default function MaFichePage() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isUploadingBannerPhotos, setIsUploadingBannerPhotos] = useState(false);
+  // SIRET
+  const [siretInput, setSiretInput] = useState("");
+  const [siretLoading, setSiretLoading] = useState(false);
+  const [siretError, setSiretError] = useState<string | null>(null);
+  const [siretSuccess, setSiretSuccess] = useState(false);
+  const [siretSuggestions, setSiretSuggestions] = useState<Array<{siret:string;nom:string;adresse:string;ville:string;actif:boolean}>>([]);
+  const [siretSearchLoading, setSiretSearchLoading] = useState(false);
+  const [siretSelected, setSiretSelected] = useState<{siret:string;nom:string} | null>(null);
+  const siretDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Vérifier si l'artisan est premium et a le badge activé
   const shouldShowTopBadge = entreprise?.premiumFeatures && 
@@ -164,7 +174,8 @@ export default function MaFichePage() {
               averageQuoteMin: artisanData.averageQuoteMin || undefined,
               averageQuoteMax: artisanData.averageQuoteMax || undefined,
               premiumFeatures: artisanData.premiumFeatures || null,
-              hasPremiumSite: artisanData.hasPremiumSite || false
+              hasPremiumSite: artisanData.hasPremiumSite || false,
+              siret: artisanData.siret || undefined,
             });
 
             // Charger les projets de l'artisan
@@ -189,6 +200,69 @@ export default function MaFichePage() {
 
     return () => unsubscribe();
   }, []);
+
+  // Recherche SIRET avec debounce
+  const handleSiretSearch = (value: string) => {
+    setSiretInput(value);
+    setSiretSelected(null);
+    setSiretError(null);
+    if (siretDebounceRef.current) clearTimeout(siretDebounceRef.current);
+    if (value.trim().length < 3) { setSiretSuggestions([]); return; }
+    setSiretSearchLoading(true);
+    siretDebounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search-siret?q=${encodeURIComponent(value)}`);
+        const data = await res.json();
+        setSiretSuggestions(data.suggestions || []);
+      } catch { setSiretSuggestions([]); }
+      finally { setSiretSearchLoading(false); }
+    }, 350);
+  };
+
+  const handleSiretSelect = (s: {siret:string;nom:string}) => {
+    setSiretSelected(s);
+    setSiretInput(s.siret);
+    setSiretSuggestions([]);
+  };
+
+  // Validation SIRET
+  const handleSiretSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!entreprise?.id || !siretSelected) return;
+    setSiretLoading(true);
+    setSiretError(null);
+    setSiretSuccess(false);
+    try {
+      const res = await fetch("/api/verify-siret", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          siret: siretSelected.siret,
+          companyName: entreprise.nom,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setSiretError(data.error || "Erreur de vérification");
+        return;
+      }
+      // Sauvegarder le SIRET + activer la visibilité publique
+      const siretToSave = siretSelected.siret;
+      const slug = entreprise.slug || `${entreprise.nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-")}-${entreprise.id.slice(-6)}`;
+      await updateDoc(doc(db, "artisans", entreprise.id), {
+        siret: siretToSave,
+        "privacy.profileVisible": true,
+        slug,
+        updatedAt: serverTimestamp(),
+      });
+      setEntreprise((prev) => prev ? { ...prev, siret: siretToSave, slug } : prev);
+      setSiretSuccess(true);
+    } catch {
+      setSiretError("Impossible de vérifier le SIRET. Vérifiez votre connexion.");
+    } finally {
+      setSiretLoading(false);
+    }
+  };
 
   // Écouter les avis en temps réel et mettre à jour les statistiques
   useEffect(() => {
@@ -537,6 +611,108 @@ export default function MaFichePage() {
         </div>
       </div>
 
+
+      {/* Bannière SIRET — visible si SIRET non renseigné */}
+      {!entreprise?.siret && (
+        <div className="rounded-xl border border-orange-200 bg-orange-50 p-5">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <ExternalLink className="h-4 w-4 text-orange-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-orange-800 text-sm">Fiche non visible publiquement</p>
+              <p className="text-orange-700 text-sm mt-0.5">
+                Ajoutez votre numéro SIRET pour activer votre fiche et apparaître dans les résultats de recherche.
+              </p>
+            </div>
+          </div>
+          <form onSubmit={handleSiretSubmit}>
+            <div className="relative flex gap-2">
+              {/* Input OU sélection — même hauteur, même ligne */}
+              {siretSelected ? (
+                <div className="flex-1 flex items-center gap-2 px-4 py-2 bg-white border border-green-300 rounded-lg text-sm min-w-0">
+                  <span className="text-green-600 flex-shrink-0">✓</span>
+                  <span className="font-medium text-gray-800 truncate">{siretSelected.nom}</span>
+                  <span className="text-gray-400 font-mono text-xs flex-shrink-0 hidden sm:block">{siretSelected.siret}</span>
+                  <button
+                    type="button"
+                    onClick={() => { setSiretSelected(null); setSiretInput(""); setSiretSuggestions([]); }}
+                    className="text-gray-400 hover:text-gray-600 flex-shrink-0 ml-auto leading-none"
+                    aria-label="Annuler la sélection"
+                  >✕</button>
+                </div>
+              ) : (
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    placeholder="Recherchez par nom d'entreprise ou SIRET…"
+                    value={siretInput}
+                    onChange={(e) => handleSiretSearch(e.target.value)}
+                    autoComplete="off"
+                    className="w-full rounded-lg border border-orange-300 bg-white px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 pr-8"
+                  />
+                  {siretSearchLoading && (
+                    <Loader2 className="h-4 w-4 animate-spin absolute right-2 top-2.5 text-orange-400" />
+                  )}
+                  {/* Dropdown */}
+                  {siretSuggestions.length > 0 && (
+                    <ul className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden">
+                      {siretSuggestions.map((s) => (
+                        <li key={s.siret}>
+                          <button
+                            type="button"
+                            onClick={() => handleSiretSelect(s)}
+                            className="w-full text-left px-4 py-3 hover:bg-orange-50 transition-colors border-b border-gray-100 last:border-0"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="min-w-0">
+                                <span className={`text-sm font-medium ${s.actif ? "text-gray-900" : "text-gray-400 line-through"}`}>
+                                  {s.nom}
+                                </span>
+                                {!s.actif && <span className="ml-2 text-xs text-red-500">Radiée</span>}
+                                <div className="text-xs text-gray-500 mt-0.5 truncate">
+                                  {s.adresse && `${s.adresse} · `}{s.ville}
+                                </div>
+                              </div>
+                              <span className="text-xs text-gray-400 font-mono flex-shrink-0">{s.siret}</span>
+                            </div>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={siretLoading || !siretSelected}
+                className="bg-orange-600 hover:bg-orange-700 text-white text-sm whitespace-nowrap flex-shrink-0"
+              >
+                {siretLoading
+                  ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Vérification…</>
+                  : "Vérifier et activer"}
+              </Button>
+            </div>
+          </form>
+          {siretError && (
+            <p className="mt-2 text-sm text-red-600">{siretError}</p>
+          )}
+        </div>
+      )}
+
+      {/* Confirmation SIRET validé */}
+      {siretSuccess && (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4 flex items-center gap-3">
+          <div className="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+            <ExternalLink className="h-4 w-4 text-green-600" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-green-800">SIRET validé — Fiche activée !</p>
+            <p className="text-xs text-green-700">Votre fiche est maintenant visible publiquement.</p>
+          </div>
+        </div>
+      )}
 
       {/* Fiche entreprise */}
       <div className="w-full h-full">

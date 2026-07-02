@@ -95,8 +95,9 @@ export default function ArtisanPage() {
           const artisanDoc = querySnapshot.docs[0];
           const artisanData = artisanDoc.data();
           
-          // Vérifier que le profil est visible
-          if (!artisanData.privacy?.profileVisible) {
+          // Vérifier que le profil est visible : soit privacy.profileVisible = true, soit un SIRET est renseigné
+          const isVisible = artisanData.privacy?.profileVisible === true || !!artisanData.siret;
+          if (!isVisible) {
             setNotFound(true);
             return;
           }

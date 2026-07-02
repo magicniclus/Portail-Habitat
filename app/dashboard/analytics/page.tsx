@@ -176,7 +176,7 @@ export default function AnalyticsPage() {
 
   const { phoneRate, formRate, totalRate } = getConversionRates();
 
-  if (!user || !artisan) {
+  if (!user) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">

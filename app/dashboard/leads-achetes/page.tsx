@@ -22,7 +22,7 @@ export default function LeadsAchetesPage() {
     );
   }
 
-  if (!user || !artisan) {
+  if (!user) {
     return (
       <div className="container mx-auto px-4 py-8">
         <Alert className="border-yellow-200 bg-yellow-50">
