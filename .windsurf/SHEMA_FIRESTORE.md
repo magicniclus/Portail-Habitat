@@ -107,8 +107,47 @@ artisans
     ├── premiumProposalShown (boolean, défaut: false) ← true quand la proposition Premium a été affichée post-complétion
     ├── companyName (string) ← peut être pré-rempli lors de l'onboarding step 3
     ├── description (string) ← peut être pré-rempli lors de l'onboarding step 3
+    ├── siret (string) ← SIRET validé via API gouvernementale
+    ├── rayon_km (int, défaut: 30) ← rayon d'intervention en km, éditable depuis le dashboard
+    ├── communes_couvertes (array<string>) ← codes INSEE couverts, calculés automatiquement par Cloud Function depuis coordinates + rayon_km (plafond 80 communes)
+    ├── departement_code (string) ← code département (ex: "69"), calculé depuis postalCode/coordinates
     ├── createdAt
     └── updatedAt
+
+villes (collection – référentiel communes INSEE)
+└── {code_insee} (code INSEE = doc ID, ex: "69123")
+    ├── nom (string) ← nom officiel INSEE
+    ├── slug (string, unique) ← minuscules, sans accents, homonymes suffixés du code département
+    ├── departement_code (string) ← ex: "69"
+    ├── departement_nom (string) ← ex: "Rhône"
+    ├── departement_slug (string) ← ex: "rhone"
+    ├── region (string) ← ex: "Auvergne-Rhône-Alpes"
+    ├── population (int)
+    ├── lat (float)
+    └── lng (float)
+
+pages_seo (collection – une doc par page SEO générée)
+└── {id} (format: "[metier_slug]__national" | "[metier_slug]__dep__[dep_slug]" | "[metier_slug]__[ville_slug]")
+    ├── type ("national" | "departement" | "ville")
+    ├── metier_id (int) ← référence lib/metiers.ts
+    ├── metier_slug (string) ← slug officiel du métier
+    ├── metier_nom (string) ← nom affiché du métier
+    ├── ville_code_insee (string, optionnel) ← uniquement si type = "ville"
+    ├── ville_slug (string, optionnel)
+    ├── ville_nom (string, optionnel)
+    ├── departement_code (string, optionnel) ← pour type "ville" ou "departement"
+    ├── departement_slug (string, optionnel)
+    ├── departement_nom (string, optionnel)
+    ├── statut ("publiee" | "noindex") ← noindex si nb_artisans = 0, JAMAIS supprimée
+    ├── nb_artisans (int) ← compteur dénormalisé, JAMAIS compté à l'affichage
+    ├── contenu_ia {
+    │   ├── intro (string) ← 80-120 mots, généré une fois par IA
+    │   ├── h2_synonyme (string, optionnel)
+    │   ├── paragraphe_synonyme (string, optionnel)
+    │   └── faq (array<{q, r}>) ← 4 questions/réponses locales
+    │   }
+    ├── date_creation (timestamp)
+    └── date_maj (timestamp)
 
     └── leads (sous-collection)
         └── {leadId}
